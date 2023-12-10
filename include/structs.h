@@ -13,17 +13,5 @@ typedef struct {
   uint8_t wday;
 } S_DateTime;
 
-typedef struct
-{
-  //int fuel;
-  int kph;
-  int rpm;
-  int voltage;
-  int intakeTemp;
-  int ambientTemp;
-  int coolantTemp;
-  //int oilTemp;
-  int timingAdvance;
-} S_OBD_Data;
 
 #endif

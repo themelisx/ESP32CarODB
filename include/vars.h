@@ -28,13 +28,10 @@ extern int activeDisplay;
 extern ELM327 obd;
 extern BluetoothSerial SerialBT;
 
-extern bool btConnected;
-extern bool obdConnected;
-extern S_OBD_Data data;
-
 extern SemaphoreHandle_t keyPadSemaphore;
 extern SemaphoreHandle_t btConnectedSemaphore;
 extern SemaphoreHandle_t obdConnectedSemaphore;
+extern SemaphoreHandle_t obdValueSemaphore;
 
 extern TaskHandle_t t_main_menu;
 extern TaskHandle_t t_settings;

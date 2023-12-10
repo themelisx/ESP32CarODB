@@ -20,45 +20,6 @@ void saveToEEPROM() {
   #endif
 }
 
-void connectToOBD() {
-  //SerialBT.register_callback(callback);
-
-  if (!SerialBT.begin("ESP32", true)) {
-    Serial.println(F("An error occurred initializing Bluetooth"));
-  } else {
-    Serial.println(("Bluetooth initialized"));
-  }
-
-  bool connected;
-  do {
-    Serial.print(("Trying to connnect to "));
-    Serial.println(OBD_DEVICE_NAME);
-    connected = SerialBT.connect(OBD_DEVICE_NAME);  
-    vTaskDelay(2000 / portTICK_PERIOD_MS);  
-
-  } while (connected == false);
-  
-  Serial.println(("Connected Succesfully!"));
-
-  xSemaphoreTake(btConnectedSemaphore, portMAX_DELAY);
-  btConnected = true;
-  xSemaphoreGive(btConnectedSemaphore);
-
-  //obd.setPin("1234");
-
-  while (!obd.begin(SerialBT, true, 2000)) {
-    Serial.println(F("Couldn't connect to OBD module"));
-  }
-
-  xSemaphoreTake(obdConnectedSemaphore, portMAX_DELAY);
-  obdConnected = true;
-  xSemaphoreGive(obdConnectedSemaphore);
-
-  Serial.println(("Connected to ELM327"));
-}
-
-
-
 
 void keypad_task(void *pvParameters) {
   Serial.print("Keypad manager (Core 0) task running on core ");
@@ -215,22 +176,25 @@ void tft1_task(void *pvParameters) {
     }
     xSemaphoreGive(keyPadSemaphore);
 
-    xSemaphoreTake(myGauges[viewId]->semaphore, portMAX_DELAY);
+    
     switch (viewId) {
-      case VIEW_BATTERY_VOLTAGE: newValue = data.voltage; break;
-      case VIEW_KPH: newValue = data.kph; break;
-      case VIEW_RPM: newValue = data.rpm; break;
-      case VIEW_COOLANT_TEMP: newValue = data.coolantTemp; break;
-      case VIEW_AMBIENT_TEMP: newValue = data.ambientTemp; break;
-      case VIEW_INTAKE_TEMP: newValue = data.intakeTemp; break;
-      case VIEW_TIMING_ADV: newValue = data.timingAdvance; break;
+      case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD.getVoltage(); break;
+      case VIEW_KPH: newValue = bluetoothOBD.getKph(); break;
+      case VIEW_RPM: newValue = bluetoothOBD.getRpm(); break;
+      case VIEW_COOLANT_TEMP: newValue = bluetoothOBD.getCoolantTemp(); break;
+      case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD.getAmbientTemp(); break;
+      case VIEW_INTAKE_TEMP: newValue = bluetoothOBD.getIntakeTemp(); break;
+      case VIEW_TIMING_ADV: newValue = bluetoothOBD.getTimingAdvance(); break;
       default: newValue = 0;
     }
+    
+    xSemaphoreTake(myGauges[viewId]->semaphore, portMAX_DELAY);
+    int oldValue = myGauges[viewId]->data.value;
     xSemaphoreGive(myGauges[viewId]->semaphore);
 
     if (viewId == VIEW_DATE_TIME) {
       myGauges[viewId]->drawDateTime();
-    } else if (changeView || myGauges[viewId]->data.value != newValue) {
+    } else if (changeView || oldValue != newValue) {
       //Serial.print("Readed value: ");
       //Serial.println(newValue);
       //Serial.println(F("Drawing...."));
@@ -245,36 +209,19 @@ void obd_task(void *pvParameters) {
   Serial.print(F("OBD manager (Core 1) task running on core "));
   Serial.println(xPortGetCoreID());
 
-  data.kph = 0;
-  data.rpm = 0;
-  data.voltage = INT_MIN;
-  data.ambientTemp = INT_MIN;
-  data.coolantTemp = INT_MIN;
-  data.intakeTemp = INT_MIN;
-  data.timingAdvance = INT_MIN;
-  //data.oilTemp = 35;
-
   bool bluetoothOk = false;
   bool obdOk = false;
   bool shouldCheck = true;
   int newValue;
   int runs;
 
-  connectToOBD();
+  bool connected = bluetoothOBD.connect(OBD_DEVICE_NAME, OBD_DEVICE_PIN);
 
   for (;;) {
 
-    xSemaphoreTake(btConnectedSemaphore, portMAX_DELAY);
-    bluetoothOk = btConnected;
-    xSemaphoreGive(btConnectedSemaphore);
-
-    xSemaphoreTake(obdConnectedSemaphore, portMAX_DELAY);
-    obdOk = obdConnected;
-    xSemaphoreGive(obdConnectedSemaphore);
-
     runs = 0;
 
-    if (bluetoothOk && obdOk) {
+    if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
       for (int i = 1; i < MAX_DISPLAYS + 1; i++) {
         //if (myDisplays[activeDisplay].enabled) {
         runs++;
@@ -287,14 +234,35 @@ void obd_task(void *pvParameters) {
         do {
           shouldCheck = true;
           switch (activeViewId) {
-            case VIEW_BATTERY_VOLTAGE: newValue = obd.batteryVoltage() * 10; break;
-            case VIEW_KPH: newValue = obd.kph(); break;
-            case VIEW_RPM: newValue = obd.rpm(); break;
-            case VIEW_COOLANT_TEMP: newValue = obd.engineCoolantTemp(); break;
+            case VIEW_BATTERY_VOLTAGE: 
+                  newValue = obd.batteryVoltage() * 10;
+                  bluetoothOBD.setVoltage(newValue);
+                  break;
+            case VIEW_KPH: 
+                  newValue = obd.kph(); 
+                  bluetoothOBD.setKph(newValue);
+                  break;
+            case VIEW_RPM: 
+                  newValue = obd.rpm(); 
+                  bluetoothOBD.setRpm(newValue);
+                  break;
+            case VIEW_COOLANT_TEMP: 
+                  newValue = obd.engineCoolantTemp(); 
+                  bluetoothOBD.setCoolantTemp(newValue);
+                  break;
             //case VIEW_OIL_TEMP: newValue = obd.oilTemp(); break;
-            case VIEW_AMBIENT_TEMP: newValue = obd.ambientAirTemp(); break;
-            case VIEW_INTAKE_TEMP: newValue = obd.intakeAirTemp(); break;
-            case VIEW_TIMING_ADV: newValue = obd.timingAdvance(); break;
+            case VIEW_AMBIENT_TEMP: 
+                  newValue = obd.ambientAirTemp(); 
+                  bluetoothOBD.setAmbientTemp(newValue);
+                  break;
+            case VIEW_INTAKE_TEMP: 
+                  newValue = obd.intakeAirTemp(); 
+                  bluetoothOBD.setIntakeTemp(newValue);
+                  break;
+            case VIEW_TIMING_ADV: 
+                  newValue = obd.timingAdvance(); 
+                  bluetoothOBD.setTimingAdvance(newValue);
+                  break;
             case VIEW_NONE:
               shouldCheck = false;
               Serial.println(F("Inactive view"));

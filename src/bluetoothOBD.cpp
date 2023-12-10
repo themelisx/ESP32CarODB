@@ -12,8 +12,6 @@
 #include "vars.h"
 
 BluetoothOBD::BluetoothOBD() {
-    btConnectedSemaphore = xSemaphoreCreateMutex();
-    obdConnectedSemaphore = xSemaphoreCreateMutex();
 
     voltage = INT_MIN;
     kph = INT_MIN;
@@ -78,6 +76,8 @@ bool BluetoothOBD::connect(char *OBDDeviceName, const char *pin) {
   //SerialBT.register_callback(callback);
   bool ret = false;
 
+  SerialBT.setPin(pin);
+
   if (!SerialBT.begin(OBDDeviceName)) {
     debug.println(DEBUG_LEVEL_ERROR, F("An error occurred initializing Bluetooth"));
   } else {
@@ -99,11 +99,7 @@ bool BluetoothOBD::connect(char *OBDDeviceName, const char *pin) {
     if (connected) {
         debug.println(DEBUG_LEVEL_INFO, F("Bluetooth connected succesfully!"));
 
-        xSemaphoreTake(btConnectedSemaphore, portMAX_DELAY);
-        btConnected = true;
-        xSemaphoreGive(btConnectedSemaphore);
-
-        //obd.setPin(OBDPin);
+        setBtConnected(true);
 
         count = 0;
         bool obdReady = false;
@@ -115,9 +111,7 @@ bool BluetoothOBD::connect(char *OBDDeviceName, const char *pin) {
         } while (obdReady == false);        
         
         if (obdReady) {
-            xSemaphoreTake(obdConnectedSemaphore, portMAX_DELAY);
-            obdConnected = true;
-            xSemaphoreGive(obdConnectedSemaphore);
+            setObdConnected(true);
             debug.println(DEBUG_LEVEL_INFO, F("Connected to ELM327"));
         } else {
             debug.println(DEBUG_LEVEL_ERROR, F("Couldn't connect to OBD module"));
@@ -130,59 +124,94 @@ bool BluetoothOBD::connect(char *OBDDeviceName, const char *pin) {
 }
 
 int BluetoothOBD::getVoltage() {
-    return voltage;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = voltage;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 int BluetoothOBD::getKph() {
-    return kph;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = kph;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 int BluetoothOBD::getRpm() {
-    return rpm;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = rpm;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 int BluetoothOBD::getCoolantTemp() {
-    return coolantTemp;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = coolantTemp;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 int BluetoothOBD::getAmbientTemp() {
-    return ambientTemp;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = ambientTemp;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 int BluetoothOBD::getIntakeTemp() {
-    return intakeTemp;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = intakeTemp;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 int BluetoothOBD::getTimingAdvance() {
-    return timingAdvance;
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    int ret = timingAdvance;
+    xSemaphoreGive(obdValueSemaphore);
+    return ret;
 }
 
 void BluetoothOBD::setVoltage(int voltage) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->voltage = voltage;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setKph(int kph) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->kph = kph;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setRpm(int rpm) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->rpm = rpm;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setCoolantTemp(int coolantTemp) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->coolantTemp = coolantTemp;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setAmbientTemp(int ambientTemp) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->ambientTemp = ambientTemp;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setIntakeTemp(int intakeTemp) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->intakeTemp = intakeTemp;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setTimingAdvance(int timingAdvance) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->timingAdvance = timingAdvance;
+    xSemaphoreGive(obdValueSemaphore);
 }
 
 #endif

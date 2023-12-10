@@ -42,12 +42,7 @@ char timeString[TIME_LENGTH];
 char oldDateString[DATE_LENGTH];
 char oldTimeString[TIME_LENGTH];
 
-bool btConnected;
-bool obdConnected;
-
 int activeDisplay;
-
-S_OBD_Data data;
 
 // Thread handles
 TaskHandle_t t_main_menu;
@@ -62,6 +57,7 @@ TaskHandle_t t_core1_obd;
 SemaphoreHandle_t keyPadSemaphore;
 SemaphoreHandle_t btConnectedSemaphore;
 SemaphoreHandle_t obdConnectedSemaphore;
+SemaphoreHandle_t obdValueSemaphore;
 
 Displays *myDisplays[MAX_DISPLAYS];
 Gauge *myGauges[MAX_VIEWS + 1];
@@ -88,7 +84,8 @@ void setup() {
 
   btConnectedSemaphore = xSemaphoreCreateMutex();
   obdConnectedSemaphore = xSemaphoreCreateMutex();
-  keyPadSemaphore = xSemaphoreCreateMutex();
+  obdValueSemaphore = xSemaphoreCreateMutex();
+  keyPadSemaphore = xSemaphoreCreateMutex();    
 
   #ifdef ENABLE_EEPROM
     myEEPROM.start();  

@@ -15,9 +15,6 @@ class BluetoothOBD {
     bool btConnected;
     bool obdConnected;
 
-    SemaphoreHandle_t btConnectedSemaphore;
-    SemaphoreHandle_t obdConnectedSemaphore;
-
     int voltage;
     int kph;
     int rpm;
