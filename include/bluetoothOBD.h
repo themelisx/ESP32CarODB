@@ -7,9 +7,6 @@
 
 class BluetoothOBD {
   private:
-    void setBtConnected(bool connected);
-    void setObdConnected(bool connected);
-
     char *OBDDeviceName;
 
     bool btConnected;
@@ -25,8 +22,10 @@ class BluetoothOBD {
 
   public:
     BluetoothOBD();
-    bool connect(char *OBDDeviceName, const char *pin);
+    bool connect(char *OBDDeviceName, char *pin);
     void disconnect();
+    void setBtConnected(bool connected);
+    void setObdConnected(bool connected);
     bool isBluetoothConnected();
     bool isOBDConnected();
 

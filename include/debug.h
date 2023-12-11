@@ -24,6 +24,7 @@ class Debug {
     void print(int debugLevel, const char str[]);
     void print(int debugLevel, char c);
     void print(int debugLevel, unsigned char b, int base);
+    void print(int debugLevel, int num);
     void print(int debugLevel, int n, int base);
     void print(int debugLevel, unsigned int n, int base);
     void print(int debugLevel, long n, int base);
@@ -38,6 +39,7 @@ class Debug {
     void println(int debugLevel, const String &s);
     void println(int debugLevel, const char c[]);
     void println(int debugLevel, char c);
+    void println(int debugLevel, int num);
     void println(int debugLevel, unsigned char b, int base);
     void println(int debugLevel, int num, int base);
     void println(int debugLevel, unsigned int num, int base);

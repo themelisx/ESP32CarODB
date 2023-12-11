@@ -47,6 +47,12 @@ void Debug::print(int debugLevel, int n, int base) {
     }
 }
 
+void Debug::print(int debugLevel, int num) {
+    if (debugLevel <= this->debugLevel) {
+        Serial.print(num);
+    }
+}
+
 void Debug::print(int debugLevel, unsigned int n, int base) {
     if (debugLevel <= this->debugLevel) {
         Serial.print(n, base);
@@ -116,6 +122,12 @@ void Debug::println(int debugLevel, const char c[]) {
 void Debug::println(int debugLevel, char c) {
     if (debugLevel <= this->debugLevel) {
         Serial.println(c);
+    }
+}
+
+void Debug::println(int debugLevel, int num) {
+    if (debugLevel <= this->debugLevel) {
+        Serial.println(num);
     }
 }
 

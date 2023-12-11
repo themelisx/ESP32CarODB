@@ -9,9 +9,9 @@
 #include "displays.h"
 #include "tasks.h"
 #include "structs.h"
+#include "settings.h"
 
 #ifdef ENABLE_EEPROM
-  #include "settings.h"
   #include "myEEPROM.h"
 #endif
 
@@ -44,9 +44,6 @@ char oldTimeString[TIME_LENGTH];
 
 int activeDisplay;
 
-// Thread handles
-TaskHandle_t t_main_menu;
-TaskHandle_t t_settings;
 // Tasks
 TaskHandle_t t_core0_tft1;
 TaskHandle_t t_core0_tft2;
@@ -78,27 +75,24 @@ Settings mySettings;
 void setup() {
 
   // Initialize Serial and set debug level
-  debug.start(115200, DEBUG_LEVEL_DEBUG);
+  //debug.start(115200, DEBUG_LEVEL_INFO);
+  debug.start(115200, DEBUG_LEVEL_DEBUG2);
 
-  debug.println(DEBUG_LEVEL_INFO, F("Staring up..."));  
+  debug.println(DEBUG_LEVEL_INFO, F("Staring up..."));
 
   btConnectedSemaphore = xSemaphoreCreateMutex();
   obdConnectedSemaphore = xSemaphoreCreateMutex();
   obdValueSemaphore = xSemaphoreCreateMutex();
-  keyPadSemaphore = xSemaphoreCreateMutex();    
+  keyPadSemaphore = xSemaphoreCreateMutex();
 
-  #ifdef ENABLE_EEPROM
-    myEEPROM.start();  
-    
-    if (myEEPROM.hasSignature()) {
-      mySettings.load();
-    } else {
-      myEEPROM.createSignature();
-      mySettings.setDefaults();
-      mySettings.save();
-    }
-  #endif
+  xSemaphoreGive(btConnectedSemaphore);
+  xSemaphoreGive(obdConnectedSemaphore);
+  xSemaphoreGive(obdValueSemaphore);
+  xSemaphoreGive(keyPadSemaphore);
 
+  mySettings.load();
+
+  debug.println(DEBUG_LEVEL_INFO, F("Disabling WiFi..."));  
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
 
@@ -137,53 +131,52 @@ void setup() {
   debug.println(DEBUG_LEVEL_INFO, F("Creating gauges..."));
   
 
-  myGauges[1] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"KM/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 180);
+  myGauges[1] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 180);
   
   myGauges[2] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, false, 0, 0, 6500, 7500);
   
   // Battery  
-  myGauges[3] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"VOLT", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
+  myGauges[3] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"%d C");
   myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"%d C");
   
   // Engine coolant  
-  myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"ENGINE", (char*)"%d C", BLUE, RED, true, true, 20, 40, 105, 120);
+  myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 20, 40, 105, 120);
   myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"%d C");
   myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   // Ambient  
-  myGauges[5] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_DUAL_TEXT, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"OUT", (char*)"%d C", BLUE, WHITE, true, false, -20, 3, 50, 50);
+  myGauges[5] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_DUAL_TEXT, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -20, 3, 50, 50);
   myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"%d C");
   myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   // Intake (+Ambient)
   
-  myGauges[6] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"INTAKE", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
+  myGauges[6] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
   myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"%d C");
   myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
-  myGauges[7] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_GAUGE_GRAPH, DELAY_VIEW_ADV, (char*)"ADVANCE", (char*)"%d º", RED, WHITE, false, false, 0, 0, 360, 360);
+  myGauges[7] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_GAUGE_GRAPH, DELAY_VIEW_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 360, 360);
 
   //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
   activeDisplay = 1;
-  myDisplays[1]->activeView = 0;
-  myDisplays[1]->nextView = 1;
-  myDisplays[1]->secondaryActiveView = 0;
+  myDisplays[1]->activeView = mySettings.getActiveView() - 1;
+  myDisplays[1]->nextView = mySettings.getActiveView();
+  myDisplays[1]->secondaryActiveView = mySettings.getSecondaryActiveView();
 
-  /*
-  debug.println(DEBUG_LEVEL_INFO, F("Staring up MainMenu"));
+  debug.println(DEBUG_LEVEL_INFO, F("Staring up View Manager 1..."));
+
   xTaskCreatePinnedToCore(
-    main_menu_task, // Task function.
-    "MainMenu",     // Name of task.
-    10000,          // Stack size of task
-    NULL,           // Parameter of the task
-    0,              // Priority of the task
-    &t_main_menu,   // Task handle to keep track of created task
-    0);             // Pin task to core 0
-
-  delay(200);*/
+    tft1_task,        // Task function.
+    "View_Manager1",  // Name of task.
+    10000,            // Stack size of task
+    NULL,             // Parameter of the task
+    0,                // Priority of the task
+    &t_core0_tft1,    // Task handle to keep track of created task
+    0);               // Pin task to core 0
+  vTaskSuspend(t_core0_tft1);
 
   debug.println(DEBUG_LEVEL_INFO, F("Staring up OBD Manager..."));
 
@@ -196,21 +189,7 @@ void setup() {
     &t_core1_obd,   // Task handle to keep track of created task
     1);             // Pin task to core 1
 
-  delay(500);
-
-  debug.println(DEBUG_LEVEL_INFO, F("Staring up View Manager 1..."));
-
-  xTaskCreatePinnedToCore(
-    tft1_task,        // Task function.
-    "View_Manager1",  // Name of task.
-    10000,            // Stack size of task
-    NULL,             // Parameter of the task
-    0,                // Priority of the task
-    &t_core0_tft1,    // Task handle to keep track of created task
-    0);               // Pin task to core 0
-
-  delay(200);
- 
+  vTaskSuspend(t_core1_obd);
 
   debug.println(DEBUG_LEVEL_INFO, F("Staring up Keypad Manager..."));
 
@@ -229,7 +208,18 @@ void setup() {
     &t_core0_keypad,  // Task handle to keep track of created task
     0);               // Pin task to core 0
 
-  debug.println(DEBUG_LEVEL_INFO, F("Setup completed"));
+  vTaskSuspend(t_core0_keypad);
+
+  debug.println(DEBUG_LEVEL_INFO, F("Setup completed\nStarting tasks..."));
+
+  vTaskResume(t_core0_tft1);  
+  delay(1000);
+  
+  vTaskResume(t_core0_keypad);
+  delay(1000);
+
+  debug.println(DEBUG_LEVEL_INFO, F("Starting OBD..."));
+  vTaskResume(t_core1_obd);
 }
 
 void loop() {

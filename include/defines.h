@@ -1,14 +1,50 @@
 #ifndef DEFINES_h
 #define DEFINES_h
 
-#define ENABLE_EEPROM
+#define MOCK_OBD
+
+//#define MOCK_OBD_LOW_VALUES
+#define MOCK_OBD_NORMAL_VALUES
+//#define MOCK_OBD_HIGH_VALUES
+
+#ifdef MOCK_OBD_LOW_VALUES
+    #define MOCK_OBD_batteryVoltage 118
+    #define MOCK_OBD_kph 0
+    #define MOCK_OBD_rpm 800
+    #define MOCK_OBD_engineCoolantTemp 10
+    #define MOCK_OBD_ambientAirTemp -5
+    #define MOCK_OBD_intakeAirTemp 12
+    #define MOCK_OBD_timingAdvance 5
+#endif
+
+#ifdef MOCK_OBD_NORMAL_VALUES
+    #define MOCK_OBD_batteryVoltage 138
+    #define MOCK_OBD_kph 50
+    #define MOCK_OBD_rpm 3500
+    #define MOCK_OBD_engineCoolantTemp 92
+    #define MOCK_OBD_ambientAirTemp 25
+    #define MOCK_OBD_intakeAirTemp 45
+    #define MOCK_OBD_timingAdvance 12
+#endif
+
+#ifdef MOCK_OBD_HIGH_VALUES
+    #define MOCK_OBD_batteryVoltage 148
+    #define MOCK_OBD_kph 180
+    #define MOCK_OBD_rpm 7500
+    #define MOCK_OBD_engineCoolantTemp 120
+    #define MOCK_OBD_ambientAirTemp 40
+    #define MOCK_OBD_intakeAirTemp 95
+    #define MOCK_OBD_timingAdvance 40
+#endif
+
+//#define ENABLE_EEPROM
 #define ENABLE_OBD_BLUETOOTH
 //#define ENABLE_STARTUP_LOGO
 //#define ENABLE_RTC_CLOCK
 //#define ENABLE_SECOND_DISPLAY
 
-#define OBD_DEVICE_NAME "OBDII"
-#define OBD_DEVICE_PIN "1234"
+#define OBD_DEVICE_NAME (char*)"OBDII"
+#define OBD_DEVICE_PIN (char*)"1234"
 
 #define DELAY_KEYPAD 200
 #define PIN_UP_KEY 27
@@ -47,14 +83,14 @@
 #define DELAY_VIEW_ADV 250
 
 #define VIEW_NONE 0
-#define VIEW_DATE_TIME 1
-#define VIEW_KPH 2
-#define VIEW_RPM 3
-#define VIEW_BATTERY_VOLTAGE 4
-#define VIEW_COOLANT_TEMP 5
-#define VIEW_AMBIENT_TEMP 6
-#define VIEW_INTAKE_TEMP 7
-#define VIEW_TIMING_ADV 8
+#define VIEW_KPH 1
+#define VIEW_RPM 2
+#define VIEW_BATTERY_VOLTAGE 3
+#define VIEW_COOLANT_TEMP 4
+#define VIEW_AMBIENT_TEMP 5
+#define VIEW_INTAKE_TEMP 6
+#define VIEW_TIMING_ADV 7
+#define VIEW_DATE_TIME 8
 //#define VIEW_OIL_TEMP 9
 
 #define TYPE_GAUGE_GRAPH 1

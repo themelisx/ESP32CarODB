@@ -50,12 +50,13 @@ extern char timeString[TIME_LENGTH];
 extern char oldDateString[DATE_LENGTH];
 extern char oldTimeString[TIME_LENGTH];
 
+extern Settings mySettings;
+
 #ifdef ENABLE_OBD_BLUETOOTH
     extern BluetoothOBD bluetoothOBD;
 #endif
 
 #ifdef ENABLE_EEPROM
-    extern Settings settings;
     extern MyEEPROM myEEPROM;
 #endif
 

@@ -6,7 +6,9 @@
 class Settings {
   private:
     bool status;
-    byte debugLevel;
+
+    int activeView;
+    int secondaryActiveView;
 
   public:
     Settings();
@@ -14,6 +16,9 @@ class Settings {
     void load();
     void save();
     void setDefaults();
+
+    int getActiveView();
+    int getSecondaryActiveView();
 };
 
 #endif

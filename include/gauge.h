@@ -99,7 +99,6 @@ class Gauge {
     int getInterval();
     bool isVisible();
 
-    void prepare();
     void setFrontColor(int fColor);
     void setBackColor(int bColor);    
     void setFontSize(int sz);

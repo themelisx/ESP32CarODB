@@ -20,9 +20,9 @@ BluetoothOBD::BluetoothOBD() {
     ambientTemp = INT_MIN;
     intakeTemp = INT_MIN;
     timingAdvance = INT_MIN;
-    
-    setBtConnected(false);
-    setObdConnected(false);
+    btConnected = false;
+    obdConnected = false;
+
 }
 
 void BluetoothOBD::setBtConnected(bool connected) {
@@ -71,51 +71,66 @@ void BluetoothOBD::disconnect() {
     setObdConnected(false);
 }
 
-bool BluetoothOBD::connect(char *OBDDeviceName, const char *pin) {
+bool BluetoothOBD::connect(char *OBDDeviceName, char *pin) {
   this->OBDDeviceName = OBDDeviceName;
   //SerialBT.register_callback(callback);
   bool ret = false;
 
-  SerialBT.setPin(pin);
-
-  if (!SerialBT.begin(OBDDeviceName)) {
+  if (!SerialBT.begin("ESP32", true)) {
     debug.println(DEBUG_LEVEL_ERROR, F("An error occurred initializing Bluetooth"));
   } else {
     debug.println(DEBUG_LEVEL_INFO, F("Bluetooth initialized"));
 
-    bool connected;
-    int count = 0;
-    debug.print(DEBUG_LEVEL_INFO, F("Trying to connnect to "));
-    debug.print(DEBUG_LEVEL_INFO, OBDDeviceName);
-    do {
-        debug.print(DEBUG_LEVEL_INFO, ".");
-        connected = SerialBT.connect(OBDDeviceName);    
-        delay(3000);
-        count++;
-        if (count > 10) break;
+    if (pin != nullptr) {
+        SerialBT.setPin(pin);
+    }
 
-    } while (connected == false);
+    bool connected;
+
+    debug.print(DEBUG_LEVEL_INFO, F("Bluetooth Slave device: "));
+    debug.println(DEBUG_LEVEL_INFO, OBDDeviceName);
+    
+    for (int i=1; i<11; i++) {
+
+        debug.print(DEBUG_LEVEL_INFO, F("Connecting to Bluetooth ("));
+        debug.print(DEBUG_LEVEL_INFO, i);
+        debug.println(DEBUG_LEVEL_INFO, F(")..."));
+
+        connected = SerialBT.connect(OBDDeviceName);
+        if (connected) {
+            break;
+        } else {
+            delay(3000);
+        }
+    }
     
     if (connected) {
         debug.println(DEBUG_LEVEL_INFO, F("Bluetooth connected succesfully!"));
 
         setBtConnected(true);
 
-        count = 0;
         bool obdReady = false;
-        debug.print(DEBUG_LEVEL_INFO, F("Connecting to OBD"));
-        do {
+        
+        for (int i=1; i<11; i++) {
+            debug.print(DEBUG_LEVEL_INFO, F("Connecting to OBD ("));
+            debug.print(DEBUG_LEVEL_INFO, i);
+            debug.println(DEBUG_LEVEL_INFO, F(")..."));
+
             obdReady = obd.begin(SerialBT, true, 3000);
-            debug.print(DEBUG_LEVEL_INFO, F("."));
-            if (count > 10) break;
-        } while (obdReady == false);        
+            if (obdReady) {
+                break;
+            } else {
+                delay(3000);
+            }
+        }
         
         if (obdReady) {
             setObdConnected(true);
-            debug.println(DEBUG_LEVEL_INFO, F("Connected to ELM327"));
+            debug.print(DEBUG_LEVEL_INFO, F("Connected"));
         } else {
-            debug.println(DEBUG_LEVEL_ERROR, F("Couldn't connect to OBD module"));
-        }        
+            debug.print(DEBUG_LEVEL_ERROR, F("Couldn't connect"));
+        }
+        debug.println(DEBUG_LEVEL_ERROR, F(" to ELM327"));
     } else {
         debug.println(DEBUG_LEVEL_INFO, F("Cannot connect to Bluetooth device"));
     }
@@ -124,94 +139,59 @@ bool BluetoothOBD::connect(char *OBDDeviceName, const char *pin) {
 }
 
 int BluetoothOBD::getVoltage() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = voltage;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->voltage;
 }
 
 int BluetoothOBD::getKph() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = kph;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->kph;
 }
 
 int BluetoothOBD::getRpm() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = rpm;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->rpm;
 }
 
 int BluetoothOBD::getCoolantTemp() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = coolantTemp;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->coolantTemp;
 }
 
 int BluetoothOBD::getAmbientTemp() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = ambientTemp;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->ambientTemp;
 }
 
 int BluetoothOBD::getIntakeTemp() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = intakeTemp;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->intakeTemp;
 }
 
 int BluetoothOBD::getTimingAdvance() {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    int ret = timingAdvance;
-    xSemaphoreGive(obdValueSemaphore);
-    return ret;
+    return this->timingAdvance;
 }
 
 void BluetoothOBD::setVoltage(int voltage) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->voltage = voltage;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setKph(int kph) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->kph = kph;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setRpm(int rpm) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->rpm = rpm;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setCoolantTemp(int coolantTemp) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->coolantTemp = coolantTemp;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setAmbientTemp(int ambientTemp) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->ambientTemp = ambientTemp;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setIntakeTemp(int intakeTemp) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->intakeTemp = intakeTemp;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 void BluetoothOBD::setTimingAdvance(int timingAdvance) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     this->timingAdvance = timingAdvance;
-    xSemaphoreGive(obdValueSemaphore);
 }
 
 #endif

@@ -9,12 +9,25 @@
 #include "displays.h"
 
 Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
+
+    debug.print(DEBUG_LEVEL_INFO, F("Creating Gauge (title:'"));
+    debug.print(DEBUG_LEVEL_INFO, title);
+    debug.print(DEBUG_LEVEL_INFO, F("`, id:"));
+    debug.print(DEBUG_LEVEL_INFO, id);
+    debug.print(DEBUG_LEVEL_INFO, F(", type:"));
+    debug.print(DEBUG_LEVEL_INFO, type);
+    debug.print(DEBUG_LEVEL_INFO, F(", strFormat: `"));
+    debug.print(DEBUG_LEVEL_INFO, strFormat);
+    debug.println(DEBUG_LEVEL_INFO, F("')"));
+
+    this->semaphore = xSemaphoreCreateMutex();
+    xSemaphoreTake(this->semaphore, portMAX_DELAY);
+
     this->monitor = monitor;
     this->id = id;
     this->type = type;    
     this->interval = interval;
     this->visible = true;
-    this->semaphore = xSemaphoreCreateMutex();
     this->secondaryViews.activeView = 0;
     this->secondaryViews.count = 0;
 
@@ -30,9 +43,6 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     this->data.useHighWarning = useHighWarning;
     this->data.strFormat = strFormat;
     this->data.title = title;
-
-   
-    xSemaphoreGive(this->semaphore);
 
     this->screenHeight = monitor->getScreenHeight();
     this->screenWidth = monitor->getScreenWidth();
@@ -50,7 +60,19 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     setFrontColor(FRONT_COLOR);
     setBackColor(BACK_COLOR);
 
-    prepare();
+    int angle = 0;
+    int angle2 = angleStart;
+    for (angle = 0; angle < 360; angle++) {
+      yield();
+      x[angle] = (screenWidth / 2) + cos(angle2 * rad) * radius;
+      y[angle] = (screenHeight / 2) + sin(angle2 * rad) * radius;
+      x2[angle] = x[angle] + cos(angle2 * rad) * radiusLength;
+      y2[angle] = y[angle] + sin(angle2 * rad) * radiusLength;
+      angle2++;
+      if (angle2 == 360) angle2 = 0;
+    }
+
+    xSemaphoreGive(this->semaphore);
 }
 
 void Gauge::setFrontColor(int fColor) {
@@ -87,22 +109,6 @@ void Gauge::setFontSize(int sz) {
   }
 }
 
-
-void Gauge::prepare() {
-  debug.println(DEBUG_LEVEL_INFO, F("Preparing Gauge display"));
-  int angle = 0;
-  int angle2 = angleStart;
-  for (angle = 0; angle < 360; angle++) {
-    yield();
-    x[angle] = (screenWidth / 2) + cos(angle2 * rad) * radius;
-    y[angle] = (screenHeight / 2) + sin(angle2 * rad) * radius;
-    x2[angle] = x[angle] + cos(angle2 * rad) * radiusLength;
-    y2[angle] = y[angle] + sin(angle2 * rad) * radiusLength;
-    angle2++;
-    if (angle2 == 360) angle2 = 0;
-  }
-}
-
 void Gauge::getFormattedValue(int viewId, int newValue, char *buf) {
   if (viewId == VIEW_BATTERY_VOLTAGE) {
     setFontSize(26);
@@ -136,17 +142,22 @@ void Gauge::drawDateTime() {
 }
 
 int Gauge::getSecondaryInfo(int viewId, char *buf) {
-  int newValue;
+  int newValue = INT_MIN;
+  
   int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
-  switch (secondaryViewId) {
-    case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD.getVoltage(); break;
-    case VIEW_KPH: newValue = bluetoothOBD.getKph(); break;
-    case VIEW_RPM: newValue = bluetoothOBD.getRpm(); break;
-    case VIEW_COOLANT_TEMP: newValue = bluetoothOBD.getCoolantTemp(); break;
-    case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD.getAmbientTemp(); break;
-    case VIEW_INTAKE_TEMP: newValue = bluetoothOBD.getIntakeTemp(); break;
-    case VIEW_TIMING_ADV: newValue = bluetoothOBD.getTimingAdvance(); break;
-    default: newValue = 0;
+  if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
+    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+    switch (secondaryViewId) {
+      case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD.getVoltage(); break;
+      case VIEW_KPH: newValue = bluetoothOBD.getKph(); break;
+      case VIEW_RPM: newValue = bluetoothOBD.getRpm(); break;
+      case VIEW_COOLANT_TEMP: newValue = bluetoothOBD.getCoolantTemp(); break;
+      case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD.getAmbientTemp(); break;
+      case VIEW_INTAKE_TEMP: newValue = bluetoothOBD.getIntakeTemp(); break;
+      case VIEW_TIMING_ADV: newValue = bluetoothOBD.getTimingAdvance(); break;
+      default: newValue = INT_MIN;
+    }
+    xSemaphoreGive(obdValueSemaphore);
   }
   if (newValue == INT_MIN) {
     sprintf(buf, "%s", "---");
@@ -189,7 +200,6 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
 
   if (repaint) {
     setFontSize(18);
-    Serial.println(data.title);
     drawBottomString(data.title, fColor, bColor);
   }
 
@@ -325,15 +335,15 @@ void Gauge::drawCenterString(const char *buf) {
   display->getTextBounds(buf2, x, y, &x1, &y1, &w, &h);
   display->setCursor(x - w / 2, y + h / 2);
   display->print(buf2);
-  Serial.print("w=");
-  Serial.println(w);
+  debug.print(DEBUG_LEVEL_DEBUG2, ("w=");
+  debug.println(DEBUG_LEVEL_DEBUG2, w);
 
   sprintf(buf2, "%s", "00:00");  
   display->getTextBounds(buf2, x, y, &x1, &y1, &w, &h);
   display->setCursor(x - w / 2, y + h / 2);
   display->print(buf2);
-  Serial.print("w=");
-  Serial.println(w);
+  debug.print(DEBUG_LEVEL_DEBUG2, "w=");
+  debug.println(DEBUG_LEVEL_DEBUG2, w);
   */
 
   yield();
