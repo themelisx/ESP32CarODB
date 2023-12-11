@@ -1,14 +1,17 @@
 #include <Arduino.h>
 
 #include "defines.h"
+
+#ifdef USE_MULTI_THREAD
+
 #include "debug.h"
 #include "gauge.h"
 #include "vars.h"
 #include "displays.h"
 
 void obd_task(void *pvParameters) {
-  debug.print(DEBUG_LEVEL_INFO, F("OBD manager task running on core "));
-  debug.println(DEBUG_LEVEL_INFO, xPortGetCoreID());
+  debug->print(DEBUG_LEVEL_INFO, "OBD manager task running on core ");
+  debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
   bool shouldCheck = true;
   int newValue;
@@ -36,14 +39,16 @@ void obd_task(void *pvParameters) {
         xSemaphoreTake(keyPadSemaphore, portMAX_DELAY);
         int activeViewId = myDisplays[activeDisplay]->activeView;
         xSemaphoreGive(keyPadSemaphore);
+        yield();
 
-        debug.print(DEBUG_LEVEL_INFO, F("Getting info for gauge id: "));
-        debug.println(DEBUG_LEVEL_INFO, activeViewId);
+        debug->print(DEBUG_LEVEL_INFO, "Getting info for gauge id: ");
+        debug->println(DEBUG_LEVEL_INFO, activeViewId);
 
         bool goToNext = false;
         do {
           shouldCheck = true;
           
+          //xSemaphoreTake(keyPadSemaphore, portMAX_DELAY);
           xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
           switch (activeViewId) {
             case VIEW_BATTERY_VOLTAGE: 
@@ -68,6 +73,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.rpm(); 
                   #endif
+                  debug->println(DEBUG_LEVEL_DEBUG2, "set rpm");
                   bluetoothOBD.setRpm(newValue);
                   break;
             case VIEW_COOLANT_TEMP: 
@@ -105,23 +111,28 @@ void obd_task(void *pvParameters) {
                   break;
             case VIEW_NONE:
               shouldCheck = false;
-              debug.println(DEBUG_LEVEL_INFO, F("Inactive view"));
+              debug->println(DEBUG_LEVEL_INFO, "Inactive view");
               break;
             default:
               shouldCheck = false;
-              debug.print(DEBUG_LEVEL_INFO, activeViewId);
-              debug.println(DEBUG_LEVEL_INFO, F(" is an unknown view"));
+              debug->print(DEBUG_LEVEL_INFO, activeViewId);
+              debug->println(DEBUG_LEVEL_INFO, " is an unknown view");
           }
           xSemaphoreGive(obdValueSemaphore);
+          //xSemaphoreGive(keyPadSemaphore);
+          yield();
 
-          debug.print(DEBUG_LEVEL_INFO, F("New value: "));
-          debug.println(DEBUG_LEVEL_INFO, newValue);
+          debug->print(DEBUG_LEVEL_INFO, "New value: ");
+          debug->println(DEBUG_LEVEL_INFO, newValue);
 
           if (shouldCheck) {
             #ifdef MOCK_OBD
+              //xSemaphoreTake(keyPadSemaphore, portMAX_DELAY);
               xSemaphoreTake(myGauges[activeViewId]->semaphore, portMAX_DELAY);
               myGauges[activeViewId]->data.value = newValue;
               xSemaphoreGive(myGauges[activeViewId]->semaphore);
+              //xSemaphoreGive(keyPadSemaphore);
+              yield();
               goToNext = true;
               vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
             #else
@@ -137,7 +148,7 @@ void obd_task(void *pvParameters) {
                 vTaskDelay(DELAY_READING / portTICK_PERIOD_MS);
               } else {
                 goToNext = true;
-                debug.println(DEBUG_LEVEL_INFO, F("OBD Read error"));
+                debug->println(DEBUG_LEVEL_INFO, "OBD Read error");
               }
             #endif
           } else {
@@ -149,12 +160,13 @@ void obd_task(void *pvParameters) {
     }
 
     if (runs == 0) {
+      yield();
       vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
     }
   }
 }
 
-
+#endif
 /*
 uint32_t supportedPIDs_1_20();
 

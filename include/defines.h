@@ -2,7 +2,6 @@
 #define DEFINES_h
 
 #define MOCK_OBD
-
 //#define MOCK_OBD_LOW_VALUES
 #define MOCK_OBD_NORMAL_VALUES
 //#define MOCK_OBD_HIGH_VALUES

@@ -25,23 +25,22 @@
 #endif
 
 extern int activeDisplay;
-extern ELM327 obd;
-extern BluetoothSerial SerialBT;
+extern ELM327 *obd;
 
+#ifdef USE_MULTI_THREAD
 extern SemaphoreHandle_t keyPadSemaphore;
 extern SemaphoreHandle_t btConnectedSemaphore;
 extern SemaphoreHandle_t obdConnectedSemaphore;
 extern SemaphoreHandle_t obdValueSemaphore;
 
-extern TaskHandle_t t_main_menu;
-extern TaskHandle_t t_settings;
 // Tasks
 extern TaskHandle_t t_core0_tft1;
 extern TaskHandle_t t_core0_tft2;
 extern TaskHandle_t t_core0_keypad;
 extern TaskHandle_t t_core1_obd;
+#endif
 
-extern Debug debug;
+extern Debug *debug;
 extern Displays *myDisplays[MAX_DISPLAYS];
 extern Gauge *myGauges[MAX_VIEWS + 1];
 
@@ -50,10 +49,11 @@ extern char timeString[TIME_LENGTH];
 extern char oldDateString[DATE_LENGTH];
 extern char oldTimeString[TIME_LENGTH];
 
-extern Settings mySettings;
+extern Settings *mySettings;
 
 #ifdef ENABLE_OBD_BLUETOOTH
-    extern BluetoothOBD bluetoothOBD;
+    extern BluetoothSerial SerialBT;
+    extern BluetoothOBD *bluetoothOBD;
 #endif
 
 #ifdef ENABLE_EEPROM

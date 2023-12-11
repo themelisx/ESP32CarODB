@@ -87,7 +87,9 @@ class Gauge {
     S_Gauge data;
     S_SecondaryViews secondaryViews;
     
+    #ifdef USE_MULTI_THREAD
     SemaphoreHandle_t semaphore;
+    #endif
     
     void addSecondaryView(int id, int secondaryViewId, char *strFormat);
 

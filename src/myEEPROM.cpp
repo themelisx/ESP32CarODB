@@ -12,20 +12,21 @@
 #include "debug.h"
 
 MyEEPROM::MyEEPROM(int eepromSize) {
-      this->size = eepromSize;
-      active = false;
+    debug->println(DEBUG_LEVEL_DEBUG, "::MyEEPROM activated");
+    this->size = eepromSize;
+    active = false;
 };
 
 bool MyEEPROM::start() {
-  debug.print(DEBUG_LEVEL_INFO, F("Starting EEPROM with "));
-  debug.print(DEBUG_LEVEL_INFO, this->size);
-  debug.println(DEBUG_LEVEL_INFO, F(" bytes... "));
+  debug->print(DEBUG_LEVEL_INFO, "Starting EEPROM with ");
+  debug->print(DEBUG_LEVEL_INFO, this->size);
+  debug->println(DEBUG_LEVEL_INFO, " bytes... ");
   
   if (EEPROM.begin(this->size)) {
-    debug.println(DEBUG_LEVEL_INFO, F("Done"));
+    debug->println(DEBUG_LEVEL_INFO, "Done");
     active = true;
   } else {
-    debug.println(DEBUG_LEVEL_ERROR, F("Failed"));
+    debug->println(DEBUG_LEVEL_ERROR, "Failed");
     active = false;
   }
   return active;
@@ -34,22 +35,22 @@ bool MyEEPROM::start() {
 void MyEEPROM::showOutOfBoundsError(int address, int size) {
 
   showOutOfBoundsError(address);
-  debug.print(DEBUG_LEVEL_ERROR, F("Out of bounds (size): "));
-  debug.println(DEBUG_LEVEL_ERROR, size);
+  debug->print(DEBUG_LEVEL_ERROR, "Out of bounds (size): ");
+  debug->println(DEBUG_LEVEL_ERROR, size);
 }
 
 void MyEEPROM::showOutOfBoundsError(int address) {
 
-  debug.print(DEBUG_LEVEL_ERROR, F("Cannot access EEPROM at address "));
-  debug.println(DEBUG_LEVEL_ERROR, address);  
+  debug->print(DEBUG_LEVEL_ERROR, "Cannot access EEPROM at address ");
+  debug->println(DEBUG_LEVEL_ERROR, address);  
 }
 
 void MyEEPROM::showNotActive() {
-  debug.println(DEBUG_LEVEL_ERROR, F("EEPROM module is not active. Aborting"));
+  debug->println(DEBUG_LEVEL_ERROR, "EEPROM module is not active. Aborting");
 }
 
 void MyEEPROM::createSignature() {
-  debug.println(DEBUG_LEVEL_DEBUG, F("Creating signature to EEPROM..."));
+  debug->println(DEBUG_LEVEL_DEBUG, "Creating signature to EEPROM...");
 
   if (!active) {
     showNotActive();
@@ -59,9 +60,9 @@ void MyEEPROM::createSignature() {
   EEPROM.write(0, 'G');
   EEPROM.write(1, 'R');
   if (EEPROM.commit()) {
-    debug.println(DEBUG_LEVEL_DEBUG, F("Done"));
+    debug->println(DEBUG_LEVEL_DEBUG, "Done");
   } else {
-    debug.println(DEBUG_LEVEL_ERROR, F("Cannot write to EEPROM"));
+    debug->println(DEBUG_LEVEL_ERROR, "Cannot write to EEPROM");
   }
 }
 

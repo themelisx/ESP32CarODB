@@ -3,7 +3,7 @@
 
 //#include "fonts/Seven_Segment12pt7b.h"
 //#include "fonts/Seven_Segment14pt7b.h"
-#include "fonts/Seven_Segment16pt7b.h"
+//#include "fonts/Seven_Segment16pt7b.h"
 #include "fonts/Seven_Segment18pt7b.h"
 //#include "fonts/Seven_Segment20pt7b.h"
 //#include "fonts/Seven_Segment22pt7b.h"

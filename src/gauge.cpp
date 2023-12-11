@@ -10,18 +10,20 @@
 
 Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
 
-    debug.print(DEBUG_LEVEL_INFO, F("Creating Gauge (title:'"));
-    debug.print(DEBUG_LEVEL_INFO, title);
-    debug.print(DEBUG_LEVEL_INFO, F("`, id:"));
-    debug.print(DEBUG_LEVEL_INFO, id);
-    debug.print(DEBUG_LEVEL_INFO, F(", type:"));
-    debug.print(DEBUG_LEVEL_INFO, type);
-    debug.print(DEBUG_LEVEL_INFO, F(", strFormat: `"));
-    debug.print(DEBUG_LEVEL_INFO, strFormat);
-    debug.println(DEBUG_LEVEL_INFO, F("')"));
+    debug->print(DEBUG_LEVEL_INFO, "Creating Gauge (title:'");
+    debug->print(DEBUG_LEVEL_INFO, title);
+    debug->print(DEBUG_LEVEL_INFO, "`, id:");
+    debug->print(DEBUG_LEVEL_INFO, id);
+    debug->print(DEBUG_LEVEL_INFO, ", type:");
+    debug->print(DEBUG_LEVEL_INFO, type);
+    debug->print(DEBUG_LEVEL_INFO, ", strFormat: `");
+    debug->print(DEBUG_LEVEL_INFO, strFormat);
+    debug->println(DEBUG_LEVEL_INFO, "')");
 
-    this->semaphore = xSemaphoreCreateMutex();
-    xSemaphoreTake(this->semaphore, portMAX_DELAY);
+    #ifdef USE_MULTI_THREAD
+      this->semaphore = xSemaphoreCreateMutex();
+      xSemaphoreGive(this->semaphore);
+    #endif
 
     this->monitor = monitor;
     this->id = id;
@@ -71,8 +73,6 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
       angle2++;
       if (angle2 == 360) angle2 = 0;
     }
-
-    xSemaphoreGive(this->semaphore);
 }
 
 void Gauge::setFrontColor(int fColor) {
@@ -87,9 +87,9 @@ void Gauge::setFontSize(int sz) {
   switch (sz) {
     //case 12: display->setFont(&Seven_Segment12pt7b); break;
     //case 14: display->setFont(&Seven_Segment14pt7b); break;
-    case 16:
+    /*case 16:
       display->setFont(&Seven_Segment16pt7b);
-      break;  //default
+      break;  //default*/
     case 18: display->setFont(&Seven_Segment18pt7b); break;
     //case 20: display->setFont(&Seven_Segment20pt7b); break;
     //case 22: display->setFont(&Seven_Segment22pt7b); break;
@@ -105,7 +105,7 @@ void Gauge::setFontSize(int sz) {
     //case 42: display->setFont(&Seven_Segment42pt7b); break;
     //case 44: display->setFont(&Seven_Segment44pt7b); break;
     //case 46: display->setFont(&Seven_Segment46pt7b); break;
-    default: display->setFont(&Seven_Segment16pt7b); break;
+    default: display->setFont(&Seven_Segment18pt7b); break;
   }
 }
 
@@ -131,7 +131,8 @@ void Gauge::drawDateTime() {
 
   if (strncmp(dateString, oldDateString, DATE_LENGTH) != 0) {
     strncpy(oldDateString, dateString, DATE_LENGTH);
-    setFontSize(16);
+    //setFontSize(16);
+    setFontSize(18);
     drawBottomString(dateString, fColor, bColor);
   }
   if (strncmp(timeString, oldTimeString, TIME_LENGTH) != 0) {
@@ -145,6 +146,7 @@ int Gauge::getSecondaryInfo(int viewId, char *buf) {
   int newValue = INT_MIN;
   
   int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
+  /*
   if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
     xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
     switch (secondaryViewId) {
@@ -159,6 +161,7 @@ int Gauge::getSecondaryInfo(int viewId, char *buf) {
     }
     xSemaphoreGive(obdValueSemaphore);
   }
+  */
   if (newValue == INT_MIN) {
     sprintf(buf, "%s", "---");
   } else {
@@ -203,7 +206,7 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
     drawBottomString(data.title, fColor, bColor);
   }
 
-  //debug.println(newValue);
+  //debug->println(newValue);
 
   if (newValue != INT_MIN) {
     display->setTextColor(newStateColor);
@@ -249,7 +252,7 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
           drawGaugeLine(highAngle, data.highColor);
         }
       } else {
-        debug.println(DEBUG_LEVEL_ERROR, F("Out of range"));
+        debug->println(DEBUG_LEVEL_ERROR, "Out of range");
         
       }
     } else {
@@ -335,15 +338,15 @@ void Gauge::drawCenterString(const char *buf) {
   display->getTextBounds(buf2, x, y, &x1, &y1, &w, &h);
   display->setCursor(x - w / 2, y + h / 2);
   display->print(buf2);
-  debug.print(DEBUG_LEVEL_DEBUG2, ("w=");
-  debug.println(DEBUG_LEVEL_DEBUG2, w);
+  debug->print(DEBUG_LEVEL_DEBUG2, ("w=");
+  debug->println(DEBUG_LEVEL_DEBUG2, w);
 
   sprintf(buf2, "%s", "00:00");  
   display->getTextBounds(buf2, x, y, &x1, &y1, &w, &h);
   display->setCursor(x - w / 2, y + h / 2);
   display->print(buf2);
-  debug.print(DEBUG_LEVEL_DEBUG2, "w=");
-  debug.println(DEBUG_LEVEL_DEBUG2, w);
+  debug->print(DEBUG_LEVEL_DEBUG2, "w=");
+  debug->println(DEBUG_LEVEL_DEBUG2, w);
   */
 
   yield();
@@ -396,7 +399,7 @@ void Gauge::addSecondaryView(int viewId, int secondaryViewId, char *strFormat) {
         secondaryViews.strFormat[pos] = strFormat;
         secondaryViews.count++;
     } else {
-        debug.println(DEBUG_LEVEL_ERROR, F("Cannot add more views"));
+        debug->println(DEBUG_LEVEL_ERROR, "Cannot add more views");
     }
     if (type == TYPE_DUAL_TEXT) {
         secondaryViews.activeView = 1;

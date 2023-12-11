@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
 #include "defines.h"
+
+#ifdef USE_MULTI_THREAD
 #include "debug.h"
 #include "gauge.h"
 #include "vars.h"
@@ -8,8 +10,8 @@
 
 
 void tft1_task(void *pvParameters) {
-  debug.print(DEBUG_LEVEL_INFO, F("View manager task running on core "));
-  debug.println(DEBUG_LEVEL_INFO, xPortGetCoreID());
+  debug->print(DEBUG_LEVEL_INFO, "View manager task running on core ");
+  debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
   int i = 1;
   int viewId = myDisplays[i]->nextView;
@@ -24,15 +26,15 @@ void tft1_task(void *pvParameters) {
     if (myDisplays[i]->activeView != myDisplays[i]->nextView || 
         myDisplays[i]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
 
-      debug.print(DEBUG_LEVEL_INFO, F("Changing Gauge at display "));
-      debug.println(DEBUG_LEVEL_INFO, i);
+      debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
+      debug->println(DEBUG_LEVEL_INFO, i);
 
       myDisplays[i]->activeView = myDisplays[i]->nextView;
       myDisplays[i]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
       viewId = myDisplays[i]->nextView;
 
-      debug.print(DEBUG_LEVEL_INFO, F("Active gauge: "));
-      debug.println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
+      debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
+      debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
 
       changeView = true;
 
@@ -48,6 +50,7 @@ void tft1_task(void *pvParameters) {
       changeView = false;
     }
     xSemaphoreGive(keyPadSemaphore);
+    yield();
 
     if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
       xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
@@ -62,21 +65,25 @@ void tft1_task(void *pvParameters) {
         default: newValue = 0;
       }
       xSemaphoreGive(obdValueSemaphore);
+      yield();
     }
     
     xSemaphoreTake(myGauges[viewId]->semaphore, portMAX_DELAY);
     int oldValue = myGauges[viewId]->data.value;
     xSemaphoreGive(myGauges[viewId]->semaphore);
+    yield();
 
     if (viewId == VIEW_DATE_TIME) {
       myGauges[viewId]->drawDateTime();
     } else if (changeView || oldValue != newValue) {
-      //debug.print(DEBUG_LEVEL_INFO, "Readed value: ");
-      //debug.println(DEBUG_LEVEL_INFO, newValue);
-      //debug.println(DEBUG_LEVEL_INFO, F("Drawing...."));
+      //debug->print(DEBUG_LEVEL_INFO, "Readed value: ");
+      //debug->println(DEBUG_LEVEL_INFO, newValue);
+      //debug->println(DEBUG_LEVEL_INFO, "Drawing....");
       myGauges[viewId]->drawGauge(viewId, changeView, newValue);
     }
 
     vTaskDelay(myGauges[viewId]->getInterval() / portTICK_PERIOD_MS);
   }
 }
+
+#endif

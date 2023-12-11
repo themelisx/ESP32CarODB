@@ -6,9 +6,11 @@ Debug::Debug() {
 };
 
 void Debug::start(int speed, int debugLevel) {
+
     this->speed = speed;
     this->debugLevel = debugLevel;
     Serial.begin(speed);
+    
 }
 
 void Debug::print(int debugLevel, const __FlashStringHelper *ifsh) {
