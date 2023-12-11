@@ -3,8 +3,8 @@
 
 #define MOCK_OBD
 //#define MOCK_OBD_LOW_VALUES
-#define MOCK_OBD_NORMAL_VALUES
-//#define MOCK_OBD_HIGH_VALUES
+//#define MOCK_OBD_NORMAL_VALUES
+#define MOCK_OBD_HIGH_VALUES
 
 #ifdef MOCK_OBD_LOW_VALUES
     #define MOCK_OBD_batteryVoltage 118

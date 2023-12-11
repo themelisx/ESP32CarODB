@@ -152,32 +152,42 @@ void setup() {
   
 
   myGauges[1] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 180);
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_INTAKE_TEMP, (char*)"INT %d C");
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
   
   myGauges[2] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, false, 0, 0, 6500, 7500);
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_INTAKE_TEMP, (char*)"INT %d C");
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
   
   // Battery  
   myGauges[3] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
-  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"%d C");
-  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
-  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"%d C");
+  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
+  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_INTAKE_TEMP, (char*)"INT %d C");
+  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
   
   // Engine coolant  
-  myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 20, 40, 105, 120);
-  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"%d C");
+  myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
+  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
+  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"INT %d C");
   myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   // Ambient  
   myGauges[5] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_DUAL_TEXT, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -20, 3, 50, 50);
-  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"%d C");
+  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"INT %d C");
+  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
   myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   // Intake (+Ambient)
   
   myGauges[6] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
-  myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"%d C");
+  myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
   myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
-  myGauges[7] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_GAUGE_GRAPH, DELAY_VIEW_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 360, 360);
+  myGauges[7] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_GAUGE_GRAPH, DELAY_VIEW_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 50, 50);
 
   //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
@@ -272,7 +282,7 @@ void loop() {
   vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
 #else
 
-  debug->println(DEBUG_LEVEL_DEBUG, "--- LOOP ---");
+  debug->println(DEBUG_LEVEL_DEBUG2, "--- LOOP ---");
   delay(10);
   
   viewId = myDisplays[activeDisplay]->nextView;

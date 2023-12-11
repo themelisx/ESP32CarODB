@@ -65,7 +65,7 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     int angle = 0;
     int angle2 = angleStart;
     for (angle = 0; angle < 360; angle++) {
-      yield();
+      
       x[angle] = (screenWidth / 2) + cos(angle2 * rad) * radius;
       y[angle] = (screenHeight / 2) + sin(angle2 * rad) * radius;
       x2[angle] = x[angle] + cos(angle2 * rad) * radiusLength;
@@ -142,26 +142,33 @@ void Gauge::drawDateTime() {
   }
 }
 
-int Gauge::getSecondaryInfo(int viewId, char *buf) {
+int Gauge::getSecondaryInfo(int secondaryViewId, char *buf) {
   int newValue = INT_MIN;
   
-  int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
-  /*
-  if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
-    xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-    switch (secondaryViewId) {
-      case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD.getVoltage(); break;
-      case VIEW_KPH: newValue = bluetoothOBD.getKph(); break;
-      case VIEW_RPM: newValue = bluetoothOBD.getRpm(); break;
-      case VIEW_COOLANT_TEMP: newValue = bluetoothOBD.getCoolantTemp(); break;
-      case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD.getAmbientTemp(); break;
-      case VIEW_INTAKE_TEMP: newValue = bluetoothOBD.getIntakeTemp(); break;
-      case VIEW_TIMING_ADV: newValue = bluetoothOBD.getTimingAdvance(); break;
-      default: newValue = INT_MIN;
+  #ifdef ENABLE_OBD_BLUETOOTH
+    if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {
+
+      #ifdef USE_MULTI_THREAD
+        xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
+      #endif
+
+        switch (secondaryViewId) {
+          case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD->getVoltage(); break;
+          case VIEW_KPH: newValue = bluetoothOBD->getKph(); break;
+          case VIEW_RPM: newValue = bluetoothOBD->getRpm(); break;
+          case VIEW_COOLANT_TEMP: newValue = bluetoothOBD->getCoolantTemp(); break;
+          case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD->getAmbientTemp(); break;
+          case VIEW_INTAKE_TEMP: newValue = bluetoothOBD->getIntakeTemp(); break;
+          case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;
+          default: newValue = INT_MIN;
+        }
+
+      #ifdef USE_MULTI_THREAD
+        xSemaphoreGive(obdValueSemaphore);
+      #endif
     }
-    xSemaphoreGive(obdValueSemaphore);
-  }
-  */
+  #endif
+
   if (newValue == INT_MIN) {
     sprintf(buf, "%s", "---");
   } else {
@@ -256,15 +263,17 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
         
       }
     } else {
-      secondaryValue = getSecondaryInfo(viewId, secondaryBuffer);
+      secondaryValue = getSecondaryInfo(myGauges[viewId]->secondaryViews.ids[myGauges[viewId]->secondaryViews.activeView], secondaryBuffer);
       drawUpper = true;
     }
   } else if (getType() == TYPE_DUAL_TEXT) {
-    secondaryValue = getSecondaryInfo(viewId, secondaryBuffer);
+    secondaryValue = getSecondaryInfo(myGauges[viewId]->secondaryViews.ids[myGauges[viewId]->secondaryViews.activeView], secondaryBuffer);
     drawUpper = true;
   }
 
   if (drawUpper) {
+    debug->print(DEBUG_LEVEL_DEBUG2, "Draw upper text: ");
+    debug->println(DEBUG_LEVEL_DEBUG2, secondaryValue);
     //if (myView[myDisplays[activeDisplay].activeView].type == TYPE_DUAL_TEXT || myView[myDisplays[activeDisplay].activeView].secondaryViews.activeView != 0) {
 
     int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
@@ -286,7 +295,7 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
 
   data.state = newState;
   data.value = newValue;
-  yield();
+  
 }
 
 void Gauge::drawGaugeLine(int angle, int color) {
@@ -299,7 +308,7 @@ void Gauge::drawGaugeLine(int angle, int color) {
 
   display->fillTriangle(x[angleBefore], y[angleBefore], x2[angleBefore], y2[angleBefore], x2[angleAfter], y2[angleAfter], color);
   display->fillTriangle(x2[angleAfter], y2[angleAfter], x[angleBefore], y[angleBefore], x[angleAfter], y[angleAfter], color);
-  yield();
+  
 }
 
 void Gauge::drawBorders() {
@@ -318,7 +327,7 @@ void Gauge::drawBorders() {
     (screenHeight / 2) + sin((angleEnd + 2) * rad) * screenHeight,
     bColor);
 
-  yield();
+  
 }
 
 void Gauge::drawCenterString(const char *buf) {
@@ -349,7 +358,7 @@ void Gauge::drawCenterString(const char *buf) {
   debug->println(DEBUG_LEVEL_DEBUG2, w);
   */
 
-  yield();
+  
 }
 
 void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgColor) {
@@ -362,12 +371,12 @@ void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgCol
   display->setTextColor(fColor);
 
   display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
-  yield();
+  
   display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
-  yield();
+  
   if (repaint) {
     display->drawRoundRect(47, -23, 146, 72, 20, fColor);
-    yield();
+    
   }
   display->setCursor(x - w / 2, y + 5);
   display->print(buf);
@@ -382,14 +391,14 @@ void Gauge::drawBottomString(const char *buf, int fColor, int bgColor) {
   display->setTextColor(fColor);
 
   display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
-  yield();
+  
   display->fillRoundRect(48, 180, 144, 72, 20, bgColor);
-  yield();
+  
   display->drawRoundRect(48, 188, 144, 72, 20, fColor);
-  yield();
+  
   display->setCursor(x - w / 2, y + 5);
   display->print(buf);
-  yield();
+  
 }
 
 void Gauge::addSecondaryView(int viewId, int secondaryViewId, char *strFormat) {
