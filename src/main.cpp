@@ -275,6 +275,118 @@ void setup() {
 
 }
 
+void readObdValue(int activeViewId) {
+
+  int newValue;
+
+  switch (activeViewId) {
+    case VIEW_BATTERY_VOLTAGE: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_batteryVoltage;
+          #else
+            newValue = obd->batteryVoltage() * 10;
+          #endif
+          break;
+    case VIEW_KPH:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_kph;
+          #else
+            newValue = obd->kph(); 
+          #endif
+          break;
+    case VIEW_RPM: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_rpm;
+          #else
+            newValue = obd->rpm(); 
+          #endif
+          break;
+    case VIEW_COOLANT_TEMP: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_engineCoolantTemp;
+          #else
+            newValue = obd->engineCoolantTemp(); 
+          #endif
+          break;
+    //case VIEW_OIL_TEMP: newValue = obd->oilTemp(); break;
+    case VIEW_AMBIENT_TEMP:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_ambientAirTemp;
+          #else
+            newValue = obd->ambientAirTemp(); 
+          #endif 
+          break;
+    case VIEW_INTAKE_TEMP:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_intakeAirTemp;
+          #else
+            newValue = obd->intakeAirTemp(); 
+          #endif
+          break;
+    case VIEW_TIMING_ADV: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_timingAdvance;
+          #else
+            newValue = obd->timingAdvance(); 
+          #endif
+          break;
+    case VIEW_NONE:
+          debug->println(DEBUG_LEVEL_INFO, "Inactive view");
+          break;
+    default:
+          debug->print(DEBUG_LEVEL_INFO, activeViewId);
+          debug->println(DEBUG_LEVEL_INFO, " is an unknown view");
+  }
+
+  #ifdef MOCK_OBD
+    bool saveValue = true;
+  #else
+    bool saveValue = false;
+    while (1)
+    if (obd->nb_rx_state == ELM_SUCCESS) {
+      saveValue = true;
+      break;
+    } else if (obd->nb_rx_state == ELM_GETTING_MSG) {
+      delay(DELAY_READING);
+    } else {      
+      debug->println(DEBUG_LEVEL_INFO, "OBD Read error");
+      break;
+    }
+  #endif
+
+  #ifdef ENABLE_OBD_BLUETOOTH
+    if (saveValue) {
+      switch (activeViewId) {
+        case VIEW_BATTERY_VOLTAGE: 
+              bluetoothOBD->setVoltage(newValue);
+              break;
+        case VIEW_KPH:
+              bluetoothOBD->setKph(newValue);
+              break;
+        case VIEW_RPM: 
+              bluetoothOBD->setRpm(newValue);
+              break;
+        case VIEW_COOLANT_TEMP: 
+              bluetoothOBD->setCoolantTemp(newValue);
+              break;
+        case VIEW_AMBIENT_TEMP:
+              bluetoothOBD->setAmbientTemp(newValue);
+              break;
+        case VIEW_INTAKE_TEMP:
+              bluetoothOBD->setIntakeTemp(newValue);
+              break;
+        case VIEW_TIMING_ADV: 
+              bluetoothOBD->setTimingAdvance(newValue);
+              break;
+        case VIEW_NONE:
+              break;
+        default:
+              break;
+      }
+    }
+  #endif
+}
+
 void loop() {
   
 #ifdef USE_MULTI_THREAD
@@ -324,118 +436,8 @@ void loop() {
     debug->print(DEBUG_LEVEL_INFO, "Getting info for gauge id: ");
     debug->println(DEBUG_LEVEL_INFO, activeViewId);
 
-    bool goToNext = false;
-    do {
-      shouldCheck = true;
-      
-      switch (activeViewId) {
-        case VIEW_BATTERY_VOLTAGE: 
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_batteryVoltage;
-              #else
-                newValue = obd->batteryVoltage() * 10;
-              #endif
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setVoltage(newValue);
-              #endif
-              break;
-        case VIEW_KPH:
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_kph;
-              #else
-                newValue = obd->kph(); 
-              #endif
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setKph(newValue);
-              #endif
-              break;
-        case VIEW_RPM: 
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_rpm;
-              #else
-                newValue = obd->rpm(); 
-              #endif
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setRpm(newValue);
-              #endif
-              break;
-        case VIEW_COOLANT_TEMP: 
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_engineCoolantTemp;
-              #else
-                newValue = obd->engineCoolantTemp(); 
-              #endif
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setCoolantTemp(newValue);
-              #endif
-              break;
-        //case VIEW_OIL_TEMP: newValue = obd->oilTemp(); break;
-        case VIEW_AMBIENT_TEMP:
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_ambientAirTemp;
-              #else
-                newValue = obd->ambientAirTemp(); 
-              #endif 
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setAmbientTemp(newValue);
-              #endif
-              break;
-        case VIEW_INTAKE_TEMP:
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_intakeAirTemp;
-              #else
-                newValue = obd->intakeAirTemp(); 
-              #endif
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setIntakeTemp(newValue);
-              #endif
-              break;
-        case VIEW_TIMING_ADV: 
-              #ifdef MOCK_OBD
-                newValue = MOCK_OBD_timingAdvance;
-              #else
-                newValue = obd->timingAdvance(); 
-              #endif
-              #ifdef ENABLE_OBD_BLUETOOTH
-                bluetoothOBD->setTimingAdvance(newValue);
-              #endif
-              break;
-        case VIEW_NONE:
-          shouldCheck = false;
-          debug->println(DEBUG_LEVEL_INFO, "Inactive view");
-          break;
-        default:
-          shouldCheck = false;
-          debug->print(DEBUG_LEVEL_INFO, activeViewId);
-          debug->println(DEBUG_LEVEL_INFO, " is an unknown view");
-      }
-
-      debug->print(DEBUG_LEVEL_INFO, "New value: ");
-      debug->println(DEBUG_LEVEL_INFO, newValue);
-
-      if (shouldCheck) {
-        #ifdef MOCK_OBD
-          myGauges[activeViewId]->data.value = newValue;
-          goToNext = true;
-          delay(DELAY_ODB);
-        #else
-          if (obd->nb_rx_state == ELM_SUCCESS) {
-            if (newValue != INT_MIN) {
-              myGauges[activeViewId]->data.value = newValue;
-            }
-            goToNext = true;
-            delay(DELAY_ODB);
-          } else if (obd->nb_rx_state == ELM_GETTING_MSG) {
-            delay(DELAY_READING);
-          } else {
-            goToNext = true;
-            debug->println(DEBUG_LEVEL_INFO, "OBD Read error");
-          }
-        #endif
-      } else {
-        goToNext = true;
-      }
-    } while (goToNext == false);
+    readObdValue(activeViewId);   
+    readObdValue(myGauges[viewId]->secondaryViews.activeView);
 
     #ifdef ENABLE_OBD_BLUETOOTH
       if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {

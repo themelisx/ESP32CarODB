@@ -278,7 +278,7 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
 
     int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
 
-    if (myGauges[secondaryViewId]->data.value != secondaryValue) {
+    //if (myGauges[secondaryViewId]->data.value != secondaryValue) {
       if (myGauges[secondaryViewId]->data.low != myGauges[secondaryViewId]->data.min && secondaryValue >= myGauges[secondaryViewId]->data.min && secondaryValue < myGauges[secondaryViewId]->data.low) {
         fColorSecondary = WHITE;
         bColorSecondary = myGauges[secondaryViewId]->data.lowColor;
@@ -290,7 +290,7 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
         bColorSecondary = BACK_COLOR;
       }
       drawUpperString(repaint, secondaryBuffer, fColorSecondary, bColorSecondary);
-    }
+    //}
   }
 
   data.state = newState;

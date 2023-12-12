@@ -194,9 +194,7 @@ void BluetoothOBD::setKph(int kph) {
 }
 
 void BluetoothOBD::setRpm(int rpm) {
-    debug->println(DEBUG_LEVEL_DEBUG2, "set rpm value");
     this->rpm = rpm;
-    debug->println(DEBUG_LEVEL_DEBUG2, "ok");
 }
 
 void BluetoothOBD::setCoolantTemp(int coolantTemp) {
