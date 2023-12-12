@@ -62,8 +62,8 @@ void Settings::setDefaults() {
     
     debug->println(DEBUG_LEVEL_INFO, "Setting default values");
 
-    this->activeView = 1;
-    this->secondaryActiveView = 0;
+    this->activeView = VIEW_KPH;
+    this->secondaryActiveView = VIEW_NONE;
 
     debug->println(DEBUG_LEVEL_DEBUG, "[OK] Setting default values");
 }

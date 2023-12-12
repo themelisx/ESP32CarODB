@@ -84,14 +84,14 @@ bool shouldCheck = true;
 int runs = 0;
 
 int viewId;
-int activeViewId;
+unsigned long lastTime;
 
 void setup() {
 
   // Initialize Serial and set debug level
   //debug.start(115200, DEBUG_LEVEL_INFO);
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_DEBUG2);
+  debug->start(115200, DEBUG_LEVEL_INFO);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
@@ -151,40 +151,41 @@ void setup() {
   debug->println(DEBUG_LEVEL_INFO, "Creating gauges...");
   
 
-  myGauges[1] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 180);
+  myGauges[1] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
   myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
-  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
-  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_INTAKE_TEMP, (char*)"INT %d C");
-  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   
   myGauges[2] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, false, 0, 0, 6500, 7500);
   myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
-  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
-  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_INTAKE_TEMP, (char*)"INT %d C");
-  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   
   // Battery  
   myGauges[3] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
-  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
-  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_INTAKE_TEMP, (char*)"INT %d C");
-  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
+  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   
   // Engine coolant  
   myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
-  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
-  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"INT %d C");
+  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"I: %d C");
   myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   // Ambient  
   myGauges[5] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_DUAL_TEXT, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -20, 3, 50, 50);
-  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"INT %d C");
-  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_COOLANT_TEMP, (char*)"ENG %d C");
+  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   // Intake (+Ambient)
   
   myGauges[6] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
-  myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"OUT %d C");
+  myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
   
   myGauges[7] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_GAUGE_GRAPH, DELAY_VIEW_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 50, 50);
@@ -192,9 +193,9 @@ void setup() {
   //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
   activeDisplay = 1;
-  //myDisplays[1]->activeView = 0; //mySettings->getActiveView() - 1;
-  //myDisplays[1]->nextView = 1; //mySettings->getActiveView();
-  //myDisplays[1]->secondaryActiveView = 0; //mySettings->getSecondaryActiveView();
+  myDisplays[1]->activeView = mySettings->getActiveView();
+  myDisplays[1]->nextView = -1;
+  myDisplays[1]->secondaryActiveView = mySettings->getSecondaryActiveView();
 
 #ifdef USE_MULTI_THREAD
   debug->println(DEBUG_LEVEL_INFO, "Staring up View Manager 1...");
@@ -271,6 +272,8 @@ void setup() {
   pinMode(PIN_ENTER_KEY, INPUT_PULLUP);
 
   debug->println(DEBUG_LEVEL_INFO, "Setup completed");
+
+  lastTime = millis();
 #endif
 
 }
@@ -334,8 +337,8 @@ void readObdValue(int activeViewId) {
           debug->println(DEBUG_LEVEL_INFO, "Inactive view");
           break;
     default:
-          debug->print(DEBUG_LEVEL_INFO, activeViewId);
-          debug->println(DEBUG_LEVEL_INFO, " is an unknown view");
+          debug->print(DEBUG_LEVEL_ERROR, activeViewId);
+          debug->println(DEBUG_LEVEL_ERROR, " is an unknown view");
   }
 
   #ifdef MOCK_OBD
@@ -395,49 +398,18 @@ void loop() {
 #else
 
   debug->println(DEBUG_LEVEL_DEBUG2, "--- LOOP ---");
-  delay(10);
   
-  viewId = myDisplays[activeDisplay]->nextView;
+  viewId = myDisplays[activeDisplay]->activeView;
+  newValue = INT_MIN;
 
-  //for (;;) {
+  if (viewId != VIEW_NONE) {
+    debug->print(DEBUG_LEVEL_DEBUG2, "Getting info for gauge id: ");
+    debug->println(DEBUG_LEVEL_DEBUG2, viewId);
 
-    if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
-        myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
-
-      debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-      debug->println(DEBUG_LEVEL_INFO, activeDisplay);
-
-      myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
-      myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
-      viewId = myDisplays[activeDisplay]->nextView;
-
-      debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-      debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
-
-      changeView = true;
-
-      myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
-
-      myGauges[viewId]->data.state = STATE_UNKNOWN;
-      myGauges[viewId]->data.value = myGauges[viewId]->data.min;
-
-      if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
-        myGauges[viewId]->drawBorders();
-      }
-    } else {
-      changeView = false;
+    readObdValue(viewId);   
+    if (myGauges[viewId]->secondaryViews.activeView != VIEW_NONE) {
+      readObdValue(myGauges[viewId]->secondaryViews.activeView);
     }
-
-    runs++;
-    newValue = INT_MIN;
-
-    activeViewId = myDisplays[activeDisplay]->activeView;
-
-    debug->print(DEBUG_LEVEL_INFO, "Getting info for gauge id: ");
-    debug->println(DEBUG_LEVEL_INFO, activeViewId);
-
-    readObdValue(activeViewId);   
-    readObdValue(myGauges[viewId]->secondaryViews.activeView);
 
     #ifdef ENABLE_OBD_BLUETOOTH
       if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {
@@ -464,106 +436,138 @@ void loop() {
       //debug->println(DEBUG_LEVEL_INFO, "Drawing....");
       myGauges[viewId]->drawGauge(viewId, changeView, newValue);
     }
+  }
 
-    delay(myGauges[viewId]->getInterval());
+  // KeyPad
+  if (digitalRead(PIN_LEFT_KEY) == LOW) { // LEFT KEY PRESSED
 
-    // KeyPad
-    if (digitalRead(PIN_LEFT_KEY) == LOW) { // LEFT KEY PRESSED
-
-      debug->println(DEBUG_LEVEL_DEBUG, "Left key pressed");
-      
-      activeDisplay--;
-      if (activeDisplay < 1) {
-        activeDisplay = MAX_DISPLAYS;
-      }
-
-    } else if (digitalRead(PIN_RIGHT_KEY) == LOW) {
-
-      debug->println(DEBUG_LEVEL_DEBUG, "Right key pressed");
-      
-      activeDisplay++;
-      if (activeDisplay > MAX_DISPLAYS) {
-        activeDisplay = 1;
-      }
-
-    } else if (digitalRead(PIN_ENTER_KEY) == LOW) { // ENTER KEY PRESSED
-
-      debug->println(DEBUG_LEVEL_DEBUG, "Enter key pressed");
-      
-    } else if (digitalRead(PIN_UP_KEY) == LOW) { // UP KEY PRESSED
-
-      debug->println(DEBUG_LEVEL_DEBUG, "Up key pressed");
-
-      bool changeGauge = true;
-
-      if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count > 0) {
-        myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView--;
-
-        if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView > 0) {
-          debug->print(DEBUG_LEVEL_INFO, "Changing to prev secondary view");
-          changeGauge = false;
-        } else {
-          myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView = myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count;
-        }
-      }
-
-      if (changeGauge) {
-        myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView - 1;
-        if (myDisplays[activeDisplay]->nextView == 0) {
-          myDisplays[activeDisplay]->nextView = MAX_VIEWS;
-        }
-        if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
-          memset(oldDateString, 0, DATE_LENGTH);
-          memset(oldTimeString, 0, TIME_LENGTH);
-        }
-      }
-      mySettings->save();
-
-    } else if (digitalRead(PIN_DOWN_KEY) == LOW || testDownKey) { // DOWN KEY PRESSED
-
-      bool changeGauge = true;
-
-      debug->println(DEBUG_LEVEL_DEBUG, "Down key pressed");
-
-      if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count > 0) {
-        myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView++;
-
-        if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView <= myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count) {
-          debug->println(DEBUG_LEVEL_INFO, "Changing to next secondary view");
-          changeGauge = false;
-        } else {
-          debug->println(DEBUG_LEVEL_INFO, "Changing to next view");
-          if (myGauges[myDisplays[activeDisplay]->activeView]->getType() == TYPE_DUAL_TEXT) {
-            debug->println(DEBUG_LEVEL_DEBUG, "view is dual text");
-            myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView = 1;
-          } else {
-            debug->println(DEBUG_LEVEL_DEBUG, "view is NOT dual text");
-            myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView = 0;
-          }
-        }
-      }
-
-      if (changeGauge) {
-        myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView + 1;
-        if (myDisplays[activeDisplay]->nextView > MAX_VIEWS) {
-          myDisplays[activeDisplay]->nextView = 1;
-        }
-        if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
-          memset(oldDateString, 0, DATE_LENGTH);
-          memset(oldTimeString, 0, TIME_LENGTH);
-        }
-      }
-      mySettings->save();
-
-      delay(DELAY_VIEW_CHANGE);
+    debug->println(DEBUG_LEVEL_DEBUG, "Left key pressed");
+    
+    activeDisplay--;
+    if (activeDisplay < 1) {
+      activeDisplay = MAX_DISPLAYS;
     }
 
-    delay(DELAY_KEYPAD);
+  } else if (digitalRead(PIN_RIGHT_KEY) == LOW) {
+
+    debug->println(DEBUG_LEVEL_DEBUG, "Right key pressed");
+    
+    activeDisplay++;
+    if (activeDisplay > MAX_DISPLAYS) {
+      activeDisplay = 1;
+    }
+
+  } else if (digitalRead(PIN_ENTER_KEY) == LOW) { // ENTER KEY PRESSED
+
+    debug->println(DEBUG_LEVEL_DEBUG, "Enter key pressed");
+    
+  } else if (digitalRead(PIN_UP_KEY) == LOW) { // UP KEY PRESSED
+
+    debug->println(DEBUG_LEVEL_DEBUG, "Up key pressed");
+
+    bool changeGauge = true;
+
+    if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count > 0) {
+      myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView--;
+
+      if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView > 0) {
+        debug->print(DEBUG_LEVEL_INFO, "Changing to prev secondary view");
+        changeGauge = false;
+      } else {
+        myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView = myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count;
+      }
+    }
+
+    if (changeGauge) {
+      myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView - 1;
+      if (myDisplays[activeDisplay]->nextView == 0) {
+        myDisplays[activeDisplay]->nextView = MAX_VIEWS;
+      }
+      if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
+        memset(oldDateString, 0, DATE_LENGTH);
+        memset(oldTimeString, 0, TIME_LENGTH);
+      }
+    }
+    mySettings->save();
+
+  } else if (digitalRead(PIN_DOWN_KEY) == LOW || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
+
+    bool changeGauge = true;
 
     if (testDownKey) {
-      delay(2000);
-    } 
-  //}
+      lastTime = millis();
+      debug->println(DEBUG_LEVEL_DEBUG, "Test Down key");
+    }
+    debug->println(DEBUG_LEVEL_DEBUG, "Down key pressed");
+
+    if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count > 0) {
+      myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView++;
+
+      if (myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView <= myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.count) {
+        debug->println(DEBUG_LEVEL_INFO, "Changing to next secondary view");
+        changeGauge = false;
+      } else {
+        debug->println(DEBUG_LEVEL_INFO, "Changing to next view");
+        if (myGauges[myDisplays[activeDisplay]->activeView]->getType() == TYPE_DUAL_TEXT) {
+          debug->println(DEBUG_LEVEL_DEBUG, "view is dual text");
+          myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView = 1;
+        } else {
+          debug->println(DEBUG_LEVEL_DEBUG, "view is NOT dual text");
+          myGauges[myDisplays[activeDisplay]->activeView]->secondaryViews.activeView = 0;
+        }
+      }
+    }
+
+    if (changeGauge) {
+      myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView + 1;
+      if (myDisplays[activeDisplay]->nextView > MAX_VIEWS) {
+        myDisplays[activeDisplay]->nextView = 1;
+      }
+      if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
+        memset(oldDateString, 0, DATE_LENGTH);
+        memset(oldTimeString, 0, TIME_LENGTH);
+      }
+    }
+    mySettings->save();
+  }
+
+  if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
+      myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
+
+    if (myDisplays[activeDisplay]->nextView == -1) { // First run
+      myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
+    }
+    debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
+    debug->println(DEBUG_LEVEL_INFO, activeDisplay);
+
+    myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
+    myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
+    viewId = myDisplays[activeDisplay]->nextView;
+
+    debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
+    debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
+
+    changeView = true;
+
+    myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
+
+    myGauges[viewId]->data.state = STATE_UNKNOWN;
+    myGauges[viewId]->data.value = myGauges[viewId]->data.min;
+
+    if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
+      myGauges[viewId]->drawBorders();
+    }
+    delay(DELAY_VIEW_CHANGE);
+  } else {
+    changeView = false;
+  }
+
+  runs++;  
+
+  if (!changeView) {
+    delay(myGauges[viewId]->getInterval());
+  }
+
 #endif
 }
 

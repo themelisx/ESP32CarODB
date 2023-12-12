@@ -60,6 +60,7 @@
 #define TFT2_DC 17
 #define TFT2_CS 15
 
+#define TEST_KEY_DELAY 3000
 #define DELAY_MAIN_MENU_TASK 100
 #define DELAY_MAIN_TASK 1000
 
