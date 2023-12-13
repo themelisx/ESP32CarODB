@@ -1,7 +1,7 @@
 #ifndef DEFINES_h
 #define DEFINES_h
 
-#define MOCK_OBD
+//#define MOCK_OBD
 //#define MOCK_OBD_LOW_VALUES
 //#define MOCK_OBD_NORMAL_VALUES
 #define MOCK_OBD_HIGH_VALUES
@@ -53,6 +53,8 @@
 #define PIN_ENTER_KEY 32
 
 #define MAX_DISPLAYS 1
+
+#define BT_DISCOVER_TIME  5000
 
 #define TFT1_DC 17
 #define TFT1_CS 5

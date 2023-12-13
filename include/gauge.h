@@ -16,7 +16,7 @@
 #define rad 0.01745
 
 #define MAX_VIEWS 7
-#define MAX_SECONDARY_VIEWS 3
+#define MAX_SECONDARY_VIEWS 4
 
 typedef struct
 {

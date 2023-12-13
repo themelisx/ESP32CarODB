@@ -7,8 +7,6 @@
 
 class BluetoothOBD {
   private:
-    char *OBDDeviceName;
-
     bool btConnected;
     bool obdConnected;
 
@@ -20,9 +18,12 @@ class BluetoothOBD {
     int intakeTemp;
     int timingAdvance;
 
+    String ByteArraytoString(esp_bd_addr_t bt_address);
+    bool scanBTdevice();
+
   public:
     BluetoothOBD();
-    bool connect(char *OBDDeviceName, char *pin);
+    bool connect(char *pin);
     void disconnect();
     void setBtConnected(bool connected);
     void setObdConnected(bool connected);

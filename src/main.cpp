@@ -50,6 +50,14 @@ SemaphoreHandle_t obdValueSemaphore;
 #ifdef ENABLE_OBD_BLUETOOTH
   BluetoothSerial SerialBT;
   BluetoothOBD *bluetoothOBD;
+
+  String deviceName[8] = {"","","","","","","",""};
+  String deviceAddr[8] = {"","","","","","","",""};
+  int btDeviceCount;
+  String obdDeviceName = "OBDII";
+  esp_bd_addr_t client_addr = {0x00,0x00,0x00,0x00,0x00,0x00};
+  esp_spp_sec_t sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
+  esp_spp_role_t role = ESP_SPP_ROLE_SLAVE; // or ESP_SPP_ROLE_MASTER
 #endif
 
 #ifdef ENABLE_EEPROM
@@ -257,8 +265,8 @@ void setup() {
   #ifdef ENABLE_OBD_BLUETOOTH
     #ifndef MOCK_OBD
       // if device does not have pin use the follow
-      bool connected = bluetoothOBD->connect(OBD_DEVICE_NAME, nullptr);
-      //bool connected = bluetoothOBD->connect(OBD_DEVICE_NAME, OBD_DEVICE_PIN);
+      bool connected = bluetoothOBD->connect(nullptr);
+      //bool connected = bluetoothOBD->connect(OBD_DEVICE_PIN);
     #else
       bluetoothOBD->setBtConnected(true);
       bluetoothOBD->setObdConnected(true);
@@ -402,17 +410,19 @@ void loop() {
   viewId = myDisplays[activeDisplay]->activeView;
   newValue = INT_MIN;
 
-  if (viewId != VIEW_NONE) {
-    debug->print(DEBUG_LEVEL_DEBUG2, "Getting info for gauge id: ");
-    debug->println(DEBUG_LEVEL_DEBUG2, viewId);
-
-    readObdValue(viewId);   
-    if (myGauges[viewId]->secondaryViews.activeView != VIEW_NONE) {
-      readObdValue(myGauges[viewId]->secondaryViews.activeView);
-    }
+  if (viewId != VIEW_NONE) {   
 
     #ifdef ENABLE_OBD_BLUETOOTH
       if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {
+
+        debug->print(DEBUG_LEVEL_DEBUG2, "Getting info for gauge id: ");
+        debug->println(DEBUG_LEVEL_DEBUG2, viewId);
+
+        readObdValue(viewId);   
+        if (myGauges[viewId]->secondaryViews.activeView != VIEW_NONE) {
+          readObdValue(myGauges[viewId]->secondaryViews.activeView);
+        }
+
         switch (viewId) {
           case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD->getVoltage(); break;
           case VIEW_KPH: newValue = bluetoothOBD->getKph(); break;
