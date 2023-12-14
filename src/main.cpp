@@ -57,7 +57,7 @@ SemaphoreHandle_t obdValueSemaphore;
   String obdDeviceName = "OBDII";
   esp_bd_addr_t client_addr = {0x00,0x00,0x00,0x00,0x00,0x00};
   esp_spp_sec_t sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
-  esp_spp_role_t role = ESP_SPP_ROLE_SLAVE; // or ESP_SPP_ROLE_MASTER
+  esp_spp_role_t role = ESP_SPP_ROLE_MASTER;
 #endif
 
 #ifdef ENABLE_EEPROM

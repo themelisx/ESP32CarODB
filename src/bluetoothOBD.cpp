@@ -144,7 +144,7 @@ bool BluetoothOBD::connect(char *pin) {
             if (obdReady) {
                 break;
             } else {
-                delay(3000);
+                //delay(3000);
             }
         }
         
@@ -268,6 +268,7 @@ bool BluetoothOBD::scanBTdevice() {
 
     int index;
     int stringCount;
+    String obdDeviceAddr = "11:22:33:dd:ee:ff";
 
     //matching scan obd2 and config obd2
     for (int i=0;i<btDeviceCount;i++) {
@@ -275,7 +276,13 @@ bool BluetoothOBD::scanBTdevice() {
         debug->println(DEBUG_LEVEL_DEBUG, txt.c_str());
         delay(100);
 
-        if (deviceName[i] == obdDeviceName) {//match name.
+        /*
+        Connecting to OBDII - 11:22:33:dd:ee:ff:4f:42 (1)...
+[  7374][E][BluetoothSerial.cpp:378] esp_spp_cb(): ESP_SPP_DISCOVERY_COMP_EVT failed!, status:1
+Connecting to OBDII - 11:22:33:dd:ee:ff:4f:42 (2)...
+[ 19841][E][BluetoothSerial.cpp:378] esp_spp_cb(): ESP_SPP_DISCOVERY_COMP_EVT failed!, status:1*/
+
+        if (deviceName[i] == obdDeviceName || deviceAddr[i] == obdDeviceAddr) {//match name.
             //00:1d:a5:00:12:92 -> {0x00,0x1d,0xa5,0x00,0x12,0x92};
             //copy match bt mac address to client_name to connect
             String str = deviceAddr[i];
