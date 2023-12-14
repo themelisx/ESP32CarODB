@@ -25,6 +25,7 @@ class Displays {
     
     int getScreenWidth();
     int getScreenHeight();
+    void printMsg(const char *buf);
 
     Adafruit_GC9A01A *getTFT();
 

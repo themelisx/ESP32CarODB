@@ -54,14 +54,6 @@ extern Settings *mySettings;
 #ifdef ENABLE_OBD_BLUETOOTH
     extern BluetoothSerial SerialBT;
     extern BluetoothOBD *bluetoothOBD;
-    extern String deviceName[8];
-    extern String deviceAddr[8];
-    extern int btDeviceCount;
-    extern String obdDeviceName;
-    extern esp_bd_addr_t client_addr;
-    extern esp_spp_sec_t sec_mask;
-    extern esp_spp_role_t role;
-
 #endif
 
 #ifdef ENABLE_EEPROM

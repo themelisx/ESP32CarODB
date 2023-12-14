@@ -18,17 +18,30 @@ class BluetoothOBD {
     int intakeTemp;
     int timingAdvance;
 
+    String obdDeviceName;
+    String obdDeviceAddr;
+
+    esp_spp_sec_t sec_mask;
+    esp_spp_role_t role;
+
+    esp_bd_addr_t client_addr = {0x00,0x00,0x00,0x00,0x00,0x00};
+    String deviceName;
+    String deviceAddr;
+
     String ByteArraytoString(esp_bd_addr_t bt_address);
     bool scanBTdevice();
 
   public:
-    BluetoothOBD();
+    BluetoothOBD(String obdDeviceName, String obdDeviceAddr);
     bool connect(char *pin);
     void disconnect();
     void setBtConnected(bool connected);
     void setObdConnected(bool connected);
     bool isBluetoothConnected();
     bool isOBDConnected();
+
+    void setDeviceName(String deviceName);
+    void setDeviceAddress(String deviceAddr);
 
     int getVoltage();
     int getKph();

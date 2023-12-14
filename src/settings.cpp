@@ -36,12 +36,12 @@ void Settings::load() {
   #else
     setDefaults();
   #endif
-  debug->println(DEBUG_LEVEL_INFO, "[OK] Load");
+  debug->println(DEBUG_LEVEL_DEBUG, "[OK] Load");
 }
 
 void Settings::save() {
   
-  debug->println(DEBUG_LEVEL_INFO, "Saving settings...");
+  debug->println(DEBUG_LEVEL_DEBUG, "Saving settings...");
   #ifdef ENABLE_EEPROM
     if (!myEEPROM.hasSignature()) {
       debug->println(DEBUG_LEVEL_DEBUG, "No signature");
@@ -55,7 +55,7 @@ void Settings::save() {
       myEEPROM.writeByte(EEPROM_DISPLAY2_SECONDARY_VIEW, myDisplays[2]->secondaryActiveView);
     #endif
   #endif
-  debug->println(DEBUG_LEVEL_INFO, "[OK] Saving settings");
+  debug->println(DEBUG_LEVEL_DEBUG, "[OK] Saving settings");
 }
 
 void Settings::setDefaults() {

@@ -50,14 +50,7 @@ SemaphoreHandle_t obdValueSemaphore;
 #ifdef ENABLE_OBD_BLUETOOTH
   BluetoothSerial SerialBT;
   BluetoothOBD *bluetoothOBD;
-
-  String deviceName[8] = {"","","","","","","",""};
-  String deviceAddr[8] = {"","","","","","","",""};
-  int btDeviceCount;
-  String obdDeviceName = "OBDII";
-  esp_bd_addr_t client_addr = {0x00,0x00,0x00,0x00,0x00,0x00};
-  esp_spp_sec_t sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
-  esp_spp_role_t role = ESP_SPP_ROLE_MASTER;
+  
 #endif
 
 #ifdef ENABLE_EEPROM
@@ -119,7 +112,7 @@ void setup() {
   mySettings->load();
 
   #ifdef ENABLE_OBD_BLUETOOTH
-    bluetoothOBD = new BluetoothOBD();
+    bluetoothOBD = new BluetoothOBD("OBDII", "11:22:33:dd:ee:ff");
   #endif
 
   debug->println(DEBUG_LEVEL_INFO, "Disabling WiFi...");  
@@ -265,7 +258,7 @@ void setup() {
   #ifdef ENABLE_OBD_BLUETOOTH
     #ifndef MOCK_OBD
       // if device does not have pin use the follow
-      bool connected = bluetoothOBD->connect(nullptr);
+      bluetoothOBD->connect(nullptr);
       //bool connected = bluetoothOBD->connect(OBD_DEVICE_PIN);
     #else
       bluetoothOBD->setBtConnected(true);
@@ -433,6 +426,10 @@ void loop() {
           case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;
           default: newValue = 0;
         }
+      } else {
+        #ifndef MOCK_OBD
+          bluetoothOBD->connect(nullptr);
+        #endif
       }
     #endif
     
@@ -541,41 +538,45 @@ void loop() {
     mySettings->save();
   }
 
-  if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
-      myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
+  if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {
+    if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
+        myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
 
-    if (myDisplays[activeDisplay]->nextView == -1) { // First run
-      myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
+      if (myDisplays[activeDisplay]->nextView == -1) { // First run
+        myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
+      }
+      debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
+      debug->println(DEBUG_LEVEL_INFO, activeDisplay);
+
+      myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
+      myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
+      viewId = myDisplays[activeDisplay]->nextView;
+
+      debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
+      debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
+
+      changeView = true;
+
+      myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
+
+      myGauges[viewId]->data.state = STATE_UNKNOWN;
+      myGauges[viewId]->data.value = myGauges[viewId]->data.min;
+
+      if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
+        myGauges[viewId]->drawBorders();
+      }
+      delay(DELAY_VIEW_CHANGE);
+    } else {
+      changeView = false;
     }
-    debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-    debug->println(DEBUG_LEVEL_INFO, activeDisplay);
 
-    myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
-    myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
-    viewId = myDisplays[activeDisplay]->nextView;
+    runs++;  
 
-    debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-    debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
-
-    changeView = true;
-
-    myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
-
-    myGauges[viewId]->data.state = STATE_UNKNOWN;
-    myGauges[viewId]->data.value = myGauges[viewId]->data.min;
-
-    if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
-      myGauges[viewId]->drawBorders();
+    if (!changeView) {
+      delay(myGauges[viewId]->getInterval());
     }
-    delay(DELAY_VIEW_CHANGE);
   } else {
-    changeView = false;
-  }
-
-  runs++;  
-
-  if (!changeView) {
-    delay(myGauges[viewId]->getInterval());
+    myDisplays[activeDisplay]->printMsg("OBD...");
   }
 
 #endif

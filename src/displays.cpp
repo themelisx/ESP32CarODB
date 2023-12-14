@@ -22,6 +22,16 @@ Displays::Displays(Adafruit_GC9A01A *tft, int screenWidth, int screenHeight) {
     this->count = 0;
 }
 
+void Displays::printMsg(const char *buf) {
+
+  int16_t x1, y1;
+  uint16_t w, h;
+  tft->fillScreen(BACK_COLOR);
+  tft->getTextBounds(buf, screenWidthCenter, screenHeightCenter, &x1, &y1, &w, &h);
+  tft->setCursor(screenWidthCenter - w / 2, screenHeightCenter + h / 2);
+  tft->print(buf);
+}
+
 int Displays::getScreenWidth() {
     return this->screenWidth;
 }
