@@ -140,6 +140,7 @@ bool BluetoothOBD::connect(char *pin) {
         setBtConnected(true);
 
         bool obdReady = false;
+        obd = new ELM327();
         
         for (int i=1; i<4; i++) {
             debug->print(DEBUG_LEVEL_INFO, "Connecting to OBD (");
