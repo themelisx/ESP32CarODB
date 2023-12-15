@@ -112,7 +112,8 @@ void setup() {
   mySettings->load();
 
   #ifdef ENABLE_OBD_BLUETOOTH
-    bluetoothOBD = new BluetoothOBD("OBDII", "11:22:33:dd:ee:ff");
+    //bluetoothOBD = new BluetoothOBD("OBDII", "11:22:33:dd:ee:ff");
+    bluetoothOBD = new BluetoothOBD("OBDII", "00:12:6f:10:24:aa");
   #endif
 
   debug->println(DEBUG_LEVEL_INFO, "Disabling WiFi...");  

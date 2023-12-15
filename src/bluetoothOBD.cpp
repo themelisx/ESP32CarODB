@@ -19,7 +19,7 @@ BluetoothOBD::BluetoothOBD(String obdDeviceName, String obdDeviceAddr) {
     this->obdDeviceAddr = obdDeviceAddr;
 
     sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
-    role = ESP_SPP_ROLE_MASTER;
+    role = ESP_SPP_ROLE_SLAVE;
 
     voltage = INT_MIN;
     kph = INT_MIN;
