@@ -127,7 +127,7 @@ bool BluetoothOBD::connect(char *pin) {
             if (connected) {
                 break;
             } else {
-                delay(2000);
+                delay(1000);
             }
         }
     } else {
@@ -147,7 +147,7 @@ bool BluetoothOBD::connect(char *pin) {
             debug->print(DEBUG_LEVEL_INFO, i);
             debug->println(DEBUG_LEVEL_INFO, ")...");
 
-            obdReady = obd->begin(SerialBT, true, 3000);
+            obdReady = obd->begin(SerialBT, OBD_DEBUG_LOGS, ODB_TIMEOUT_MS);
             if (obdReady) {
                 break;
             } else {
@@ -204,7 +204,7 @@ bool BluetoothOBD::scanBTdevice() {
             bluetoothOBD->setDeviceAddress(pDevice->getAddress().toString().c_str());
             })) 
     {
-        delay(BT_DISCOVER_TIME);
+        delay(DELAY_BT_DISCOVER_TIME);
         SerialBT.discoverAsyncStop();
         debug->println(DEBUG_LEVEL_INFO, "Scan completed");
         delay(1000);
