@@ -90,9 +90,8 @@ unsigned long lastTime;
 void setup() {
 
   // Initialize Serial and set debug level
-  //debug.start(115200, DEBUG_LEVEL_INFO);
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_INFO);
+  debug->start(115200, DEBUG_LEVEL_DEBUG);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
@@ -282,7 +281,7 @@ void setup() {
 
 void readObdValue(int activeViewId) {
 
-  int newValue;
+  int newValue = INT_MIN;
 
   switch (activeViewId) {
     case VIEW_BATTERY_VOLTAGE: 
@@ -347,15 +346,14 @@ void readObdValue(int activeViewId) {
     bool saveValue = true;
   #else
     bool saveValue = false;
-    while (1)
-    if (obd->nb_rx_state == ELM_SUCCESS) {
-      saveValue = true;
-      break;
-    } else if (obd->nb_rx_state == ELM_GETTING_MSG) {
-      delay(DELAY_READING);
-    } else {      
-      debug->println(DEBUG_LEVEL_INFO, "OBD Read error");
-      break;
+
+    if (newValue != INT_MIN) {
+      if (obd->nb_rx_state == ELM_SUCCESS) {
+        saveValue = true;
+        debug->println(DEBUG_LEVEL_DEBUG, "OBD Read SUCCESS");  
+      } else if (obd->nb_rx_state != ELM_GETTING_MSG) {
+        debug->println(DEBUG_LEVEL_DEBUG, "OBD Read ERROR");  
+      }
     }
   #endif
 
@@ -412,8 +410,10 @@ void loop() {
         debug->print(DEBUG_LEVEL_DEBUG2, "Getting info for gauge id: ");
         debug->println(DEBUG_LEVEL_DEBUG2, viewId);
 
+        debug->println(DEBUG_LEVEL_DEBUG, "Query ODB value");
         readObdValue(viewId);   
         if (myGauges[viewId]->secondaryViews.activeView != VIEW_NONE) {
+          debug->println(DEBUG_LEVEL_DEBUG, "Query ODB value for secondary view");
           readObdValue(myGauges[viewId]->secondaryViews.activeView);
         }
 
