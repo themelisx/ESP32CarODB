@@ -105,7 +105,7 @@ class BluetoothOBD {
     void setOilTemp(int oilTemp);
 
     int getAbsLoad();
-    void setAbsLoad();
+    void setAbsLoad(int absLoad);
     
 };
 

@@ -159,7 +159,7 @@ int Gauge::getSecondaryInfo(int secondaryViewId, char *buf) {
           case VIEW_COOLANT_TEMP: newValue = bluetoothOBD->getCoolantTemp(); break;
           case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD->getAmbientTemp(); break;
           case VIEW_INTAKE_TEMP: newValue = bluetoothOBD->getIntakeTemp(); break;
-          case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;
+          case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;          
           default: newValue = INT_MIN;
         }
 

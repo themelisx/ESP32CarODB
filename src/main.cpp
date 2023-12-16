@@ -77,7 +77,7 @@ Displays *myDisplays[MAX_DISPLAYS + 1];
 Gauge *myGauges[MAX_VIEWS + 1];
 Settings *mySettings;
 
-bool testDownKey = false;
+bool testDownKey = true;
   
 bool changeView = true;
 bool shouldCheck = true;
@@ -426,12 +426,12 @@ bool readObdValue(int activeViewId) {
   #else
     bool saveValue = false;
 
-    if (doAction) {
+    if (doAction) {      
       delay(DELAY_READING);
       if (obd->nb_rx_state == ELM_SUCCESS) {
         saveValue = true;
         debug->println(DEBUG_LEVEL_DEBUG, "OBD Read SUCCESS");  
-        debug->print(DEBUG_LEVEL_DEBUG, "value readed: ");
+        debug->print(DEBUG_LEVEL_DEBUG, "---------------- value readed: ");
         debug->println(DEBUG_LEVEL_DEBUG, newValue);
       } else if (obd->nb_rx_state != ELM_GETTING_MSG) {
         debug->println(DEBUG_LEVEL_DEBUG, "OBD Read ERROR");  
@@ -444,31 +444,25 @@ bool readObdValue(int activeViewId) {
   #ifdef ENABLE_OBD_BLUETOOTH
     if (saveValue) {
       switch (activeViewId) {
-        case VIEW_BATTERY_VOLTAGE: 
-              bluetoothOBD->setVoltage(newValue);
-              break;
-        case VIEW_KPH:
-              bluetoothOBD->setKph(newValue);
-              break;
-        case VIEW_RPM: 
-              bluetoothOBD->setRpm(newValue);
-              break;
-        case VIEW_COOLANT_TEMP: 
-              bluetoothOBD->setCoolantTemp(newValue);
-              break;
-        case VIEW_AMBIENT_TEMP:
-              bluetoothOBD->setAmbientTemp(newValue);
-              break;
-        case VIEW_INTAKE_TEMP:
-              bluetoothOBD->setIntakeTemp(newValue);
-              break;
-        case VIEW_TIMING_ADV: 
-              bluetoothOBD->setTimingAdvance(newValue);
-              break;
-        case VIEW_NONE:
-              break;
-        default:
-              break;
+        case VIEW_BATTERY_VOLTAGE: bluetoothOBD->setVoltage(newValue); break;
+        case VIEW_KPH: bluetoothOBD->setKph(newValue); break;
+        case VIEW_RPM: bluetoothOBD->setRpm(newValue); break;
+        case VIEW_COOLANT_TEMP: bluetoothOBD->setCoolantTemp(newValue); break;        
+        case VIEW_INTAKE_TEMP: bluetoothOBD->setIntakeTemp(newValue); break;
+        case VIEW_TIMING_ADV: bluetoothOBD->setTimingAdvance(newValue); break;
+        case VIEW_ENGINE_LOAD: bluetoothOBD->setEngineLoad(newValue); break;
+        case VIEW_MAF_RATE: bluetoothOBD->setMafRate(newValue); break;
+        case VIEW_SHORT_FUEL_TRIM: bluetoothOBD->setShortFuelTrim(newValue); break;
+        case VIEW_LONG_FUEL_TRIM: bluetoothOBD->setLongFuelTrim(newValue); break;
+        case VIEW_THROTTLE: bluetoothOBD->setThrottle(newValue); break;
+        //supportedPIDs_21_40
+        case VIEW_FUEL_LEVEL: bluetoothOBD->setFuelLevel(newValue); break;
+        //supportedPIDs_41_60
+        case VIEW_AMBIENT_TEMP: bluetoothOBD->setAmbientTemp(newValue); break;
+        case VIEW_OIL_TEMP: bluetoothOBD->setOilTemp(newValue); break;
+        case VIEW_ABS_LOAD: bluetoothOBD->setAbsLoad(newValue); break;
+        case VIEW_NONE: break;    
+        default: break;
       }
     }
   #endif
@@ -629,11 +623,10 @@ void loop() {
         while (!valueReaded) {
           valueReaded = readObdValue(viewId); 
           count++;
-          if (count > 10) {
-            debug->println(DEBUG_LEVEL_DEBUG, "Value not readed after 10 times");
+          if (count > 200) {
+            debug->println(DEBUG_LEVEL_DEBUG, "Value not readed after 200 times");
             break;
           }
-          delay(DELAY_READING);
         }
 
         int newValue = INT_MIN;
@@ -643,10 +636,20 @@ void loop() {
             case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD->getVoltage(); break;
             case VIEW_KPH: newValue = bluetoothOBD->getKph(); break;
             case VIEW_RPM: newValue = bluetoothOBD->getRpm(); break;
-            case VIEW_COOLANT_TEMP: newValue = bluetoothOBD->getCoolantTemp(); break;
-            case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD->getAmbientTemp(); break;
+            case VIEW_COOLANT_TEMP: newValue = bluetoothOBD->getCoolantTemp(); break;            
             case VIEW_INTAKE_TEMP: newValue = bluetoothOBD->getIntakeTemp(); break;
             case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;
+            case VIEW_ENGINE_LOAD: newValue = bluetoothOBD->getEngineLoad(); break;
+            case VIEW_MAF_RATE: newValue = bluetoothOBD->getMafRate(); break;
+            case VIEW_SHORT_FUEL_TRIM: newValue = bluetoothOBD->getShortFuelTrim(); break;
+            case VIEW_LONG_FUEL_TRIM: newValue = bluetoothOBD->getLongFuelTrim(); break;
+            case VIEW_THROTTLE: newValue = bluetoothOBD->getThrottle(); break;
+            //supportedPIDs_21_40
+            case VIEW_FUEL_LEVEL: newValue = bluetoothOBD->getFuelLevel(); break;
+            //supportedPIDs_41_60
+            case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD->getAmbientTemp(); break;
+            case VIEW_OIL_TEMP: newValue = bluetoothOBD->getOilTemp(); break;
+            case VIEW_ABS_LOAD: newValue = bluetoothOBD->getAbsLoad(); break;
             default: newValue = 0;
           }
 

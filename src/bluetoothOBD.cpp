@@ -352,7 +352,7 @@ void BluetoothOBD::setOilTemp(int oilTemp) {
 int BluetoothOBD::getAbsLoad() {
     return this->absLoad;
 }
-void BluetoothOBD::setAbsLoad() {
+void BluetoothOBD::setAbsLoad(int absLoad) {
     this->absLoad = absLoad;
 }
 

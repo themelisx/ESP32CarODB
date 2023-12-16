@@ -88,12 +88,12 @@
 #define TFT2_DC 17
 #define TFT2_CS 15
 
-#define TEST_KEY_DELAY 5000
+#define TEST_KEY_DELAY 10000
 #define DELAY_MAIN_MENU_TASK 100
 #define DELAY_MAIN_TASK 1000
 
 #define DELAY_ODB 50
-#define DELAY_READING 15
+#define DELAY_READING 10
 
 #define DATE_LENGTH 9
 #define TIME_LENGTH 6
