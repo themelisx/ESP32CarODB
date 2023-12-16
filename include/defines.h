@@ -42,7 +42,7 @@
 //#define ENABLE_RTC_CLOCK
 //#define ENABLE_SECOND_DISPLAY
 
-#define OBD_DEBUG_LOGS true
+#define OBD_DEBUG_LOGS false
 #define ODB_TIMEOUT_MS 100
 #define OBD_DEVICE_NAME (char*)"OBDII"
 #define OBD_DEVICE_PIN (char*)"1234"
@@ -69,7 +69,7 @@
 #define DELAY_MAIN_TASK 1000
 
 #define DELAY_ODB 50
-#define DELAY_READING 5
+#define DELAY_READING 15
 
 #define DATE_LENGTH 9
 #define TIME_LENGTH 6
@@ -89,12 +89,11 @@
 #define VIEW_NONE 0
 #define VIEW_KPH 1
 #define VIEW_RPM 2
-#define VIEW_BATTERY_VOLTAGE 7
+#define VIEW_BATTERY_VOLTAGE 3
 #define VIEW_COOLANT_TEMP 4
 #define VIEW_AMBIENT_TEMP 5
 #define VIEW_INTAKE_TEMP 6
-
-#define VIEW_TIMING_ADV 3
+#define VIEW_TIMING_ADV 7
 
 #define VIEW_DATE_TIME 8
 //#define VIEW_OIL_TEMP 9
