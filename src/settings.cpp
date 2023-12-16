@@ -62,7 +62,7 @@ void Settings::setDefaults() {
     
     debug->println(DEBUG_LEVEL_INFO, "Setting default values");
 
-    this->activeView = VIEW_KPH;
+    this->activeView = VIEW_COOLANT_TEMP;
     this->secondaryActiveView = VIEW_NONE;
 
     debug->println(DEBUG_LEVEL_DEBUG, "[OK] Setting default values");

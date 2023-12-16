@@ -77,7 +77,7 @@ Displays *myDisplays[MAX_DISPLAYS + 1];
 Gauge *myGauges[MAX_VIEWS + 1];
 Settings *mySettings;
 
-bool testDownKey = true;
+bool testDownKey = false;
   
 bool changeView = true;
 bool shouldCheck = true;
@@ -89,7 +89,7 @@ void setup() {
 
   // Initialize Serial and set debug level
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_DEBUG);
+  debug->start(115200, DEBUG_LEVEL_INFO);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
