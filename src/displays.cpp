@@ -4,6 +4,7 @@
 
 #include "debug.h"
 #include "vars.h"
+#include "fonts.h"
 
 
 Displays::Displays(Adafruit_GC9A01A *tft, int screenWidth, int screenHeight) {
@@ -26,6 +27,7 @@ void Displays::printMsg(const char *buf) {
 
   int16_t x1, y1;
   uint16_t w, h;
+  tft->setFont(&Seven_Segment18pt7b);
   tft->fillScreen(BACK_COLOR);
   tft->getTextBounds(buf, screenWidthCenter, screenHeightCenter, &x1, &y1, &w, &h);
   tft->setCursor(screenWidthCenter - w / 2, screenHeightCenter + h / 2);
