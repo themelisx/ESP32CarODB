@@ -163,18 +163,20 @@ void setup() {
   myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 50, 50);
   //  Engine load
   myGauges[7] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"LOAD", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
-  // MAF rate
-  myGauges[8] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_SIMPLE_TEXT, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, WHITE, false, false, -10, 0, 10, 10);
   // Short fuel trims
-  myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"SFT", (char*)"%d", RED, WHITE, false, false, -30, -20, 20, 30);
+  myGauges[8] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"SFT", (char*)"%d", RED, WHITE, false, false, -30, -20, 20, 30);
   // Long fuel trims
-  myGauges[10] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"LFT", (char*)"%d", RED, WHITE, false, false, -30, -20, 20, 30);
+  myGauges[9] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"LFT", (char*)"%d", RED, WHITE, false, false, -30, -20, 20, 30);
   // Throttle
-  myGauges[11] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROT", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
+  myGauges[10] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROT", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
+  // MAF rate
+  myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_SIMPLE_TEXT, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, WHITE, false, false, -10, 0, 10, 10);
+  
   //supportedPIDs_21_40
   // Fuel level
   //myGauges[12] = new Gauge(myDisplays[1], VIEW_FUEL_LEVEL, TYPE_GAUGE_GRAPH, DELAY_VIEW_FUEL_LEVEL, (char*)"FUEL", (char*)"%d", RED, WHITE, true, false, 0, 15, 100, 100);
-    //supportedPIDs_41_60
+  
+  //supportedPIDs_41_60
   // Ambient  
   //myGauges[13] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -30, 3, 50, 50);
   // Oil temp
