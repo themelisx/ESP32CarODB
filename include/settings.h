@@ -3,8 +3,19 @@
 
 #include <Arduino.h>
 
+#include "defines.h"
+
+#ifdef ENABLE_EEPROM
+  #include "myEEPROM.h"    
+#endif
+
 class Settings {
   private:
+
+    #ifdef ENABLE_EEPROM
+      MyEEPROM *myEEPROM;
+    #endif
+
     bool status;
 
     int activeView;

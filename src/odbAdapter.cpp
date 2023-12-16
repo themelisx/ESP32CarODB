@@ -1,25 +1,28 @@
 #include <Arduino.h>
 #include "defines.h"
 
-#ifdef ENABLE_OBD_BLUETOOTH
+#ifdef USE_OBD_BLUETOOTH
+    #include <BluetoothSerial.h>
+#endif
 
-#include <BluetoothSerial.h>
 #include <ELMduino.h>
 
-#include "bluetoothOBD.h"
+#include "odbAdapter.h"
 
 #include "debug.h"
 #include "vars.h"
 
-BluetoothOBD::BluetoothOBD(String obdDeviceName, String obdDeviceAddr) {
+OdbAdapter::OdbAdapter(String deviceName, String deviceAddr) {
 
-    debug->println(DEBUG_LEVEL_DEBUG, "::BluetoothOBD activated");
+    debug->println(DEBUG_LEVEL_DEBUG, "::OdbAdapter activated");
 
-    this->obdDeviceName = obdDeviceName;
-    this->obdDeviceAddr = obdDeviceAddr;
+    this->deviceName = deviceName;
+    this->deviceAddr = deviceAddr;
 
-    sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
-    role = ESP_SPP_ROLE_SLAVE;
+    #ifdef USE_OBD_BLUETOOTH
+        sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
+        role = ESP_SPP_ROLE_SLAVE;
+    #endif
 
     voltage = INT_MIN;
     kph = INT_MIN;
@@ -28,22 +31,22 @@ BluetoothOBD::BluetoothOBD(String obdDeviceName, String obdDeviceAddr) {
     ambientTemp = INT_MIN;
     intakeTemp = INT_MIN;
     timingAdvance = INT_MIN;
-    btConnected = false;
+    deviceConnected = false;
     obdConnected = false;
 
 }
 
-void BluetoothOBD::setBtConnected(bool connected) {
+void OdbAdapter::setDeviceConnected(bool connected) {
     #ifdef USE_MULTI_THREAD
     xSemaphoreTake(btConnectedSemaphore, portMAX_DELAY);
     #endif
-    this->btConnected = connected;
+    this->deviceConnected = connected;
     #ifdef USE_MULTI_THREAD
     xSemaphoreGive(btConnectedSemaphore);
     #endif
 }
 
-void BluetoothOBD::setObdConnected(bool connected) {
+void OdbAdapter::setObdConnected(bool connected) {
     #ifdef USE_MULTI_THREAD
     xSemaphoreTake(obdConnectedSemaphore, portMAX_DELAY);
     #endif
@@ -53,18 +56,18 @@ void BluetoothOBD::setObdConnected(bool connected) {
     #endif
 }
 
-bool BluetoothOBD::isBluetoothConnected() {
+bool OdbAdapter::isDeviceConnected() {
     #ifdef USE_MULTI_THREAD
     xSemaphoreTake(btConnectedSemaphore, portMAX_DELAY);
     #endif
-    bool isConnected = btConnected;
+    bool isConnected = deviceConnected;
     #ifdef USE_MULTI_THREAD
     xSemaphoreGive(btConnectedSemaphore);
     #endif
     return isConnected;
 }
 
-bool BluetoothOBD::isOBDConnected() {
+bool OdbAdapter::isOBDConnected() {
     #ifdef USE_MULTI_THREAD
     xSemaphoreTake(obdConnectedSemaphore, portMAX_DELAY);
     #endif
@@ -76,41 +79,79 @@ bool BluetoothOBD::isOBDConnected() {
     return isObdConnected;
 }
 
-/*void BluetoothOBD::callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
+/*void OdbAdapter::callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
   if (event == ESP_SPP_SRV_OPEN_EVT) {
-    debug->println(DEBUG_LEVEL_INFO, "BluetoothOBD Client Connected");
+    debug->println(DEBUG_LEVEL_INFO, "OdbAdapter Client Connected");
   }
 
   if (event == ESP_SPP_CLOSE_EVT) {
-    debug->println(DEBUG_LEVEL_INFO, "BluetoothOBD Client disconnected");
+    debug->println(DEBUG_LEVEL_INFO, "OdbAdapter Client disconnected");
   }
 }*/
 
-void BluetoothOBD::disconnect() {
-    if (SerialBT.connected()) {
-        SerialBT.disconnect();        
+void OdbAdapter::disconnect() {
+    if (SerialDevice.connected()) {
+        SerialDevice.disconnect();        
     }
-    setBtConnected(false);
+    setDeviceConnected(false);
     setObdConnected(false);
 }
 
-bool BluetoothOBD::connect(char *pin) {
-  //SerialBT.register_callback(callback);
+#ifdef USE_OBD_WIFI
+bool OdbAdapter::connect(char *pin) {
+{
+    WiFi.mode(WIFI_AP);
+    if (pin != nullptr) {
+        WiFi.begin(ssid, pin);
+    } else {
+        WiFi.begin(ssid);
+    }
+
+    for (int i=1; i<4; i++) {
+        if (WiFi.status() == WL_CONNECTED) {
+            deviceConnected = true;
+            break;
+        } else {
+            delay(500);
+        }        
+    }
+
+    if (deviceConnected) {
+        debug->println(DEBUG_LEVEL_INFO, "Connecting to OBD over WiFi...");
+
+        if (SerialDevice.connect(server, 35000)) {
+            setObdConnected(true);
+            debug->print(DEBUG_LEVEL_INFO, "Connected");
+        } else {
+            debug->print(DEBUG_LEVEL_ERROR, "Couldn't connect");
+        }
+        debug->println(DEBUG_LEVEL_ERROR, " to ELM327");
+
+    } else {
+        debug->println(DEBUG_LEVEL_ERROR, "OBDII Adaptor not found!");
+    }
+  }
+}
+#endif
+
+#ifdef USE_OBD_BLUETOOTH
+bool OdbAdapter::connect(char *pin) {
+  //SerialDevice.register_callback(callback);
   bool ret = false;
 
-  if (!SerialBT.begin("ESP32", true)) {
+  if (!SerialDevice.begin("ESP32", true)) {
     debug->println(DEBUG_LEVEL_ERROR, "An error occurred initializing Bluetooth");
   } else {
     debug->println(DEBUG_LEVEL_INFO, "Bluetooth initialized");
 
     if (pin != nullptr) {
-        SerialBT.setPin(pin);
+        SerialDevice.setPin(pin);
     }
 
     bool connected;
 
     debug->print(DEBUG_LEVEL_INFO, "Bluetooth Slave device: ");
-    debug->println(DEBUG_LEVEL_INFO, obdDeviceName.c_str());
+    debug->println(DEBUG_LEVEL_INFO, deviceName.c_str());
 
     //connect to obd2
     if (scanBTdevice()) {
@@ -118,9 +159,9 @@ bool BluetoothOBD::connect(char *pin) {
         String txt = "";        
         for (int i=1; i<4; i++) {
 
-            txt = "Connecting to " + obdDeviceName + " - " + ByteArraytoString(client_addr) + " (" + String(i) + ")...";
+            txt = "Connecting to " + deviceName + " - " + ByteArraytoString(client_addr) + " (" + String(i) + ")...";
             debug->println(DEBUG_LEVEL_INFO, txt.c_str());
-            connected = SerialBT.connect(client_addr, 0, sec_mask, role);
+            connected = SerialDevice.connect(client_addr, 0, sec_mask, role);
 
             if (connected) {
                 break;
@@ -133,9 +174,9 @@ bool BluetoothOBD::connect(char *pin) {
     }
     
     if (connected) {
-        debug->println(DEBUG_LEVEL_INFO, "Bluetooth connected succesfully!");
+        debug->println(DEBUG_LEVEL_INFO, "Device connected succesfully!");
 
-        setBtConnected(true);
+        setDeviceConnected(true);
 
         bool obdReady = false;
         obd = new ELM327();
@@ -145,7 +186,7 @@ bool BluetoothOBD::connect(char *pin) {
             debug->print(DEBUG_LEVEL_INFO, i);
             debug->println(DEBUG_LEVEL_INFO, ")...");
 
-            obdReady = obd->begin(SerialBT, OBD_DEBUG_LOGS, ODB_TIMEOUT_MS);
+            obdReady = obd->begin(SerialDevice, OBD_DEBUG_LOGS, ODB_TIMEOUT_MS);
             if (obdReady) {
                 break;
             } else {
@@ -166,10 +207,12 @@ bool BluetoothOBD::connect(char *pin) {
   }
   return ret;
 }
+#endif
 
 //convert bt address to text
 //{0x00,0x1d,0xa5,0x00,0x12,0x92} -> 00:1d:a5:00:12:92
-String BluetoothOBD::ByteArraytoString(esp_bd_addr_t bt_address) {
+#ifdef USE_OBD_BLUETOOTH
+String OdbAdapter::ByteArraytoString(esp_bd_addr_t bt_address) {
   String txt = "";
   String nib = "";
     for (int i=0; i<ESP_BD_ADDR_LEN+1; i++) {
@@ -183,27 +226,39 @@ String BluetoothOBD::ByteArraytoString(esp_bd_addr_t bt_address) {
     txt = txt + nib;
     return txt;
 }
+#endif
 
-bool BluetoothOBD::scanBTdevice() {
+#ifdef USE_OBD_BLUETOOTH
+bool OdbAdapter::scanBTdevice() {
 
     debug->println(DEBUG_LEVEL_INFO, "Scanning for OBDII Adapter...");
 
-    bool foundOBD2 = false;
+    foundOBD2 = false;
+    //String tmpName = this->deviceName;
 
     // BTScanResults* btDeviceList = BTSerial.getScanResults();  // maybe accessing from different threads!
-    if (SerialBT.discoverAsync([](BTAdvertisedDevice* pDevice) {
+    if (SerialDevice.discoverAsync([](BTAdvertisedDevice* pDevice) {
             // BTAdvertisedDeviceSet*set = reinterpret_cast<BTAdvertisedDeviceSet*>(pDevice);
             // btDeviceList[pDevice->getAddress()] = * set;
             //String txt = pDevice->toString().c_str();
             
             debug->print(DEBUG_LEVEL_INFO, "Found device: ");
             debug->println(DEBUG_LEVEL_INFO, pDevice->toString().c_str());
-            bluetoothOBD->setDeviceName(pDevice->getName().c_str());
-            bluetoothOBD->setDeviceAddress(pDevice->getAddress().toString().c_str());
-            })) 
+
+            String tmpName = pDevice->getName().c_str();
+            String tmpAddress = pDevice->getAddress().toString().c_str();
+
+            if (tmpName == odbAdapter->deviceName || tmpAddress == odbAdapter->deviceAddr) {
+
+                    odbAdapter->setFoundOBD2(true);
+                    odbAdapter->setDeviceName(pDevice->getName().c_str());
+                    odbAdapter->setDeviceAddress(pDevice->getAddress().toString().c_str());
+            }
+            
+        })) 
     {
         delay(DELAY_BT_DISCOVER_TIME);
-        SerialBT.discoverAsyncStop();
+        SerialDevice.discoverAsyncStop();
         debug->println(DEBUG_LEVEL_INFO, "Scan completed");
         delay(1000);
     
@@ -219,18 +274,16 @@ bool BluetoothOBD::scanBTdevice() {
     String txt = deviceName + " - " + deviceAddr;
     debug->println(DEBUG_LEVEL_DEBUG, txt.c_str());
 
-    if (deviceName == obdDeviceName || deviceAddr == obdDeviceAddr) {//match name.
-        //00:1d:a5:00:12:92 -> {0x00,0x1d,0xa5,0x00,0x12,0x92};
-        //copy match bt mac address to client_name to connect
+    if (foundOBD2) {
         stringCount = 0;
         while (deviceAddr.length() > 0)
         {
             index = deviceAddr.indexOf(':');
-            if (index == -1)  {// No : found
-                client_addr[stringCount] = strtol(deviceAddr.c_str(), 0, 16);//convert hex string to byte
+            if (index == -1)  {
+                client_addr[stringCount] = strtol(deviceAddr.c_str(), 0, 16);
                 break;
             } else {
-                client_addr[stringCount] = strtol(deviceAddr.substring(0, index).c_str(),0,16); //convert hex string to byte
+                client_addr[stringCount] = strtol(deviceAddr.substring(0, index).c_str(), 0, 16);
                 stringCount++;
                 deviceAddr = deviceAddr.substring(index + 1);
             }
@@ -240,120 +293,123 @@ bool BluetoothOBD::scanBTdevice() {
     
     return foundOBD2;
 }
+#endif
 
-void BluetoothOBD::setDeviceName(String deviceName) {
+void OdbAdapter::setFoundOBD2(bool found) {
+    this->foundOBD2 = found;
+}
+
+void OdbAdapter::setDeviceName(String deviceName) {
     this->deviceName = deviceName;
 }
 
-void BluetoothOBD::setDeviceAddress(String deviceAddr) {
+void OdbAdapter::setDeviceAddress(String deviceAddr) {
     this->deviceAddr = deviceAddr;
 }
 
 //supportedPIDs_1_20
-int BluetoothOBD::getVoltage() {
+int OdbAdapter::getVoltage() {
     return this->voltage;
 }
-void BluetoothOBD::setVoltage(int voltage) {
+void OdbAdapter::setVoltage(int voltage) {
     this->voltage = voltage;
 }
 
-int BluetoothOBD::getKph() {
+int OdbAdapter::getKph() {
     return this->kph;
 }
-void BluetoothOBD::setKph(int kph) {
+void OdbAdapter::setKph(int kph) {
     this->kph = kph;
 }
 
-int BluetoothOBD::getRpm() {
+int OdbAdapter::getRpm() {
     return this->rpm;
 }
-void BluetoothOBD::setRpm(int rpm) {
+void OdbAdapter::setRpm(int rpm) {
     this->rpm = rpm;
 }
 
-int BluetoothOBD::getCoolantTemp() {
+int OdbAdapter::getCoolantTemp() {
     return this->coolantTemp;
 }
-void BluetoothOBD::setCoolantTemp(int coolantTemp) {
+void OdbAdapter::setCoolantTemp(int coolantTemp) {
     this->coolantTemp = coolantTemp;
 }
 
-int BluetoothOBD::getIntakeTemp() {
+int OdbAdapter::getIntakeTemp() {
     return this->intakeTemp;
 }
-void BluetoothOBD::setIntakeTemp(int intakeTemp) {
+void OdbAdapter::setIntakeTemp(int intakeTemp) {
     this->intakeTemp = intakeTemp;
 }
 
-int BluetoothOBD::getTimingAdvance() {
+int OdbAdapter::getTimingAdvance() {
     return this->timingAdvance;
 }
-void BluetoothOBD::setTimingAdvance(int timingAdvance) {
+void OdbAdapter::setTimingAdvance(int timingAdvance) {
     this->timingAdvance = timingAdvance;
 }
-int BluetoothOBD::getEngineLoad() {
+int OdbAdapter::getEngineLoad() {
     return this->engineLoad;
 }
-void BluetoothOBD::setEngineLoad(int engineLoad) {
+void OdbAdapter::setEngineLoad(int engineLoad) {
     this->engineLoad = engineLoad;
 }
 
-int BluetoothOBD::getMafRate() {
+int OdbAdapter::getMafRate() {
     return this->mafRate;
 }
-void BluetoothOBD::setMafRate(int mafReate) {
+void OdbAdapter::setMafRate(int mafReate) {
     this->mafRate = mafRate;
 }
 
-int BluetoothOBD::getShortFuelTrim() {
+int OdbAdapter::getShortFuelTrim() {
     return this->shortFuelTrim;
 }
-void BluetoothOBD::setShortFuelTrim(int shortFuelTrim) {
+void OdbAdapter::setShortFuelTrim(int shortFuelTrim) {
     this->shortFuelTrim = shortFuelTrim;
 }
 
-int BluetoothOBD::getLongFuelTrim() {
+int OdbAdapter::getLongFuelTrim() {
     return this->longFuelTrim;
 }
-void BluetoothOBD::setLongFuelTrim(int longFuelTrim) {
+void OdbAdapter::setLongFuelTrim(int longFuelTrim) {
     this->longFuelTrim = longFuelTrim;
 }
 
-int BluetoothOBD::getThrottle() {
+int OdbAdapter::getThrottle() {
     return this->throttle;
 }
-void BluetoothOBD::setThrottle(int throttle) {
+void OdbAdapter::setThrottle(int throttle) {
     this->throttle = throttle;
 }
 
 //supportedPIDs_21_40
-int BluetoothOBD::getFuelLevel() {
+int OdbAdapter::getFuelLevel() {
     return this->fuelLevel;
 }
-void BluetoothOBD::setFuelLevel(int fuelLevel) {
+void OdbAdapter::setFuelLevel(int fuelLevel) {
     this->fuelLevel = fuelLevel;
 }
 
 //supportedPIDs_41_60
-int BluetoothOBD::getAmbientTemp() {
+int OdbAdapter::getAmbientTemp() {
     return this->ambientTemp;
 }
-void BluetoothOBD::setAmbientTemp(int ambientTemp) {
+void OdbAdapter::setAmbientTemp(int ambientTemp) {
     this->ambientTemp = ambientTemp;
 }
 
-int BluetoothOBD::getOilTemp() {
+int OdbAdapter::getOilTemp() {
     return this->oilTemp;
 }
-void BluetoothOBD::setOilTemp(int oilTemp) {
+void OdbAdapter::setOilTemp(int oilTemp) {
     this->oilTemp = oilTemp;
 }
 
-int BluetoothOBD::getAbsLoad() {
+int OdbAdapter::getAbsLoad() {
     return this->absLoad;
 }
-void BluetoothOBD::setAbsLoad(int absLoad) {
+void OdbAdapter::setAbsLoad(int absLoad) {
     this->absLoad = absLoad;
 }
-
-#endif

@@ -3,10 +3,11 @@
 
 #include <Arduino.h>
 
-#ifdef ENABLE_OBD_BLUETOOTH
-  #include <BluetoothSerial.h>
-  #include "bluetoothOBD.h"
+#ifdef USE_OBD_BLUETOOTH
+  #include <BluetoothSerial.h>  
 #endif
+
+#include "odbAdapter.h"
 
 #include <ELMduino.h>
 
@@ -15,10 +16,6 @@
 #include "gauge.h"
 #include "structs.h"
 #include "settings.h"
-
-#ifdef ENABLE_EEPROM  
-  #include "myEEPROM.h"
-#endif
 
 #ifdef ENABLE_RTC_CLOCK
   #include "myRTC.h"
@@ -44,24 +41,16 @@ extern Debug *debug;
 extern Displays *myDisplays[MAX_DISPLAYS];
 extern Gauge *myGauges[MAX_VIEWS + 1];
 
-extern char dateString[DATE_LENGTH];
-extern char timeString[TIME_LENGTH];
-extern char oldDateString[DATE_LENGTH];
-extern char oldTimeString[TIME_LENGTH];
-
 extern Settings *mySettings;
-
-#ifdef ENABLE_OBD_BLUETOOTH
-    extern BluetoothSerial SerialBT;
-    extern BluetoothOBD *bluetoothOBD;
-#endif
-
-#ifdef ENABLE_EEPROM
-    extern MyEEPROM myEEPROM;
-#endif
+extern OdbAdapter *odbAdapter;
 
 #ifdef ENABLE_RTC_CLOCK
     extern RTC_DS1302 myRTC;
+
+    extern char dateString[DATE_LENGTH];
+    extern char timeString[TIME_LENGTH];
+    extern char oldDateString[DATE_LENGTH];
+    extern char oldTimeString[TIME_LENGTH];
 #endif
 
 #endif

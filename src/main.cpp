@@ -9,17 +9,10 @@
 #include "structs.h"
 #include "settings.h"
 
-#ifdef ENABLE_OBD_BLUETOOTH
-  #include <BluetoothSerial.h>
-  #include "bluetoothOBD.h"
-#endif
+#include "odbAdapter.h"
 
 #ifdef USE_MULTI_THREAD
   #include "tasks.h"
-#endif
-
-#ifdef ENABLE_EEPROM
-  #include "myEEPROM.h"
 #endif
 
 #ifdef ENABLE_RTC_CLOCK
@@ -47,29 +40,21 @@ SemaphoreHandle_t obdConnectedSemaphore;
 SemaphoreHandle_t obdValueSemaphore;
 #endif
 
-#ifdef ENABLE_OBD_BLUETOOTH
-  BluetoothSerial SerialBT;
-  BluetoothOBD *bluetoothOBD;
-  
-#endif
-
-#ifdef ENABLE_EEPROM
-  MyEEPROM myEEPROM(512);
-#endif
+Debug *debug;
+ELM327 *obd;
+OdbAdapter *odbAdapter;
 
 #ifdef ENABLE_RTC_CLOCK
   RTC_DS1302 myRTC;
+
+  S_DateTime dateTime;
+
+  char 
+  String[DATE_LENGTH];
+  char timeString[TIME_LENGTH];
+  char oldDateString[DATE_LENGTH];
+  char oldTimeString[TIME_LENGTH];
 #endif
-
-Debug *debug;
-ELM327 *obd;
-
-S_DateTime dateTime;
-
-char dateString[DATE_LENGTH];
-char timeString[TIME_LENGTH];
-char oldDateString[DATE_LENGTH];
-char oldTimeString[TIME_LENGTH];
 
 int activeDisplay;
 
@@ -77,12 +62,16 @@ Displays *myDisplays[MAX_DISPLAYS + 1];
 Gauge *myGauges[MAX_VIEWS + 1];
 Settings *mySettings;
 
-bool testDownKey = true;
+#ifdef USE_MOCK_KEYPAD
+  bool testDownKey = true;
+#else
+  bool testDownKey = false;
+#endif
   
-bool changeView = true;
 bool shouldCheck = true;
 
 int viewId;
+int viewIndex;
 unsigned long lastTime;
 
 void setup() {
@@ -108,14 +97,14 @@ void setup() {
   mySettings = new Settings();
   mySettings->load();
 
-  #ifdef ENABLE_OBD_BLUETOOTH
-    //bluetoothOBD = new BluetoothOBD("OBDII", "11:22:33:dd:ee:ff");
-    bluetoothOBD = new BluetoothOBD("OBDII", "00:12:6f:10:24:aa");
-  #endif
+  #ifdef USE_OBD_BLUETOOTH
+    //odbAdapter = new OdbAdapter("OBDII", "11:22:33:dd:ee:ff");
+    odbAdapter = new OdbAdapter("OBDII", "00:12:6f:10:24:aa");
 
-  debug->println(DEBUG_LEVEL_INFO, "Disabling WiFi...");  
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
+    debug->println(DEBUG_LEVEL_INFO, "Disabling WiFi...");  
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+  #endif
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up TFT1...");
   tft1.begin();
@@ -188,36 +177,36 @@ void setup() {
   //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
 
-  //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
-  //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_COOLANT_TEMP, (char*)"E: %d C");
+  //myGauges[1]->addSecondaryView(VIEW_RPM, (char*)"%d");
+  //myGauges[1]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  //myGauges[1]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  //myGauges[1]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
 
-  //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
-  //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_COOLANT_TEMP, (char*)"E: %d C");
+  //myGauges[2]->addSecondaryView(VIEW_KPH, (char*)"%d");
+  //myGauges[2]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  //myGauges[2]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  //myGauges[2]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
 
-  //myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_COOLANT_TEMP, (char*)"E: %d C");
+  //myGauges[3]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  //myGauges[3]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  //myGauges[3]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
 
-  //myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
+  //myGauges[4]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  //myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  //myGauges[4]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
 
-  //myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  //myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
+  //myGauges[5]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
+  //myGauges[5]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
+  //myGauges[5]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
 
-  //myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  //myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
+  //myGauges[6]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
+  //myGauges[6]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
+  //myGauges[6]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
 
   activeDisplay = 1;
-  myDisplays[1]->activeView = mySettings->getActiveView();
-  myDisplays[1]->nextView = -1;
-  myDisplays[1]->secondaryActiveView = mySettings->getSecondaryActiveView();
+  myDisplays[activeDisplay]->activeView = mySettings->getActiveView();
+  myDisplays[activeDisplay]->nextView = -1;
+  myDisplays[activeDisplay]->secondaryActiveView = mySettings->getSecondaryActiveView();
 
 #ifdef USE_MULTI_THREAD
   debug->println(DEBUG_LEVEL_INFO, "Staring up View Manager 1...");
@@ -276,15 +265,13 @@ void setup() {
   vTaskResume(t_core1_obd);
 #else
 
-  #ifdef ENABLE_OBD_BLUETOOTH
-    #ifndef MOCK_OBD
-      // if device does not have pin use the follow
-      //bluetoothOBD->connect(nullptr);
-      //bool connected = bluetoothOBD->connect(OBD_DEVICE_PIN);
-    #else
-      bluetoothOBD->setBtConnected(true);
-      bluetoothOBD->setObdConnected(true);
-    #endif
+  #ifndef MOCK_OBD
+    // if device does not have pin use the follow
+    //odbAdapter->connect(nullptr);
+    //bool connected = odbAdapter->connect(OBD_DEVICE_PIN);
+  #else
+    odbAdapter->setBtConnected(true);
+    odbAdapter->setObdConnected(true);
   #endif
 
   pinMode(PIN_UP_KEY, INPUT_PULLUP);
@@ -300,12 +287,61 @@ void setup() {
 
 }
 
-bool readObdValue(int activeViewId) {
+int getValueForViewType(int viewId) {
+  int newValue;
+  switch (viewId) {
+    case VIEW_BATTERY_VOLTAGE: newValue = odbAdapter->getVoltage(); break;
+    case VIEW_KPH: newValue = odbAdapter->getKph(); break;
+    case VIEW_RPM: newValue = odbAdapter->getRpm(); break;
+    case VIEW_COOLANT_TEMP: newValue = odbAdapter->getCoolantTemp(); break;            
+    case VIEW_INTAKE_TEMP: newValue = odbAdapter->getIntakeTemp(); break;
+    case VIEW_TIMING_ADV: newValue = odbAdapter->getTimingAdvance(); break;
+    case VIEW_ENGINE_LOAD: newValue = odbAdapter->getEngineLoad(); break;
+    case VIEW_MAF_RATE: newValue = odbAdapter->getMafRate(); break;
+    case VIEW_SHORT_FUEL_TRIM: newValue = odbAdapter->getShortFuelTrim(); break;
+    case VIEW_LONG_FUEL_TRIM: newValue = odbAdapter->getLongFuelTrim(); break;
+    case VIEW_THROTTLE: newValue = odbAdapter->getThrottle(); break;
+    //supportedPIDs_21_40
+    case VIEW_FUEL_LEVEL: newValue = odbAdapter->getFuelLevel(); break;
+    //supportedPIDs_41_60
+    case VIEW_AMBIENT_TEMP: newValue = odbAdapter->getAmbientTemp(); break;
+    case VIEW_OIL_TEMP: newValue = odbAdapter->getOilTemp(); break;
+    case VIEW_ABS_LOAD: newValue = odbAdapter->getAbsLoad(); break;
+    default: newValue = INT_MIN;
+  }
+  return newValue;
+}
+
+void setValueForViewType(int viewTypeId, int newValue) {
+  switch (viewTypeId) {
+    case VIEW_BATTERY_VOLTAGE: odbAdapter->setVoltage(newValue); break;
+    case VIEW_KPH: odbAdapter->setKph(newValue); break;
+    case VIEW_RPM: odbAdapter->setRpm(newValue); break;
+    case VIEW_COOLANT_TEMP: odbAdapter->setCoolantTemp(newValue); break;        
+    case VIEW_INTAKE_TEMP: odbAdapter->setIntakeTemp(newValue); break;
+    case VIEW_TIMING_ADV: odbAdapter->setTimingAdvance(newValue); break;
+    case VIEW_ENGINE_LOAD: odbAdapter->setEngineLoad(newValue); break;
+    case VIEW_MAF_RATE: odbAdapter->setMafRate(newValue); break;
+    case VIEW_SHORT_FUEL_TRIM: odbAdapter->setShortFuelTrim(newValue); break;
+    case VIEW_LONG_FUEL_TRIM: odbAdapter->setLongFuelTrim(newValue); break;
+    case VIEW_THROTTLE: odbAdapter->setThrottle(newValue); break;
+    //supportedPIDs_21_40
+    case VIEW_FUEL_LEVEL: odbAdapter->setFuelLevel(newValue); break;
+    //supportedPIDs_41_60
+    case VIEW_AMBIENT_TEMP: odbAdapter->setAmbientTemp(newValue); break;
+    case VIEW_OIL_TEMP: odbAdapter->setOilTemp(newValue); break;
+    case VIEW_ABS_LOAD: odbAdapter->setAbsLoad(newValue); break;
+    case VIEW_NONE: break;    
+    default: break;
+  }
+}
+
+bool readObdValue(int viewTypeId) {
 
   int newValue = 0;
   bool doAction = true;
 
-  switch (activeViewId) {
+  switch (viewTypeId) {
     case VIEW_BATTERY_VOLTAGE: 
           #ifdef MOCK_OBD
             newValue = MOCK_OBD_batteryVoltage;
@@ -419,8 +455,8 @@ bool readObdValue(int activeViewId) {
           break;
     default:
           doAction = false;
-          debug->print(DEBUG_LEVEL_ERROR, activeViewId);
-          debug->println(DEBUG_LEVEL_ERROR, " is an unknown view");
+          debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
+          debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
   }
 
   #ifdef MOCK_OBD
@@ -433,7 +469,7 @@ bool readObdValue(int activeViewId) {
       if (obd->nb_rx_state == ELM_SUCCESS) {
         saveValue = true;
         debug->println(DEBUG_LEVEL_DEBUG, "OBD Read SUCCESS");  
-        debug->print(DEBUG_LEVEL_DEBUG, "---------------- value readed: ");
+        debug->print(DEBUG_LEVEL_DEBUG, "----------------> value readed: ");
         debug->println(DEBUG_LEVEL_DEBUG, newValue);
       } else if (obd->nb_rx_state != ELM_GETTING_MSG) {
         debug->println(DEBUG_LEVEL_DEBUG, "OBD Read ERROR");  
@@ -443,31 +479,9 @@ bool readObdValue(int activeViewId) {
     }
   #endif
 
-  #ifdef ENABLE_OBD_BLUETOOTH
     if (saveValue) {
-      switch (activeViewId) {
-        case VIEW_BATTERY_VOLTAGE: bluetoothOBD->setVoltage(newValue); break;
-        case VIEW_KPH: bluetoothOBD->setKph(newValue); break;
-        case VIEW_RPM: bluetoothOBD->setRpm(newValue); break;
-        case VIEW_COOLANT_TEMP: bluetoothOBD->setCoolantTemp(newValue); break;        
-        case VIEW_INTAKE_TEMP: bluetoothOBD->setIntakeTemp(newValue); break;
-        case VIEW_TIMING_ADV: bluetoothOBD->setTimingAdvance(newValue); break;
-        case VIEW_ENGINE_LOAD: bluetoothOBD->setEngineLoad(newValue); break;
-        case VIEW_MAF_RATE: bluetoothOBD->setMafRate(newValue); break;
-        case VIEW_SHORT_FUEL_TRIM: bluetoothOBD->setShortFuelTrim(newValue); break;
-        case VIEW_LONG_FUEL_TRIM: bluetoothOBD->setLongFuelTrim(newValue); break;
-        case VIEW_THROTTLE: bluetoothOBD->setThrottle(newValue); break;
-        //supportedPIDs_21_40
-        case VIEW_FUEL_LEVEL: bluetoothOBD->setFuelLevel(newValue); break;
-        //supportedPIDs_41_60
-        case VIEW_AMBIENT_TEMP: bluetoothOBD->setAmbientTemp(newValue); break;
-        case VIEW_OIL_TEMP: bluetoothOBD->setOilTemp(newValue); break;
-        case VIEW_ABS_LOAD: bluetoothOBD->setAbsLoad(newValue); break;
-        case VIEW_NONE: break;    
-        default: break;
-      }
+      setValueForViewType(viewTypeId, newValue);
     }
-  #endif
   return saveValue;
 }
 
@@ -517,10 +531,10 @@ void checkKeypad() {
       if (myDisplays[activeDisplay]->nextView == 0) {
         myDisplays[activeDisplay]->nextView = MAX_VIEWS;
       }
-      if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
+      /*if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
         memset(oldDateString, 0, DATE_LENGTH);
         memset(oldTimeString, 0, TIME_LENGTH);
-      }
+      }*/
     }
     mySettings->save();
 
@@ -557,13 +571,68 @@ void checkKeypad() {
       if (myDisplays[activeDisplay]->nextView > MAX_VIEWS) {
         myDisplays[activeDisplay]->nextView = 1;
       }
-      if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
+      /*if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
         memset(oldDateString, 0, DATE_LENGTH);
         memset(oldTimeString, 0, TIME_LENGTH);
-      }
+      }*/
     }
     mySettings->save();
   }
+}
+
+bool drawActiveGauge() {
+  
+  bool changeView = false;
+
+  if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
+    myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
+
+    if (myDisplays[activeDisplay]->nextView == -1) { // First run
+      myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
+    }
+    debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
+    debug->println(DEBUG_LEVEL_INFO, activeDisplay);
+
+    myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
+    myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
+    viewId = myDisplays[activeDisplay]->nextView;
+
+    debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
+    debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
+
+    myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
+
+    myGauges[viewId]->data.state = STATE_UNKNOWN;
+    myGauges[viewId]->data.value = myGauges[viewId]->data.min;
+
+    if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
+      myGauges[viewId]->drawBorders();
+    }
+    changeView = true;
+  } 
+
+  return changeView;
+}
+
+bool readValueForViewType(int viewId) {
+
+  bool valueReaded = false;
+  int count = 0;
+
+  debug->print(DEBUG_LEVEL_DEBUG, "Getting info for gauge id: ");
+  debug->println(DEBUG_LEVEL_DEBUG, viewId);
+  debug->println(DEBUG_LEVEL_DEBUG, "Query ODB value");
+  
+  while (!valueReaded) {
+    valueReaded = readObdValue(viewId); 
+    count++;
+    if (count > 200) {
+      debug->println(DEBUG_LEVEL_DEBUG, "Value not readed after 200 times");
+      break;
+    }
+  }
+
+  return valueReaded;
 }
 
 void loop() {
@@ -574,157 +643,69 @@ void loop() {
 #else
 
   debug->println(DEBUG_LEVEL_DEBUG2, "--- LOOP ---");
-  
-  viewId = myDisplays[activeDisplay]->activeView;
+
+  viewIndex = myDisplays[activeDisplay]->activeView;
+  viewId = myGauges[viewIndex]->getId();
 
   if (viewId != VIEW_NONE) {   
+    
+    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
 
-    #ifdef ENABLE_OBD_BLUETOOTH
-      if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {
+      bool changeView = drawActiveGauge();
+      if (changeView) {
+        viewIndex = myDisplays[activeDisplay]->activeView;
+        viewId = myGauges[viewIndex]->getId();
+      }
 
-        if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
-          myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
+      bool valueReaded = readValueForViewType(viewId);
 
-          if (myDisplays[activeDisplay]->nextView == -1) { // First run
-            myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
-          }
-          debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-          debug->println(DEBUG_LEVEL_INFO, activeDisplay);
-
-          myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
-          myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
-          viewId = myDisplays[activeDisplay]->nextView;
-
-          debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-          debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
-
-          changeView = true;
-
-          myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
-
-          myGauges[viewId]->data.state = STATE_UNKNOWN;
-          myGauges[viewId]->data.value = myGauges[viewId]->data.min;
-
-          if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
-            myGauges[viewId]->drawBorders();
-          }
-          //delay(DELAY_VIEW_CHANGE);
-        } else {
-          changeView = false;
-        }
-        viewId = myDisplays[activeDisplay]->activeView;
-
-        debug->print(DEBUG_LEVEL_DEBUG, "Getting info for gauge id: ");
-        debug->println(DEBUG_LEVEL_DEBUG, viewId);
-
-        debug->println(DEBUG_LEVEL_DEBUG, "Query ODB value");
-
-        bool redrawValue = false;
-        bool valueReaded = false;
-        int count = 0;
-        while (!valueReaded) {
-          valueReaded = readObdValue(viewId); 
-          count++;
-          if (count > 200) {
-            debug->println(DEBUG_LEVEL_DEBUG, "Value not readed after 200 times");
-            break;
-          }
-        }
-
-        int newValue = INT_MIN;
-        if (valueReaded) {
-          debug->println(DEBUG_LEVEL_DEBUG2, "value readed");
-          switch (viewId) {
-            case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD->getVoltage(); break;
-            case VIEW_KPH: newValue = bluetoothOBD->getKph(); break;
-            case VIEW_RPM: newValue = bluetoothOBD->getRpm(); break;
-            case VIEW_COOLANT_TEMP: newValue = bluetoothOBD->getCoolantTemp(); break;            
-            case VIEW_INTAKE_TEMP: newValue = bluetoothOBD->getIntakeTemp(); break;
-            case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;
-            case VIEW_ENGINE_LOAD: newValue = bluetoothOBD->getEngineLoad(); break;
-            case VIEW_MAF_RATE: newValue = bluetoothOBD->getMafRate(); break;
-            case VIEW_SHORT_FUEL_TRIM: newValue = bluetoothOBD->getShortFuelTrim(); break;
-            case VIEW_LONG_FUEL_TRIM: newValue = bluetoothOBD->getLongFuelTrim(); break;
-            case VIEW_THROTTLE: newValue = bluetoothOBD->getThrottle(); break;
-            //supportedPIDs_21_40
-            case VIEW_FUEL_LEVEL: newValue = bluetoothOBD->getFuelLevel(); break;
-            //supportedPIDs_41_60
-            case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD->getAmbientTemp(); break;
-            case VIEW_OIL_TEMP: newValue = bluetoothOBD->getOilTemp(); break;
-            case VIEW_ABS_LOAD: newValue = bluetoothOBD->getAbsLoad(); break;
-            default: newValue = 0;
-          }
-
-          if (myGauges[viewId]->data.value != newValue) {
-            redrawValue = true;
-          }
-        } else {
-            debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
-        }
-
-        /*
-        if (myDisplays[activeDisplay]->secondaryActiveView != VIEW_NONE) {
-          int secondaryId = myGauges[viewId]->secondaryViews.ids[myDisplays[activeDisplay]->secondaryActiveView];
-
-          debug->print(DEBUG_LEVEL_DEBUG, "Query ODB value for secondary view id: ");
-          debug->println(DEBUG_LEVEL_DEBUG, secondaryId);
-          valueReaded = false;
-          while (!valueReaded) {            
-            valueReaded = readObdValue(secondaryId);
-            count++;
-            if (count > 10) {
-              debug->println(DEBUG_LEVEL_DEBUG, "secondary value not readed after 10 times");
-              break;
-            }
-            delay(DELAY_READING);
-          }
-          int newValue2 = INT_MIN;
-          if (valueReaded) {
-            debug->println(DEBUG_LEVEL_DEBUG2, "value readed");
-            switch (secondaryId) {
-              case VIEW_BATTERY_VOLTAGE: newValue2 = bluetoothOBD->getVoltage(); break;
-              case VIEW_KPH: newValue2 = bluetoothOBD->getKph(); break;
-              case VIEW_RPM: newValue2 = bluetoothOBD->getRpm(); break;
-              case VIEW_COOLANT_TEMP: newValue2 = bluetoothOBD->getCoolantTemp(); break;
-              case VIEW_AMBIENT_TEMP: newValue2 = bluetoothOBD->getAmbientTemp(); break;
-              case VIEW_INTAKE_TEMP: newValue2 = bluetoothOBD->getIntakeTemp(); break;
-              case VIEW_TIMING_ADV: newValue2 = bluetoothOBD->getTimingAdvance(); break;
-              default: newValue2 = 0;
-            }
-
-            if (myGauges[secondaryId]->data.value != newValue2) {
-              redrawValue = true;
-            } 
-          } else {
-            debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
-          }       
-        }*/
+      int newValue = INT_MIN;
+      if (valueReaded) {
         
+        newValue = getValueForViewType(viewId);          
+        bool redrawView = myGauges[viewIndex]->data.value != newValue;
+        myGauges[viewIndex]->data.value = newValue;
 
-        if (viewId == VIEW_DATE_TIME) {
-          myGauges[viewId]->drawDateTime();
-        } else if (changeView || redrawValue) {
-          //debug->print(DEBUG_LEVEL_DEBUG2, "Readed value: ");
-          //debug->println(DEBUG_LEVEL_DEBUG2, newValue);
-          //debug->println(DEBUG_LEVEL_DEBUG2, "Drawing....");
-          myGauges[viewId]->drawGauge(viewId, changeView, newValue);
+        if (myDisplays[activeDisplay]->secondaryActiveView != VIEW_NONE) {
+          int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
+          int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
+
+          newValue = getValueForViewType(secondaryViewId);
+          if (!redrawView) {
+            for (int i=1; i<MAX_VIEWS+1; i++){
+              if (myGauges[i]->getId() == secondaryViewId) {
+                redrawView = myGauges[i]->data.value != newValue;
+                myGauges[i]->data.value = newValue;
+                break;
+              }
+            }
+          }
         }
 
-        checkKeypad();
-
-        delay(myGauges[viewId]->getInterval());
+        if (redrawView || changeView) {            
+          myGauges[viewIndex]->drawGauge(changeView);
+        }
 
       } else {
-        myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
-        delay(500);
-        myDisplays[activeDisplay]->printMsg("NO OBD");
-        delay(DELAY_MAIN_TASK);
-        #ifndef MOCK_OBD
-          bluetoothOBD->connect(nullptr);
-        #endif
+          debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
       }
-    #endif
+
+      checkKeypad();
+
+      delay(myGauges[viewId]->getInterval());
+
+    } else {
+      myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
+      delay(500);
+      myDisplays[activeDisplay]->printMsg("NO OBD");
+      delay(DELAY_MAIN_TASK);
+      #ifndef MOCK_OBD
+        odbAdapter->connect(nullptr);
+      #endif
+    }
     
+  } else {
+    //fill blank screen or msg ?
   }
 
 #endif

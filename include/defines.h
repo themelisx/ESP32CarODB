@@ -1,72 +1,70 @@
 #ifndef DEFINES_h
 #define DEFINES_h
 
-//#define MOCK_OBD
-//#define MOCK_OBD_LOW_VALUES
-#define MOCK_OBD_NORMAL_VALUES
-//#define MOCK_OBD_HIGH_VALUES
+#include "configuration.h"
 
-#ifdef MOCK_OBD_LOW_VALUES
-    #define MOCK_OBD_batteryVoltage 118
-    #define MOCK_OBD_kph 0
-    #define MOCK_OBD_rpm 800
-    #define MOCK_OBD_engineCoolantTemp 10    
-    #define MOCK_OBD_intakeAirTemp 12
-    #define MOCK_OBD_timingAdvance 5
-    #define MOCK_OBD_engineLoad 15;
-    #define MOCK_OBD_mafRate 2;
-    #define MOCK_OBD_shortFuelTrim -15;
-    #define MOCK_OBD_longFuelTrim -20;
-    #define MOCK_OBD_throttle 10;
-    #define MOCK_OBD_fuelLevel 15;
-    #define MOCK_OBD_ambientAirTemp -5
-    #define MOCK_OBD_oilTemp -10;
-    #define MOCK_OBD_absLoad 12;
+#ifdef MOCK_OBD
+    #ifdef MOCK_OBD_LOW_VALUES
+        #define MOCK_OBD_batteryVoltage 118
+        #define MOCK_OBD_kph 0
+        #define MOCK_OBD_rpm 800
+        #define MOCK_OBD_engineCoolantTemp 10    
+        #define MOCK_OBD_intakeAirTemp 12
+        #define MOCK_OBD_timingAdvance 5
+        #define MOCK_OBD_engineLoad 15;
+        #define MOCK_OBD_mafRate 2;
+        #define MOCK_OBD_shortFuelTrim -15;
+        #define MOCK_OBD_longFuelTrim -20;
+        #define MOCK_OBD_throttle 10;
+        #define MOCK_OBD_fuelLevel 15;
+        #define MOCK_OBD_ambientAirTemp -5
+        #define MOCK_OBD_oilTemp -10;
+        #define MOCK_OBD_absLoad 12;
+    #endif
+
+    #ifdef MOCK_OBD_NORMAL_VALUES
+        #define MOCK_OBD_batteryVoltage 138
+        #define MOCK_OBD_kph 50
+        #define MOCK_OBD_rpm 3500
+        #define MOCK_OBD_engineCoolantTemp 92
+        #define MOCK_OBD_intakeAirTemp 35
+        #define MOCK_OBD_timingAdvance 12
+        #define MOCK_OBD_engineLoad 15;
+        #define MOCK_OBD_mafRate 5;
+        #define MOCK_OBD_shortFuelTrim 2;
+        #define MOCK_OBD_longFuelTrim 5;
+        #define MOCK_OBD_throttle 35;
+        #define MOCK_OBD_fuelLevel 50;
+        #define MOCK_OBD_ambientAirTemp 25
+        #define MOCK_OBD_oilTemp 45;
+        #define MOCK_OBD_absLoad 25;
+    #endif
+
+    #ifdef MOCK_OBD_HIGH_VALUES
+        #define MOCK_OBD_batteryVoltage 148
+        #define MOCK_OBD_kph 180
+        #define MOCK_OBD_rpm 7500
+        #define MOCK_OBD_engineCoolantTemp 120
+        #define MOCK_OBD_intakeAirTemp 95
+        #define MOCK_OBD_timingAdvance 40
+        #define MOCK_OBD_engineLoad 85;
+        #define MOCK_OBD_mafRate 7;
+        #define MOCK_OBD_shortFuelTrim 15;
+        #define MOCK_OBD_longFuelTrim 20;
+        #define MOCK_OBD_throttle 81;
+        #define MOCK_OBD_fuelLevel 100;
+        #define MOCK_OBD_ambientAirTemp 45
+        #define MOCK_OBD_oilTemp 125;
+        #define MOCK_OBD_absLoad 85;
+    #endif
 #endif
 
-#ifdef MOCK_OBD_NORMAL_VALUES
-    #define MOCK_OBD_batteryVoltage 138
-    #define MOCK_OBD_kph 50
-    #define MOCK_OBD_rpm 3500
-    #define MOCK_OBD_engineCoolantTemp 92
-    #define MOCK_OBD_intakeAirTemp 35
-    #define MOCK_OBD_timingAdvance 12
-    #define MOCK_OBD_engineLoad 15;
-    #define MOCK_OBD_mafRate 5;
-    #define MOCK_OBD_shortFuelTrim 2;
-    #define MOCK_OBD_longFuelTrim 5;
-    #define MOCK_OBD_throttle 35;
-    #define MOCK_OBD_fuelLevel 50;
-    #define MOCK_OBD_ambientAirTemp 25
-    #define MOCK_OBD_oilTemp 45;
-    #define MOCK_OBD_absLoad 25;
+#ifdef ENABLE_ELM327_DEBUG_LOGS
+    #define OBD_DEBUG_LOGS true
+#else
+    #define OBD_DEBUG_LOGS false
 #endif
 
-#ifdef MOCK_OBD_HIGH_VALUES
-    #define MOCK_OBD_batteryVoltage 148
-    #define MOCK_OBD_kph 180
-    #define MOCK_OBD_rpm 7500
-    #define MOCK_OBD_engineCoolantTemp 120
-    #define MOCK_OBD_intakeAirTemp 95
-    #define MOCK_OBD_timingAdvance 40
-    #define MOCK_OBD_engineLoad 85;
-    #define MOCK_OBD_mafRate 7;
-    #define MOCK_OBD_shortFuelTrim 15;
-    #define MOCK_OBD_longFuelTrim 20;
-    #define MOCK_OBD_throttle 81;
-    #define MOCK_OBD_fuelLevel 100;
-    #define MOCK_OBD_ambientAirTemp 45
-    #define MOCK_OBD_oilTemp 125;
-    #define MOCK_OBD_absLoad 85;
-#endif
-
-//#define ENABLE_EEPROM
-#define ENABLE_OBD_BLUETOOTH
-//#define ENABLE_STARTUP_LOGO
-//#define ENABLE_RTC_CLOCK
-//#define ENABLE_SECOND_DISPLAY
-
-#define OBD_DEBUG_LOGS true
 #define ODB_TIMEOUT_MS 100
 #define OBD_DEVICE_NAME (char*)"OBDII"
 #define OBD_DEVICE_PIN (char*)"1234"
@@ -119,7 +117,7 @@
 #define DELAY_VIEW_OIL_TEMP 1000
 #define DELAY_VIEW_ABS_LOAD 100
 
-#define DELAY_VIEW_DATE_TIME 1000
+//#define DELAY_VIEW_DATE_TIME 1000
 
 #define MAX_VIEWS 11
 #define MAX_SECONDARY_VIEWS 4
@@ -143,7 +141,7 @@
 #define VIEW_OIL_TEMP 14
 #define VIEW_ABS_LOAD 15
 
-#define VIEW_DATE_TIME 99
+//#define VIEW_DATE_TIME 99
 
 #define TYPE_GAUGE_GRAPH 1
 #define TYPE_SIMPLE_TEXT 2

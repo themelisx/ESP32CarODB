@@ -61,10 +61,13 @@ class Gauge {
     float x2[360];
     float y2[360];
 
-    char dateString[DATE_LENGTH];
-    char timeString[TIME_LENGTH];
-    char oldDateString[DATE_LENGTH];
-    char oldTimeString[TIME_LENGTH];
+    
+    #ifdef ENABLE_RTC_CLOCK
+      char dateString[DATE_LENGTH];
+      char timeString[TIME_LENGTH];
+      char oldDateString[DATE_LENGTH];
+      char oldTimeString[TIME_LENGTH];
+    #endif
 
     int activeDisplay;
 
@@ -88,7 +91,7 @@ class Gauge {
     SemaphoreHandle_t semaphore;
     #endif
     
-    void addSecondaryView(int id, int secondaryViewId, char *strFormat);
+    void addSecondaryView(int secondaryViewId, char *strFormat);
 
     int getViewHeight();
     int getViewWidth();
@@ -101,16 +104,16 @@ class Gauge {
     void setFrontColor(int fColor);
     void setBackColor(int bColor);    
     void setFontSize(int sz);
-    void getFormattedValue(int viewId, int newValue, char *buf);
+    void getFormattedValue(int newValue, char *buf);
     void drawDateTime();
-    void drawGauge(int viewId, bool repaint, int newValue);
+    void drawGauge(bool repaint);
     void drawGaugeLine(int angle, int color);
     void drawBorders();
     void drawCenterString(const char *buf);
     void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
     void drawBottomString(const char *buf, int fColor, int bgColor);
 
-    int getSecondaryInfo(int viewId, char *buf);
+    int getSecondaryInfo(char *buf);
 
 };
 
