@@ -15,9 +15,6 @@
 
 #define rad 0.01745
 
-#define MAX_VIEWS 6
-#define MAX_SECONDARY_VIEWS 4
-
 typedef struct
 {
   int activeView;

@@ -149,47 +149,68 @@ void setup() {
   
   debug->println(DEBUG_LEVEL_INFO, "Creating gauges...");
   
+  // Battery  
+  myGauges[1] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
+  // KM/h
+  myGauges[2] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_SIMPLE_TEXT, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
+  // RPM  
+  myGauges[3] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_SIMPLE_TEXT, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, false, 0, 0, 6500, 7500);
+  // Engine coolant  
+  myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
+  // Intake
+  myGauges[5] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
+  // Advance
+  myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 50, 50);
+  //  Engine load
+  myGauges[7] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"LOAD", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
+  // MAF rate
+  myGauges[8] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_SIMPLE_TEXT, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, WHITE, false, false, 0, 0, 0, 0);
+  // Short fuel trims
+  myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"SFT", (char*)"%d", RED, WHITE, false, false, 0, 0, 0, 0);
+  // Long fuel trims
+  myGauges[10] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"LFT", (char*)"%d", RED, WHITE, false, false, 0, 0, 0, 0);
+  // Throttle
+  myGauges[11] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROT", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
+  //supportedPIDs_21_40
+  // Fuel level
+  myGauges[12] = new Gauge(myDisplays[1], VIEW_FUEL_LEVEL, TYPE_GAUGE_GRAPH, DELAY_VIEW_FUEL_LEVEL, (char*)"FUEL", (char*)"%d", RED, WHITE, true, false, 0, 15, 100, 100);
+    //supportedPIDs_41_60
+  // Ambient  
+  myGauges[13] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -30, 3, 50, 50);
+  // Oil temp
+  myGauges[14] = new Gauge(myDisplays[1], VIEW_OIL_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_OIL_TEMP, (char*)"OIL", (char*)"%d C", BLUE, RED, true, true, -30, 40, 110, 150);
+  // Abs Load
+  myGauges[15] = new Gauge(myDisplays[1], VIEW_ABS_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ABS_LOAD, (char*)"ABS LOAD", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
 
-  myGauges[1] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
+  
+  //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
+
+
   //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
   //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
   //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_INTAKE_TEMP, (char*)"I: %d C");
   //myGauges[1]->addSecondaryView(VIEW_KPH, VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  
-  myGauges[2] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, false, 0, 0, 6500, 7500);
+
   //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
   //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
   //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_INTAKE_TEMP, (char*)"I: %d C");
   //myGauges[2]->addSecondaryView(VIEW_RPM, VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  
-  // Battery  
-  myGauges[3] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
+
   //myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
   //myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_INTAKE_TEMP, (char*)"I: %d C");
   //myGauges[3]->addSecondaryView(VIEW_BATTERY_VOLTAGE, VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  
-  // Engine coolant  
-  myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
+
   //myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
   //myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"I: %d C");
   //myGauges[4]->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
-  
-  // Ambient  
-  myGauges[5] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -30, 3, 50, 50);
+
   //myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_INTAKE_TEMP, (char*)"I: %d C");
   //myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   //myGauges[5]->addSecondaryView(VIEW_AMBIENT_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
-  
-  // Intake (+Ambient)
-  
-  myGauges[6] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
+
   //myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_AMBIENT_TEMP, (char*)"O: %d C");
   //myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"E: %d C");
   //myGauges[6]->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
-  
-  myGauges[7] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_GAUGE_GRAPH, DELAY_VIEW_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 50, 50);
-
-  //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
   activeDisplay = 1;
   myDisplays[1]->activeView = mySettings->getActiveView();
@@ -280,8 +301,6 @@ void setup() {
 bool readObdValue(int activeViewId) {
 
   int newValue = 0;
-  float tmpValue;
-
   bool doAction = true;
 
   switch (activeViewId) {
@@ -289,10 +308,7 @@ bool readObdValue(int activeViewId) {
           #ifdef MOCK_OBD
             newValue = MOCK_OBD_batteryVoltage;
           #else
-            tmpValue = obd->batteryVoltage();
-            debug->print(DEBUG_LEVEL_DEBUG, "value tmp: ");
-            Serial.println(tmpValue);
-            newValue = int(tmpValue * 10);
+            newValue = int(obd->batteryVoltage() * 10);
           #endif
           break;
     case VIEW_KPH:
@@ -315,15 +331,7 @@ bool readObdValue(int activeViewId) {
           #else
             newValue = (int)obd->engineCoolantTemp(); 
           #endif
-          break;
-    //case VIEW_OIL_TEMP: newValue = obd->oilTemp(); break;
-    case VIEW_AMBIENT_TEMP:
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_ambientAirTemp;
-          #else
-            newValue = (int)obd->ambientAirTemp(); 
-          #endif 
-          break;
+          break;    
     case VIEW_INTAKE_TEMP:
           #ifdef MOCK_OBD
             newValue = MOCK_OBD_intakeAirTemp;
@@ -336,6 +344,71 @@ bool readObdValue(int activeViewId) {
             newValue = MOCK_OBD_timingAdvance;
           #else
             newValue = (int)obd->timingAdvance(); 
+          #endif
+          break;
+    case VIEW_ENGINE_LOAD: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_engineLoad;
+          #else
+            newValue = (int)obd->engineLoad(); 
+          #endif
+          break;
+    case VIEW_MAF_RATE: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_mafRate;
+          #else
+            newValue = (int)obd->mafRate(); 
+          #endif
+          break;
+    case VIEW_SHORT_FUEL_TRIM: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_shortFuelTrim;
+          #else
+            newValue = (int)obd->shortTermFuelTrimBank_1(); 
+          #endif
+          break;
+    case VIEW_LONG_FUEL_TRIM: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_longFuelTrim;
+          #else
+            newValue = (int)obd->longTermFuelTrimBank_1(); 
+          #endif
+          break;
+    case VIEW_THROTTLE: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_throttle;
+          #else
+            newValue = (int)obd->throttle(); 
+          #endif
+          break;
+    //supportedPIDs_21_40
+    case VIEW_FUEL_LEVEL: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_fuelLevel;
+          #else
+            newValue = (int)obd->fuelLevel(); 
+          #endif
+          break;
+    //supportedPIDs_41_60
+    case VIEW_AMBIENT_TEMP:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_ambientAirTemp;
+          #else
+            newValue = (int)obd->ambientAirTemp(); 
+          #endif 
+          break;
+    case VIEW_OIL_TEMP: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_oilTemp;
+          #else
+            newValue = (int)obd->oilTemp(); 
+          #endif
+          break;
+    case VIEW_ABS_LOAD: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_absLoad;
+          #else
+            newValue = (int)obd->absLoad(); 
           #endif
           break;
     case VIEW_NONE:
@@ -362,6 +435,8 @@ bool readObdValue(int activeViewId) {
         debug->println(DEBUG_LEVEL_DEBUG, newValue);
       } else if (obd->nb_rx_state != ELM_GETTING_MSG) {
         debug->println(DEBUG_LEVEL_DEBUG, "OBD Read ERROR");  
+        newValue = INT_MIN;
+        saveValue = true;
       }
     }
   #endif
@@ -582,6 +657,7 @@ void loop() {
             debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
         }
 
+        /*
         if (myDisplays[activeDisplay]->secondaryActiveView != VIEW_NONE) {
           int secondaryId = myGauges[viewId]->secondaryViews.ids[myDisplays[activeDisplay]->secondaryActiveView];
 
@@ -617,7 +693,7 @@ void loop() {
           } else {
             debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
           }       
-        }
+        }*/
         
 
         if (viewId == VIEW_DATE_TIME) {

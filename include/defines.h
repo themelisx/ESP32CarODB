@@ -10,10 +10,18 @@
     #define MOCK_OBD_batteryVoltage 118
     #define MOCK_OBD_kph 0
     #define MOCK_OBD_rpm 800
-    #define MOCK_OBD_engineCoolantTemp 10
-    #define MOCK_OBD_ambientAirTemp -5
+    #define MOCK_OBD_engineCoolantTemp 10    
     #define MOCK_OBD_intakeAirTemp 12
     #define MOCK_OBD_timingAdvance 5
+    #define MOCK_OBD_engineLoad 15;
+    #define MOCK_OBD_mafRate 2;
+    #define MOCK_OBD_shortFuelTrim -15;
+    #define MOCK_OBD_longFuelTrim -20;
+    #define MOCK_OBD_throttle 10;
+    #define MOCK_OBD_fuelLevel 15;
+    #define MOCK_OBD_ambientAirTemp -5
+    #define MOCK_OBD_oilTemp -10;
+    #define MOCK_OBD_absLoad 12;
 #endif
 
 #ifdef MOCK_OBD_NORMAL_VALUES
@@ -21,9 +29,17 @@
     #define MOCK_OBD_kph 50
     #define MOCK_OBD_rpm 3500
     #define MOCK_OBD_engineCoolantTemp 92
-    #define MOCK_OBD_ambientAirTemp 25
-    #define MOCK_OBD_intakeAirTemp 45
+    #define MOCK_OBD_intakeAirTemp 35
     #define MOCK_OBD_timingAdvance 12
+    #define MOCK_OBD_engineLoad 15;
+    #define MOCK_OBD_mafRate 5;
+    #define MOCK_OBD_shortFuelTrim 2;
+    #define MOCK_OBD_longFuelTrim 5;
+    #define MOCK_OBD_throttle 35;
+    #define MOCK_OBD_fuelLevel 50;
+    #define MOCK_OBD_ambientAirTemp 25
+    #define MOCK_OBD_oilTemp 45;
+    #define MOCK_OBD_absLoad 25;
 #endif
 
 #ifdef MOCK_OBD_HIGH_VALUES
@@ -31,9 +47,17 @@
     #define MOCK_OBD_kph 180
     #define MOCK_OBD_rpm 7500
     #define MOCK_OBD_engineCoolantTemp 120
-    #define MOCK_OBD_ambientAirTemp 40
     #define MOCK_OBD_intakeAirTemp 95
     #define MOCK_OBD_timingAdvance 40
+    #define MOCK_OBD_engineLoad 85;
+    #define MOCK_OBD_mafRate 7;
+    #define MOCK_OBD_shortFuelTrim 15;
+    #define MOCK_OBD_longFuelTrim 20;
+    #define MOCK_OBD_throttle 81;
+    #define MOCK_OBD_fuelLevel 100;
+    #define MOCK_OBD_ambientAirTemp 45
+    #define MOCK_OBD_oilTemp 125;
+    #define MOCK_OBD_absLoad 85;
 #endif
 
 //#define ENABLE_EEPROM
@@ -64,7 +88,7 @@
 #define TFT2_DC 17
 #define TFT2_CS 15
 
-#define TEST_KEY_DELAY 15000
+#define TEST_KEY_DELAY 5000
 #define DELAY_MAIN_MENU_TASK 100
 #define DELAY_MAIN_TASK 1000
 
@@ -77,30 +101,54 @@
 #define VIEW_MANAGER_DELAY 100
 #define DELAY_VIEW_CHANGE 1000
 
-#define DELAY_VIEW_RPM 50
+#define DELAY_VIEW_BATTERY_VOLTAGE 500
 #define DELAY_VIEW_KPH 500
-#define DELAY_VIEW_BATTERY_VOLTAGE 200
+#define DELAY_VIEW_RPM 50
 #define DELAY_VIEW_COOLANT_TEMP 1000
-#define DELAY_VIEW_AMBIENT_AIR_TEMP 1000
 #define DELAY_VIEW_INTAKE_AIR_TEMP 500
+#define DELAY_VIEW_TIMING_ADV 50
+#define DELAY_VIEW_ENGINE_LOAD 100
+#define DELAY_VIEW_MAF_RATE 50
+#define DELAY_VIEW_SHORT_FUEL_TRIM 50
+#define DELAY_VIEW_LONG_FUEL_TRIM 50
+#define DELAY_VIEW_THROTTLE 50
+//supportedPIDs_21_40
+#define DELAY_VIEW_FUEL_LEVEL 1000
+//supportedPIDs_41_60
+#define DELAY_VIEW_AMBIENT_AIR_TEMP 1000
+#define DELAY_VIEW_OIL_TEMP 1000
+#define DELAY_VIEW_ABS_LOAD 100
+
 #define DELAY_VIEW_DATE_TIME 1000
-#define DELAY_VIEW_ADV 50
+
+#define MAX_VIEWS 15
+#define MAX_SECONDARY_VIEWS 4
 
 #define VIEW_NONE 0
-#define VIEW_KPH 1
-#define VIEW_RPM 2
-#define VIEW_BATTERY_VOLTAGE 3
+#define VIEW_BATTERY_VOLTAGE 1
+#define VIEW_KPH 2
+#define VIEW_RPM 3
 #define VIEW_COOLANT_TEMP 4
-#define VIEW_AMBIENT_TEMP 5
-#define VIEW_INTAKE_TEMP 6
-#define VIEW_TIMING_ADV 7
+#define VIEW_INTAKE_TEMP 5
+#define VIEW_TIMING_ADV 6
+#define VIEW_ENGINE_LOAD 7
+#define VIEW_MAF_RATE 8
+#define VIEW_SHORT_FUEL_TRIM 9
+#define VIEW_LONG_FUEL_TRIM 10
+#define VIEW_THROTTLE 11
+//supportedPIDs_21_40
+#define VIEW_FUEL_LEVEL 12
+//supportedPIDs_41_60
+#define VIEW_AMBIENT_TEMP 13
+#define VIEW_OIL_TEMP 14
+#define VIEW_ABS_LOAD 15
 
 #define VIEW_DATE_TIME 8
-//#define VIEW_OIL_TEMP 9
 
 #define TYPE_GAUGE_GRAPH 1
-#define TYPE_DUAL_TEXT 2
-#define TYPE_DATE 3
+#define TYPE_SIMPLE_TEXT 2
+#define TYPE_DUAL_TEXT 3
+#define TYPE_DATE 4
 
 #define NO_IMAGE -1
 

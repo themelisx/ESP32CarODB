@@ -76,17 +76,15 @@ bool BluetoothOBD::isOBDConnected() {
     return isObdConnected;
 }
 
-/*
-void BluetoothOBD::callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
+/*void BluetoothOBD::callback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
   if (event == ESP_SPP_SRV_OPEN_EVT) {
-    debug->println("Client Connected");
+    debug->println(DEBUG_LEVEL_INFO, "BluetoothOBD Client Connected");
   }
 
   if (event == ESP_SPP_CLOSE_EVT) {
-    debug->println("Client disconnected");
+    debug->println(DEBUG_LEVEL_INFO, "BluetoothOBD Client disconnected");
   }
-}
-*/
+}*/
 
 void BluetoothOBD::disconnect() {
     if (SerialBT.connected()) {
@@ -221,12 +219,6 @@ bool BluetoothOBD::scanBTdevice() {
     String txt = deviceName + " - " + deviceAddr;
     debug->println(DEBUG_LEVEL_DEBUG, txt.c_str());
 
-    /*
-    Connecting to OBDII - 11:22:33:dd:ee:ff:4f:42 (1)...
-[  7374][E][BluetoothSerial.cpp:378] esp_spp_cb(): ESP_SPP_DISCOVERY_COMP_EVT failed!, status:1
-Connecting to OBDII - 11:22:33:dd:ee:ff:4f:42 (2)...
-[ 19841][E][BluetoothSerial.cpp:378] esp_spp_cb(): ESP_SPP_DISCOVERY_COMP_EVT failed!, status:1*/
-
     if (deviceName == obdDeviceName || deviceAddr == obdDeviceAddr) {//match name.
         //00:1d:a5:00:12:92 -> {0x00,0x1d,0xa5,0x00,0x12,0x92};
         //copy match bt mac address to client_name to connect
@@ -257,60 +249,111 @@ void BluetoothOBD::setDeviceAddress(String deviceAddr) {
     this->deviceAddr = deviceAddr;
 }
 
+//supportedPIDs_1_20
 int BluetoothOBD::getVoltage() {
     return this->voltage;
+}
+void BluetoothOBD::setVoltage(int voltage) {
+    this->voltage = voltage;
 }
 
 int BluetoothOBD::getKph() {
     return this->kph;
 }
+void BluetoothOBD::setKph(int kph) {
+    this->kph = kph;
+}
 
 int BluetoothOBD::getRpm() {
     return this->rpm;
+}
+void BluetoothOBD::setRpm(int rpm) {
+    this->rpm = rpm;
 }
 
 int BluetoothOBD::getCoolantTemp() {
     return this->coolantTemp;
 }
-
-int BluetoothOBD::getAmbientTemp() {
-    return this->ambientTemp;
+void BluetoothOBD::setCoolantTemp(int coolantTemp) {
+    this->coolantTemp = coolantTemp;
 }
 
 int BluetoothOBD::getIntakeTemp() {
     return this->intakeTemp;
 }
-
-int BluetoothOBD::getTimingAdvance() {
-    return this->timingAdvance;
-}
-
-void BluetoothOBD::setVoltage(int voltage) {
-    this->voltage = voltage;
-}
-
-void BluetoothOBD::setKph(int kph) {
-    this->kph = kph;
-}
-
-void BluetoothOBD::setRpm(int rpm) {
-    this->rpm = rpm;
-}
-
-void BluetoothOBD::setCoolantTemp(int coolantTemp) {
-    this->coolantTemp = coolantTemp;
-}
-
-void BluetoothOBD::setAmbientTemp(int ambientTemp) {
-    this->ambientTemp = ambientTemp;
-}
-
 void BluetoothOBD::setIntakeTemp(int intakeTemp) {
     this->intakeTemp = intakeTemp;
 }
 
+int BluetoothOBD::getTimingAdvance() {
+    return this->timingAdvance;
+}
 void BluetoothOBD::setTimingAdvance(int timingAdvance) {
     this->timingAdvance = timingAdvance;
+}
+int BluetoothOBD::getEngineLoad() {
+    return this->engineLoad;
+}
+void BluetoothOBD::setEngineLoad(int engineLoad) {
+    this->engineLoad = engineLoad;
+}
+
+int BluetoothOBD::getMafRate() {
+    return this->mafRate;
+}
+void BluetoothOBD::setMafRate(int mafReate) {
+    this->mafRate = mafRate;
+}
+
+int BluetoothOBD::getShortFuelTrim() {
+    return this->shortFuelTrim;
+}
+void BluetoothOBD::setShortFuelTrim(int shortFuelTrim) {
+    this->shortFuelTrim = shortFuelTrim;
+}
+
+int BluetoothOBD::getLongFuelTrim() {
+    return this->longFuelTrim;
+}
+void BluetoothOBD::setLongFuelTrim(int longFuelTrim) {
+    this->longFuelTrim = longFuelTrim;
+}
+
+int BluetoothOBD::getThrottle() {
+    return this->throttle;
+}
+void BluetoothOBD::setThrottle(int throttle) {
+    this->throttle = throttle;
+}
+
+//supportedPIDs_21_40
+int BluetoothOBD::getFuelLevel() {
+    return this->fuelLevel;
+}
+void BluetoothOBD::setFuelLevel(int fuelLevel) {
+    this->fuelLevel = fuelLevel;
+}
+
+//supportedPIDs_41_60
+int BluetoothOBD::getAmbientTemp() {
+    return this->ambientTemp;
+}
+void BluetoothOBD::setAmbientTemp(int ambientTemp) {
+    this->ambientTemp = ambientTemp;
+}
+
+int BluetoothOBD::getOilTemp() {
+    return this->oilTemp;
+}
+void BluetoothOBD::setOilTemp(int oilTemp) {
+    this->oilTemp = oilTemp;
+}
+
+int BluetoothOBD::getAbsLoad() {
+    return this->absLoad;
+}
+void BluetoothOBD::setAbsLoad() {
+    this->absLoad = absLoad;
 }
 
 #endif
