@@ -66,7 +66,7 @@
 //#define ENABLE_RTC_CLOCK
 //#define ENABLE_SECOND_DISPLAY
 
-#define OBD_DEBUG_LOGS false
+#define OBD_DEBUG_LOGS true
 #define ODB_TIMEOUT_MS 100
 #define OBD_DEVICE_NAME (char*)"OBDII"
 #define OBD_DEVICE_PIN (char*)"1234"
@@ -121,7 +121,7 @@
 
 #define DELAY_VIEW_DATE_TIME 1000
 
-#define MAX_VIEWS 15
+#define MAX_VIEWS 11
 #define MAX_SECONDARY_VIEWS 4
 
 #define VIEW_NONE 0
