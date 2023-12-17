@@ -56,8 +56,8 @@ void Settings::save() {
     myEEPROM->writeInt(EEPROM_DISPLAY1_NEXT_VIEW, this->activeView);
     myEEPROM->writeInt(EEPROM_DISPLAY1_SECONDARY_VIEW, this->secondaryActiveView);
     #ifdef ENABLE_SECOND_DISPLAY
-      myEEPROM->writeByte(EEPROM_DISPLAY2_NEXT_VIEW, this->activeView2);
-      myEEPROM->writeByte(EEPROM_DISPLAY2_SECONDARY_VIEW, this->secondaryActiveView2);
+      myEEPROM->writeInt(EEPROM_DISPLAY2_NEXT_VIEW, this->activeView2);
+      myEEPROM->writeInt(EEPROM_DISPLAY2_SECONDARY_VIEW, this->secondaryActiveView2);
     #endif
   #endif
   debug->println(DEBUG_LEVEL_DEBUG, "[OK] Saving settings");
