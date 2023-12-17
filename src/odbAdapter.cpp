@@ -365,6 +365,11 @@ void OdbAdapter::setValueForViewType(int viewTypeId, int newValue) {
   }
 }
 
+int OdbAdapter::getRandomNumber(int min, int max) {
+    srand(time(NULL));
+    return (rand() % (max - min + 1)) + min;
+}
+
 bool OdbAdapter::readObdValue(int viewTypeId) {
 
   int newValue = 0;
@@ -373,77 +378,77 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
   switch (viewTypeId) {
     case VIEW_BATTERY_VOLTAGE: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_batteryVoltage;
+            newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 10, MOCK_OBD_batteryVoltage + 10);
           #else
             newValue = int(obd->batteryVoltage() * 10);
           #endif
           break;
     case VIEW_KPH:
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_kph;
+            newValue = getRandomNumber(MOCK_OBD_kph - 10, MOCK_OBD_kph + 10);
           #else
             newValue = (int)obd->kph(); 
           #endif
           break;
     case VIEW_RPM: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_rpm;
+            newValue = getRandomNumber(MOCK_OBD_rpm - 100, MOCK_OBD_rpm + 100);
           #else
             newValue = (int)obd->rpm(); 
           #endif
           break;
     case VIEW_COOLANT_TEMP: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_engineCoolantTemp;
+            newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 15, MOCK_OBD_engineCoolantTemp + 15);
           #else
             newValue = (int)obd->engineCoolantTemp(); 
           #endif
           break;    
     case VIEW_INTAKE_TEMP:
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_intakeAirTemp;
+            newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 5, MOCK_OBD_intakeAirTemp + 5);
           #else
             newValue = (int)obd->intakeAirTemp(); 
           #endif
           break;
     case VIEW_TIMING_ADV: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_timingAdvance;
+            newValue = getRandomNumber(MOCK_OBD_timingAdvance - 5, MOCK_OBD_timingAdvance + 5);
           #else
             newValue = (int)obd->timingAdvance(); 
           #endif
           break;
     case VIEW_ENGINE_LOAD: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_engineLoad;
+            newValue = getRandomNumber(MOCK_OBD_engineLoad - 10, MOCK_OBD_engineLoad + 10);
           #else
             newValue = (int)obd->engineLoad(); 
           #endif
           break;
     case VIEW_MAF_RATE: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_mafRate;
+            newValue = getRandomNumber(MOCK_OBD_mafRate - 3, MOCK_OBD_mafRate + 3);
           #else
             newValue = (int)obd->mafRate(); 
           #endif
           break;
     case VIEW_SHORT_FUEL_TRIM: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_shortFuelTrim;
+            newValue = getRandomNumber(MOCK_OBD_shortFuelTrim - 5, MOCK_OBD_shortFuelTrim + 5);
           #else
             newValue = (int)obd->shortTermFuelTrimBank_1(); 
           #endif
           break;
     case VIEW_LONG_FUEL_TRIM: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_longFuelTrim;
+            newValue = getRandomNumber(MOCK_OBD_longFuelTrim - 5, MOCK_OBD_longFuelTrim + 5);
           #else
             newValue = (int)obd->longTermFuelTrimBank_1(); 
           #endif
           break;
     case VIEW_THROTTLE: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_throttle;
+            newValue = getRandomNumber(MOCK_OBD_throttle - 10, MOCK_OBD_throttle + 10);
           #else
             newValue = (int)obd->throttle(); 
           #endif
@@ -451,7 +456,7 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
     //supportedPIDs_21_40
     case VIEW_FUEL_LEVEL: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_fuelLevel;
+            newValue = getRandomNumber(MOCK_OBD_fuelLevel - 15, MOCK_OBD_fuelLevel + 15);
           #else
             newValue = (int)obd->fuelLevel(); 
           #endif
@@ -459,21 +464,21 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
     //supportedPIDs_41_60
     case VIEW_AMBIENT_TEMP:
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_ambientAirTemp;
+            newValue = getRandomNumber(MOCK_OBD_ambientAirTemp - 10, MOCK_OBD_ambientAirTemp + 10);
           #else
             newValue = (int)obd->ambientAirTemp(); 
           #endif 
           break;
     case VIEW_OIL_TEMP: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_oilTemp;
+            newValue = getRandomNumber(MOCK_OBD_oilTemp - 15, MOCK_OBD_oilTemp + 15);
           #else
             newValue = (int)obd->oilTemp(); 
           #endif
           break;
     case VIEW_ABS_LOAD: 
           #ifdef MOCK_OBD
-            newValue = MOCK_OBD_absLoad;
+            newValue = getRandomNumber(MOCK_OBD_absLoad - 5, MOCK_OBD_absLoad + 5);
           #else
             newValue = (int)obd->absLoad(); 
           #endif

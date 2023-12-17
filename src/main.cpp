@@ -142,24 +142,32 @@ void setup() {
   myGauges[1] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   // KM/h
   myGauges[2] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
+  //myGauges[2]->addSecondaryView(VIEW_RPM, (char*)"%d");
   // RPM  
   myGauges[3] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
+  //myGauges[3]->addSecondaryView(VIEW_KPH, (char*)"%d");
   // Engine coolant  
   myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
+  //myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"%d C");
   // Intake
   myGauges[5] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
+  //myGauges[5]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"%d C");
   // Advance
   myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
-  //  Engine load
-  myGauges[7] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"LOAD", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  // Short fuel trims
-  myGauges[8] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"SFT", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  // Long fuel trims
-  myGauges[9] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"LFT", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   // Throttle
-  myGauges[10] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROT", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  myGauges[7] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  //myGauges[7]->addSecondaryView(VIEW_ENGINE_LOAD, (char*)"%d");
+  //  Engine load
+  myGauges[8] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  //myGauges[8]->addSecondaryView(VIEW_THROTTLE, (char*)"%d");
+  // Short fuel trims
+  myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  //myGauges[9]->addSecondaryView(VIEW_LONG_FUEL_TRIM, (char*)"%d");
+  // Long fuel trims
+  myGauges[10] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  //myGauges[10]->addSecondaryView(VIEW_SHORT_FUEL_TRIM, (char*)"%d");
   // MAF rate
-  myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);
+  //myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);
   
   //supportedPIDs_21_40
   // Fuel level
@@ -438,6 +446,7 @@ void loop() {
 
       bool changeView = drawActiveGauge();
       if (changeView) {
+        debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
         viewIndex = myDisplays[activeDisplay]->activeView;
         viewId = myGauges[viewIndex]->getId();
       }
@@ -449,10 +458,10 @@ void loop() {
         
         newValue = odbAdapter->getValueForViewType(viewId);
 
-        debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
-        debug->println(DEBUG_LEVEL_DEBUG2, newValue);
-        debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
-        debug->println(DEBUG_LEVEL_DEBUG2, myGauges[viewIndex]->data.value);
+        //debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
+        //debug->println(DEBUG_LEVEL_DEBUG2, newValue);
+        //debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
+        //debug->println(DEBUG_LEVEL_DEBUG2, myGauges[viewIndex]->data.value);
 
         bool redrawView = myGauges[viewIndex]->data.value != newValue;
         myGauges[viewIndex]->data.value = newValue;
@@ -461,19 +470,18 @@ void loop() {
           int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
           int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
 
-          newValue = odbAdapter->getValueForViewType(secondaryViewId);
-          if (!redrawView) {
-            for (int i=1; i<MAX_VIEWS+1; i++){
-              if (myGauges[i]->getId() == secondaryViewId) {
-                redrawView = myGauges[i]->data.value != newValue;
-                myGauges[i]->data.value = newValue;
-                break;
-              }
+          valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
+          if (valueReaded) {
+            newValue = odbAdapter->getValueForViewType(secondaryViewId);
+            if (myGauges[viewIndex]->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
+              redrawView = true;
             }
+            myGauges[viewIndex]->secondaryViews.value[secondaryViewIdx] = newValue;
           }
         }
 
-        if (redrawView || changeView) {            
+        if (redrawView || changeView) { 
+          //debug->println(DEBUG_LEVEL_DEBUG, "Draw gauge request");
           myGauges[viewIndex]->drawGauge(changeView);
         }
 

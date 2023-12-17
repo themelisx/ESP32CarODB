@@ -38,6 +38,7 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     this->data.high = high;
     this->data.max = max;
     this->data.value = INT_MIN;
+    this->data.oldValue = INT_MIN;
     this->data.state = STATE_OUT_OF_RANGE;
     this->data.lowColor = lowColor;
     this->data.highColor = highColor;
@@ -142,30 +143,6 @@ void Gauge::drawDateTime() {
 
 #endif
 
-int Gauge::getSecondaryInfo(char *buf) {
-  int newValue = INT_MIN;
-
-  int secondaryViewId = this->secondaryViews.ids[this->secondaryViews.activeView];
-  for (int i=1; i<MAX_VIEWS+1; i++) {
-    if (myGauges[i]->getId() == secondaryViewId) {
-      newValue = myGauges[i]->data.value;
-      break;
-    }
-  }
-  
-  if (newValue == INT_MIN) {
-    sprintf(buf, "%s", "---");
-  } else {
-    if (secondaryViewId == VIEW_BATTERY_VOLTAGE) {
-      float x = (float)newValue / 10;
-      sprintf(buf, secondaryViews.strFormat[secondaryViews.activeView], x);
-    } else {
-      sprintf(buf, secondaryViews.strFormat[secondaryViews.activeView], newValue);
-    }
-  }
-  return newValue;
-}
-
 void Gauge::drawGauge(bool repaint) {
 
   char valueBuf[16];
@@ -217,10 +194,10 @@ void Gauge::drawGauge(bool repaint) {
 
         int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
         int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
-        int oldAngle = map(data.value, data.min, data.max, gaugeMin, gaugeMax);
+        int oldAngle = map(data.oldValue, data.min, data.max, gaugeMin, gaugeMax);
         int newAngle = map(newValue, data.min, data.max, gaugeMin, gaugeMax);
 
-        if (newValue < data.value) {
+        if (newValue < data.oldValue) {
           for (i = oldAngle; i >= newAngle; i--) {
             drawGaugeLine(i, bColor);
           }
@@ -248,40 +225,38 @@ void Gauge::drawGauge(bool repaint) {
         debug->println(DEBUG_LEVEL_ERROR, "Out of range");        
       }
     } else {
-      secondaryValue = getSecondaryInfo(secondaryBuffer);
       drawUpper = true;
     }
   } else if (getType() == TYPE_DUAL_TEXT) {
-    secondaryValue = getSecondaryInfo(secondaryBuffer);
     drawUpper = true;
   }
 
-  if (drawUpper) {
-    debug->print(DEBUG_LEVEL_DEBUG2, "Draw upper text: ");
-    debug->println(DEBUG_LEVEL_DEBUG2, secondaryValue);
-    //if (myView[myDisplays[activeDisplay].activeView].type == TYPE_DUAL_TEXT || myView[myDisplays[activeDisplay].activeView].secondaryViews.activeView != 0) {
-
-    int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
-
-    // TODO: If there is no secondary view
-    //if (myGauges[secondaryViewId]->data.value != secondaryValue) {
-      if (myGauges[secondaryViewId]->data.low != myGauges[secondaryViewId]->data.min && secondaryValue >= myGauges[secondaryViewId]->data.min && secondaryValue < myGauges[secondaryViewId]->data.low) {
-        fColorSecondary = WHITE;
-        bColorSecondary = myGauges[secondaryViewId]->data.lowColor;
-      } else if (myGauges[secondaryViewId]->data.high != myGauges[secondaryViewId]->data.max && secondaryValue > myGauges[secondaryViewId]->data.high && secondaryValue <= myGauges[secondaryViewId]->data.max) {
-        fColorSecondary = WHITE;
-        bColorSecondary = myGauges[secondaryViewId]->data.highColor;
-      } else {
-        fColorSecondary = FRONT_COLOR;
-        bColorSecondary = BACK_COLOR;
-      }
-      drawUpperString(repaint, secondaryBuffer, fColorSecondary, bColorSecondary);
-    //}
-  }
-
   data.state = newState;
-  data.value = newValue;
-  
+  data.oldValue = newValue;
+
+  if (drawUpper && secondaryViews.activeView != 0) {
+    
+    int secondaryViewId = secondaryViews.ids[secondaryViews.activeView];
+    newValue = secondaryViews.value[secondaryViews.activeView];
+    if (newValue != secondaryViews.oldValue[secondaryViews.activeView]) {
+      debug->print(DEBUG_LEVEL_DEBUG2, "Draw upper text: ");
+      debug->println(DEBUG_LEVEL_DEBUG2, secondaryValue);
+      secondaryViews.oldValue[secondaryViews.activeView] = newValue;
+      
+      if (newValue == INT_MIN) {
+        sprintf(secondaryBuffer, "%s", "---");
+      } else {
+        if (secondaryViewId == VIEW_BATTERY_VOLTAGE) {
+          float x = (float)newValue / 10;
+          sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViews.activeView], x);
+        } else {
+          sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViews.activeView], newValue);
+        }
+      }
+
+      drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+    }   
+  }    
 }
 
 void Gauge::drawGaugeLine(int angle, int color) {
@@ -392,6 +367,8 @@ void Gauge::addSecondaryView(int secondaryViewId, char *strFormat) {
         int pos = secondaryViews.count + 1;
         secondaryViews.ids[pos] = secondaryViewId;
         secondaryViews.strFormat[pos] = strFormat;
+        secondaryViews.value[pos] = INT_MIN;
+        secondaryViews.oldValue[pos] = INT_MIN;
         secondaryViews.count++;
     } else {
         debug->println(DEBUG_LEVEL_ERROR, "Cannot add more views");

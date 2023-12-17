@@ -62,6 +62,7 @@ class OdbAdapter {
     int absLoad;
 
     bool scanBTdevice();
+    int getRandomNumber(int min, int max);
 
   public:
     OdbAdapter(String deviceName, String deviceAddr);

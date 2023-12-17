@@ -20,6 +20,8 @@ typedef struct
   int activeView;
   int count;
   int ids[MAX_SECONDARY_VIEWS + 1];
+  int value[MAX_SECONDARY_VIEWS + 1];
+  int oldValue[MAX_SECONDARY_VIEWS + 1];
   char *strFormat[MAX_SECONDARY_VIEWS + 1];
 } S_SecondaryViews;
 
@@ -30,6 +32,7 @@ typedef struct
   int high;
   int max;
   int value;
+  int oldValue;
   int state;
   int lowColor;
   int highColor;
@@ -112,8 +115,6 @@ class Gauge {
     void drawCenterString(const char *buf);
     void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
     void drawBottomString(const char *buf, int fColor, int bgColor);
-
-    int getSecondaryInfo(char *buf);
 
 };
 
