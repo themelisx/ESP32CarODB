@@ -52,16 +52,16 @@ void tft1_task(void *pvParameters) {
     xSemaphoreGive(keyPadSemaphore);
     yield();
 
-    if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
+    if (odbAdapter.isDeviceConnected() && odbAdapter.isOBDConnected()) {
       xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
       switch (viewId) {
-        case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD.getVoltage(); break;
-        case VIEW_KPH: newValue = bluetoothOBD.getKph(); break;
-        case VIEW_RPM: newValue = bluetoothOBD.getRpm(); break;
-        case VIEW_COOLANT_TEMP: newValue = bluetoothOBD.getCoolantTemp(); break;
-        case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD.getAmbientTemp(); break;
-        case VIEW_INTAKE_TEMP: newValue = bluetoothOBD.getIntakeTemp(); break;
-        case VIEW_TIMING_ADV: newValue = bluetoothOBD.getTimingAdvance(); break;
+        case VIEW_BATTERY_VOLTAGE: newValue = odbAdapter.getVoltage(); break;
+        case VIEW_KPH: newValue = odbAdapter.getKph(); break;
+        case VIEW_RPM: newValue = odbAdapter.getRpm(); break;
+        case VIEW_COOLANT_TEMP: newValue = odbAdapter.getCoolantTemp(); break;
+        case VIEW_AMBIENT_TEMP: newValue = odbAdapter.getAmbientTemp(); break;
+        case VIEW_INTAKE_TEMP: newValue = odbAdapter.getIntakeTemp(); break;
+        case VIEW_TIMING_ADV: newValue = odbAdapter.getTimingAdvance(); break;
         default: newValue = 0;
       }
       xSemaphoreGive(obdValueSemaphore);
@@ -73,9 +73,10 @@ void tft1_task(void *pvParameters) {
     xSemaphoreGive(myGauges[viewId]->semaphore);
     yield();
 
-    if (viewId == VIEW_DATE_TIME) {
+    /*if (viewId == VIEW_DATE_TIME) {
       myGauges[viewId]->drawDateTime();
-    } else if (changeView || oldValue != newValue) {
+    } else*/ 
+    if (changeView || oldValue != newValue) {
       //debug->print(DEBUG_LEVEL_INFO, "Readed value: ");
       //debug->println(DEBUG_LEVEL_INFO, newValue);
       //debug->println(DEBUG_LEVEL_INFO, "Drawing....");

@@ -19,18 +19,18 @@ void obd_task(void *pvParameters) {
 
   #ifndef MOCK_OBD
     // if device does not have pin use the follow
-    bool connected = bluetoothOBD.connect(OBD_DEVICE_NAME, nullptr);
-    //bool connected = bluetoothOBD.connect(OBD_DEVICE_NAME, OBD_DEVICE_PIN);
+    bool connected = odbAdapter.connect(OBD_DEVICE_NAME, nullptr);
+    //bool connected = odbAdapter.connect(OBD_DEVICE_NAME, OBD_DEVICE_PIN);
   #else
-    bluetoothOBD.setBtConnected(true);
-    bluetoothOBD.setObdConnected(true);
+    odbAdapter.setDeviceConnected(true);
+    odbAdapter.setObdConnected(true);
   #endif
 
   for (;;) {
 
     runs = 0;
 
-    if (bluetoothOBD.isBluetoothConnected() && bluetoothOBD.isOBDConnected()) {
+    if (odbAdapter.isDeviceConnected() && odbAdapter.isOBDConnected()) {
       for (int i = 1; i < MAX_DISPLAYS + 1; i++) {
         //if (myDisplays[activeDisplay].enabled) {
         runs++;
@@ -57,7 +57,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.batteryVoltage() * 10;
                   #endif
-                  bluetoothOBD.setVoltage(newValue);
+                  odbAdapter.setVoltage(newValue);
                   break;
             case VIEW_KPH:
                   #ifdef MOCK_OBD
@@ -65,7 +65,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.kph(); 
                   #endif
-                  bluetoothOBD.setKph(newValue);
+                  odbAdapter.setKph(newValue);
                   break;
             case VIEW_RPM: 
                   #ifdef MOCK_OBD
@@ -74,7 +74,7 @@ void obd_task(void *pvParameters) {
                     newValue = obd.rpm(); 
                   #endif
                   debug->println(DEBUG_LEVEL_DEBUG2, "set rpm");
-                  bluetoothOBD.setRpm(newValue);
+                  odbAdapter.setRpm(newValue);
                   break;
             case VIEW_COOLANT_TEMP: 
                   #ifdef MOCK_OBD
@@ -82,7 +82,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.engineCoolantTemp(); 
                   #endif
-                  bluetoothOBD.setCoolantTemp(newValue);
+                  odbAdapter.setCoolantTemp(newValue);
                   break;
             //case VIEW_OIL_TEMP: newValue = obd.oilTemp(); break;
             case VIEW_AMBIENT_TEMP:
@@ -91,7 +91,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.ambientAirTemp(); 
                   #endif 
-                  bluetoothOBD.setAmbientTemp(newValue);
+                  odbAdapter.setAmbientTemp(newValue);
                   break;
             case VIEW_INTAKE_TEMP:
                   #ifdef MOCK_OBD
@@ -99,7 +99,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.intakeAirTemp(); 
                   #endif
-                  bluetoothOBD.setIntakeTemp(newValue);
+                  odbAdapter.setIntakeTemp(newValue);
                   break;
             case VIEW_TIMING_ADV: 
                   #ifdef MOCK_OBD
@@ -107,7 +107,7 @@ void obd_task(void *pvParameters) {
                   #else
                     newValue = obd.timingAdvance(); 
                   #endif
-                  bluetoothOBD.setTimingAdvance(newValue);
+                  odbAdapter.setTimingAdvance(newValue);
                   break;
             case VIEW_NONE:
               shouldCheck = false;

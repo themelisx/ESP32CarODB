@@ -19,6 +19,9 @@ class MyEEPROM {
     void createSignature();
     bool hasSignature();
 
+    void writeInt(int address, int number);
+    int readInt(int address);
+
     byte readByte(int address);
     void writeByte(int address, byte myByte);
 

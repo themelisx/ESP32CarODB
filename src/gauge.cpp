@@ -109,8 +109,8 @@ void Gauge::setFontSize(int sz) {
   }
 }
 
-void Gauge::getFormattedValue(int viewId, int newValue, char *buf) {
-  if (viewId == VIEW_BATTERY_VOLTAGE) {
+void Gauge::getFormattedValue(int newValue, char *buf) {
+  if (this->getId() == VIEW_BATTERY_VOLTAGE) {
     setFontSize(26);
     float x = (float)newValue / 10;
     sprintf(buf, data.strFormat, x);
@@ -120,14 +120,12 @@ void Gauge::getFormattedValue(int viewId, int newValue, char *buf) {
   }
 }
 
+
+#ifdef ENABLE_RTC_CLOCK
+
 void Gauge::drawDateTime() {
-  #ifdef ENABLE_RTC_CLOCK
-    strncpy(dateString, myRTC.getFormattedDate(), DATE_LENGTH);
-    strncpy(timeString, myRTC.getFormattedTime(), TIME_LENGTH);
-  #else
-    strncpy(dateString, "--/--/--", DATE_LENGTH);
-    strncpy(timeString, "--:--", TIME_LENGTH);
-  #endif
+  strncpy(dateString, myRTC.getFormattedDate(), DATE_LENGTH);
+  strncpy(timeString, myRTC.getFormattedTime(), TIME_LENGTH);
 
   if (strncmp(dateString, oldDateString, DATE_LENGTH) != 0) {
     strncpy(oldDateString, dateString, DATE_LENGTH);
@@ -142,33 +140,19 @@ void Gauge::drawDateTime() {
   }
 }
 
-int Gauge::getSecondaryInfo(int secondaryViewId, char *buf) {
+#endif
+
+int Gauge::getSecondaryInfo(char *buf) {
   int newValue = INT_MIN;
-  
-  #ifdef ENABLE_OBD_BLUETOOTH
-    if (bluetoothOBD->isBluetoothConnected() && bluetoothOBD->isOBDConnected()) {
 
-      #ifdef USE_MULTI_THREAD
-        xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-      #endif
-
-        switch (secondaryViewId) {
-          case VIEW_BATTERY_VOLTAGE: newValue = bluetoothOBD->getVoltage(); break;
-          case VIEW_KPH: newValue = bluetoothOBD->getKph(); break;
-          case VIEW_RPM: newValue = bluetoothOBD->getRpm(); break;
-          case VIEW_COOLANT_TEMP: newValue = bluetoothOBD->getCoolantTemp(); break;
-          case VIEW_AMBIENT_TEMP: newValue = bluetoothOBD->getAmbientTemp(); break;
-          case VIEW_INTAKE_TEMP: newValue = bluetoothOBD->getIntakeTemp(); break;
-          case VIEW_TIMING_ADV: newValue = bluetoothOBD->getTimingAdvance(); break;          
-          default: newValue = INT_MIN;
-        }
-
-      #ifdef USE_MULTI_THREAD
-        xSemaphoreGive(obdValueSemaphore);
-      #endif
+  int secondaryViewId = this->secondaryViews.ids[this->secondaryViews.activeView];
+  for (int i=1; i<MAX_VIEWS+1; i++) {
+    if (myGauges[i]->getId() == secondaryViewId) {
+      newValue = myGauges[i]->data.value;
+      break;
     }
-  #endif
-
+  }
+  
   if (newValue == INT_MIN) {
     sprintf(buf, "%s", "---");
   } else {
@@ -182,7 +166,7 @@ int Gauge::getSecondaryInfo(int secondaryViewId, char *buf) {
   return newValue;
 }
 
-void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
+void Gauge::drawGauge(bool repaint) {
 
   char valueBuf[16];
   char secondaryBuffer[16];
@@ -192,6 +176,8 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
   int bColorSecondary;
   int secondaryValue;
   bool drawUpper = false;
+
+  int newValue = this->data.value;
 
   if (newValue < data.min || newValue > data.max) {
     newState = STATE_OUT_OF_RANGE;
@@ -217,7 +203,7 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
 
   if (newValue != INT_MIN) {
     display->setTextColor(newStateColor);
-    getFormattedValue(viewId, newValue, valueBuf);
+    getFormattedValue(newValue, valueBuf);
     drawCenterString(valueBuf);
   } else {
     display->setTextColor(fColor);
@@ -259,15 +245,14 @@ void Gauge::drawGauge(int viewId, bool repaint, int newValue) {
           drawGaugeLine(highAngle, data.highColor);
         }
       } else {
-        debug->println(DEBUG_LEVEL_ERROR, "Out of range");
-        
+        debug->println(DEBUG_LEVEL_ERROR, "Out of range");        
       }
     } else {
-      secondaryValue = getSecondaryInfo(myGauges[viewId]->secondaryViews.ids[myGauges[viewId]->secondaryViews.activeView], secondaryBuffer);
+      secondaryValue = getSecondaryInfo(secondaryBuffer);
       drawUpper = true;
     }
   } else if (getType() == TYPE_DUAL_TEXT) {
-    secondaryValue = getSecondaryInfo(myGauges[viewId]->secondaryViews.ids[myGauges[viewId]->secondaryViews.activeView], secondaryBuffer);
+    secondaryValue = getSecondaryInfo(secondaryBuffer);
     drawUpper = true;
   }
 
@@ -402,7 +387,7 @@ void Gauge::drawBottomString(const char *buf, int fColor, int bgColor) {
   
 }
 
-void Gauge::addSecondaryView(int viewId, int secondaryViewId, char *strFormat) {
+void Gauge::addSecondaryView(int secondaryViewId, char *strFormat) {
     if (secondaryViews.count < MAX_SECONDARY_VIEWS) {
         int pos = secondaryViews.count + 1;
         secondaryViews.ids[pos] = secondaryViewId;

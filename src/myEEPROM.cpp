@@ -57,8 +57,8 @@ void MyEEPROM::createSignature() {
     return;
   }
 
-  EEPROM.write(0, 'G');
-  EEPROM.write(1, 'R');
+  EEPROM.write(0, 'T');
+  EEPROM.write(1, 'C');
   if (EEPROM.commit()) {
     debug->println(DEBUG_LEVEL_DEBUG, "Done");
   } else {
@@ -73,7 +73,21 @@ bool MyEEPROM::hasSignature() {
     return false;
   }
 
-  return ((EEPROM.read(0) == 'G') && (EEPROM.read(1) == 'R'));
+  return ((EEPROM.read(0) == 'T') && (EEPROM.read(1) == 'C'));
+}
+
+void MyEEPROM::writeInt(int address, int number)
+{ 
+  EEPROM.write(address, number >> 8);
+  EEPROM.write(address + 1, number & 0xFF);
+  EEPROM.commit();
+}
+
+int MyEEPROM::readInt(int address)
+{
+  byte byte1 = EEPROM.read(address);
+  byte byte2 = EEPROM.read(address + 1);
+  return (byte1 << 8) + byte2;
 }
 
 byte MyEEPROM::readByte(int address) {  
@@ -98,6 +112,7 @@ void MyEEPROM::writeByte(int address, byte myByte) {
 
   if (address < this->size) {
     EEPROM.put(address, myByte);
+    EEPROM.commit();
   } else {
     showOutOfBoundsError(address);
   }
@@ -154,7 +169,9 @@ size_t MyEEPROM::writeString(int address, const char* value) {
   }
 
   if (address < this->size) {
-    return EEPROM.writeString(address, value);
+    int bytes = EEPROM.writeString(address, value);
+    EEPROM.commit();
+    return bytes;
   } else {
     showOutOfBoundsError(address);
     return 0;
@@ -169,7 +186,9 @@ size_t MyEEPROM::writeString(int address, String value) {
   }
   
   if (address < this->size) {
-    return EEPROM.writeString(address, value);
+    int bytes = EEPROM.writeString(address, value);
+    EEPROM.commit();
+    return bytes;
   } else {
     showOutOfBoundsError(address);
     return 0;
@@ -184,7 +203,9 @@ size_t MyEEPROM::writeBytes(int address, const void* value, size_t len) {
   }
 
   if ((address + len) < this->size) {
-    return EEPROM.writeBytes(address, value, len);
+    int bytes = EEPROM.writeBytes(address, value, len);
+    EEPROM.commit();
+    return bytes;
   } else {
     showOutOfBoundsError(address, len);
     return 0;

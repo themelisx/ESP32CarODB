@@ -68,12 +68,14 @@ void keypad_task(void *pvParameters) {
         if (myDisplays[activeDisplay]->nextView == 0) {
           myDisplays[activeDisplay]->nextView = MAX_VIEWS;
         }
-        if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
+        /*if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
           memset(oldDateString, 0, DATE_LENGTH);
           memset(oldTimeString, 0, TIME_LENGTH);
-        }
+        }*/
       }
-      mySettings.save();
+      mySettings->setActiveView(myDisplays[1]->activeView);
+      mySettings->setSecondaryActiveView(myDisplays[1]->secondaryActiveView);
+      mySettings->save();
       xSemaphoreGive(keyPadSemaphore);
       yield();
 
@@ -107,12 +109,14 @@ void keypad_task(void *pvParameters) {
         if (myDisplays[activeDisplay]->nextView > MAX_VIEWS) {
           myDisplays[activeDisplay]->nextView = 1;
         }
-        if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
+        /*if (myDisplays[activeDisplay]->nextView == VIEW_DATE_TIME) {
           memset(oldDateString, 0, DATE_LENGTH);
           memset(oldTimeString, 0, TIME_LENGTH);
-        }
+        }*/
       }
-      mySettings.save();
+      mySettings->setActiveView(myDisplays[1]->activeView);
+      mySettings->setSecondaryActiveView(myDisplays[1]->secondaryActiveView);
+      mySettings->save();
       xSemaphoreGive(keyPadSemaphore);
       yield();
 
