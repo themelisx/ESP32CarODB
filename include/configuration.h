@@ -20,7 +20,7 @@
 // Settings //
 //////////////
 // Enable EEPROM to save settings in EEPROM
-//#define ENABLE_EEPROM
+#define ENABLE_EEPROM
 
 
 /////////////////

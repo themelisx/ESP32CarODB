@@ -78,6 +78,11 @@ class OdbAdapter {
     void setDeviceName(String deviceName);
     void setDeviceAddress(String deviceAddr);
 
+    bool readValueForViewType(int viewId);
+    int getValueForViewType(int viewId);
+    void setValueForViewType(int viewTypeId, int newValue);
+    bool readObdValue(int viewTypeId);
+
     //supportedPIDs_1_20
     int getVoltage();
     void setVoltage(int voltage);

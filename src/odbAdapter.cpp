@@ -295,6 +295,230 @@ bool OdbAdapter::scanBTdevice() {
 }
 #endif
 
+bool OdbAdapter::readValueForViewType(int viewId) {
+
+  bool valueReaded = false;
+  int count = 0;
+
+  debug->print(DEBUG_LEVEL_DEBUG2, "Getting info for gauge id: ");
+  debug->println(DEBUG_LEVEL_DEBUG2, viewId);
+  debug->println(DEBUG_LEVEL_DEBUG2, "Query ODB value");
+  
+  while (!valueReaded) {
+    valueReaded = readObdValue(viewId); 
+    count++;
+    if (count > 200) {
+      debug->println(DEBUG_LEVEL_DEBUG2, "Value not readed after 200 times");
+      break;
+    }
+  }
+
+  return valueReaded;
+}
+
+int OdbAdapter::getValueForViewType(int viewId) {
+  int newValue;
+  switch (viewId) {
+    case VIEW_BATTERY_VOLTAGE: newValue = getVoltage(); break;
+    case VIEW_KPH: newValue = getKph(); break;
+    case VIEW_RPM: newValue = getRpm(); break;
+    case VIEW_COOLANT_TEMP: newValue = getCoolantTemp(); break;            
+    case VIEW_INTAKE_TEMP: newValue = getIntakeTemp(); break;
+    case VIEW_TIMING_ADV: newValue = getTimingAdvance(); break;
+    case VIEW_ENGINE_LOAD: newValue = getEngineLoad(); break;    
+    case VIEW_SHORT_FUEL_TRIM: newValue = getShortFuelTrim(); break;
+    case VIEW_LONG_FUEL_TRIM: newValue = getLongFuelTrim(); break;
+    case VIEW_THROTTLE: newValue = getThrottle(); break;
+    case VIEW_MAF_RATE: newValue = getMafRate(); break;
+    //supportedPIDs_21_40
+    case VIEW_FUEL_LEVEL: newValue = getFuelLevel(); break;
+    //supportedPIDs_41_60
+    case VIEW_AMBIENT_TEMP: newValue = getAmbientTemp(); break;
+    case VIEW_OIL_TEMP: newValue = getOilTemp(); break;
+    case VIEW_ABS_LOAD: newValue = getAbsLoad(); break;
+    default: newValue = INT_MIN;
+  }
+  return newValue;
+}
+
+void OdbAdapter::setValueForViewType(int viewTypeId, int newValue) {
+  switch (viewTypeId) {
+    case VIEW_BATTERY_VOLTAGE: setVoltage(newValue); break;
+    case VIEW_KPH: setKph(newValue); break;
+    case VIEW_RPM: setRpm(newValue); break;
+    case VIEW_COOLANT_TEMP: setCoolantTemp(newValue); break;        
+    case VIEW_INTAKE_TEMP: setIntakeTemp(newValue); break;
+    case VIEW_TIMING_ADV: setTimingAdvance(newValue); break;
+    case VIEW_ENGINE_LOAD: setEngineLoad(newValue); break;    
+    case VIEW_SHORT_FUEL_TRIM: setShortFuelTrim(newValue); break;
+    case VIEW_LONG_FUEL_TRIM: setLongFuelTrim(newValue); break;
+    case VIEW_THROTTLE: setThrottle(newValue); break;
+    case VIEW_MAF_RATE: setMafRate(newValue); break;
+    //supportedPIDs_21_40
+    case VIEW_FUEL_LEVEL: setFuelLevel(newValue); break;
+    //supportedPIDs_41_60
+    case VIEW_AMBIENT_TEMP: setAmbientTemp(newValue); break;
+    case VIEW_OIL_TEMP: setOilTemp(newValue); break;
+    case VIEW_ABS_LOAD: setAbsLoad(newValue); break;
+    case VIEW_NONE: break;    
+    default: break;
+  }
+}
+
+bool OdbAdapter::readObdValue(int viewTypeId) {
+
+  int newValue = 0;
+  bool doAction = true;
+
+  switch (viewTypeId) {
+    case VIEW_BATTERY_VOLTAGE: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_batteryVoltage;
+          #else
+            newValue = int(obd->batteryVoltage() * 10);
+          #endif
+          break;
+    case VIEW_KPH:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_kph;
+          #else
+            newValue = (int)obd->kph(); 
+          #endif
+          break;
+    case VIEW_RPM: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_rpm;
+          #else
+            newValue = (int)obd->rpm(); 
+          #endif
+          break;
+    case VIEW_COOLANT_TEMP: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_engineCoolantTemp;
+          #else
+            newValue = (int)obd->engineCoolantTemp(); 
+          #endif
+          break;    
+    case VIEW_INTAKE_TEMP:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_intakeAirTemp;
+          #else
+            newValue = (int)obd->intakeAirTemp(); 
+          #endif
+          break;
+    case VIEW_TIMING_ADV: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_timingAdvance;
+          #else
+            newValue = (int)obd->timingAdvance(); 
+          #endif
+          break;
+    case VIEW_ENGINE_LOAD: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_engineLoad;
+          #else
+            newValue = (int)obd->engineLoad(); 
+          #endif
+          break;
+    case VIEW_MAF_RATE: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_mafRate;
+          #else
+            newValue = (int)obd->mafRate(); 
+          #endif
+          break;
+    case VIEW_SHORT_FUEL_TRIM: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_shortFuelTrim;
+          #else
+            newValue = (int)obd->shortTermFuelTrimBank_1(); 
+          #endif
+          break;
+    case VIEW_LONG_FUEL_TRIM: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_longFuelTrim;
+          #else
+            newValue = (int)obd->longTermFuelTrimBank_1(); 
+          #endif
+          break;
+    case VIEW_THROTTLE: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_throttle;
+          #else
+            newValue = (int)obd->throttle(); 
+          #endif
+          break;
+    //supportedPIDs_21_40
+    case VIEW_FUEL_LEVEL: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_fuelLevel;
+          #else
+            newValue = (int)obd->fuelLevel(); 
+          #endif
+          break;
+    //supportedPIDs_41_60
+    case VIEW_AMBIENT_TEMP:
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_ambientAirTemp;
+          #else
+            newValue = (int)obd->ambientAirTemp(); 
+          #endif 
+          break;
+    case VIEW_OIL_TEMP: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_oilTemp;
+          #else
+            newValue = (int)obd->oilTemp(); 
+          #endif
+          break;
+    case VIEW_ABS_LOAD: 
+          #ifdef MOCK_OBD
+            newValue = MOCK_OBD_absLoad;
+          #else
+            newValue = (int)obd->absLoad(); 
+          #endif
+          break;
+    case VIEW_NONE:
+          doAction = false;
+          debug->println(DEBUG_LEVEL_INFO, "Inactive view");
+          break;
+    default:
+          doAction = false;
+          debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
+          debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
+  }
+
+  #ifdef MOCK_OBD
+    bool saveValue = true;
+
+    debug->println(DEBUG_LEVEL_DEBUG2, "OBD Read SUCCESS");  
+    debug->print(DEBUG_LEVEL_DEBUG2, "----------------> value readed: ");
+    debug->println(DEBUG_LEVEL_DEBUG2, newValue);
+
+  #else
+    bool saveValue = false;
+
+    if (doAction) {      
+      delay(DELAY_READING);
+      if (obd->nb_rx_state == ELM_SUCCESS) {
+        saveValue = true;
+        debug->println(DEBUG_LEVEL_DEBUG, "OBD Read SUCCESS");  
+        debug->print(DEBUG_LEVEL_DEBUG, "----------------> value readed: ");
+        debug->println(DEBUG_LEVEL_DEBUG, newValue);
+      } else if (obd->nb_rx_state != ELM_GETTING_MSG) {
+        debug->println(DEBUG_LEVEL_DEBUG, "OBD Read ERROR");  
+        newValue = INT_MIN;
+        saveValue = true;
+      }
+    }
+  #endif
+
+    if (saveValue) {
+      setValueForViewType(viewTypeId, newValue);
+    }
+  return saveValue;
+}
+
 void OdbAdapter::setFoundOBD2(bool found) {
     this->foundOBD2 = found;
 }
@@ -359,7 +583,7 @@ void OdbAdapter::setEngineLoad(int engineLoad) {
 int OdbAdapter::getMafRate() {
     return this->mafRate;
 }
-void OdbAdapter::setMafRate(int mafReate) {
+void OdbAdapter::setMafRate(int mafRate) {
     this->mafRate = mafRate;
 }
 

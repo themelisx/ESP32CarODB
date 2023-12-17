@@ -22,7 +22,7 @@ void obd_task(void *pvParameters) {
     bool connected = odbAdapter.connect(OBD_DEVICE_NAME, nullptr);
     //bool connected = odbAdapter.connect(OBD_DEVICE_NAME, OBD_DEVICE_PIN);
   #else
-    odbAdapter.setBtConnected(true);
+    odbAdapter.setDeviceConnected(true);
     odbAdapter.setObdConnected(true);
   #endif
 

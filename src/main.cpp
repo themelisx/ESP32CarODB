@@ -141,25 +141,25 @@ void setup() {
   // Battery  
   myGauges[1] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   // KM/h
-  myGauges[2] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_SIMPLE_TEXT, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
+  myGauges[2] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
   // RPM  
-  myGauges[3] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_SIMPLE_TEXT, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, false, 0, 0, 6500, 7500);
+  myGauges[3] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
   // Engine coolant  
   myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
   // Intake
   myGauges[5] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
   // Advance
-  myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", RED, WHITE, false, false, 0, 0, 50, 50);
+  myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
   //  Engine load
-  myGauges[7] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"LOAD", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
+  myGauges[7] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"LOAD", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
   // Short fuel trims
-  myGauges[8] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"SFT", (char*)"%d", RED, WHITE, false, false, -30, -20, 20, 30);
+  myGauges[8] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"SFT", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   // Long fuel trims
-  myGauges[9] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_SIMPLE_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"LFT", (char*)"%d", RED, WHITE, false, false, -30, -20, 20, 30);
+  myGauges[9] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"LFT", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   // Throttle
-  myGauges[10] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROT", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
+  myGauges[10] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROT", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
   // MAF rate
-  myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_SIMPLE_TEXT, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, WHITE, false, false, -10, 0, 10, 10);
+  myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);
   
   //supportedPIDs_21_40
   // Fuel level
@@ -270,7 +270,7 @@ void setup() {
     //odbAdapter->connect(nullptr);
     //bool connected = odbAdapter->connect(OBD_DEVICE_PIN);
   #else
-    odbAdapter->setBtConnected(true);
+    odbAdapter->setDeviceConnected(true);
     odbAdapter->setObdConnected(true);
   #endif
 
@@ -285,204 +285,6 @@ void setup() {
   lastTime = millis();
 #endif
 
-}
-
-int getValueForViewType(int viewId) {
-  int newValue;
-  switch (viewId) {
-    case VIEW_BATTERY_VOLTAGE: newValue = odbAdapter->getVoltage(); break;
-    case VIEW_KPH: newValue = odbAdapter->getKph(); break;
-    case VIEW_RPM: newValue = odbAdapter->getRpm(); break;
-    case VIEW_COOLANT_TEMP: newValue = odbAdapter->getCoolantTemp(); break;            
-    case VIEW_INTAKE_TEMP: newValue = odbAdapter->getIntakeTemp(); break;
-    case VIEW_TIMING_ADV: newValue = odbAdapter->getTimingAdvance(); break;
-    case VIEW_ENGINE_LOAD: newValue = odbAdapter->getEngineLoad(); break;
-    case VIEW_MAF_RATE: newValue = odbAdapter->getMafRate(); break;
-    case VIEW_SHORT_FUEL_TRIM: newValue = odbAdapter->getShortFuelTrim(); break;
-    case VIEW_LONG_FUEL_TRIM: newValue = odbAdapter->getLongFuelTrim(); break;
-    case VIEW_THROTTLE: newValue = odbAdapter->getThrottle(); break;
-    //supportedPIDs_21_40
-    case VIEW_FUEL_LEVEL: newValue = odbAdapter->getFuelLevel(); break;
-    //supportedPIDs_41_60
-    case VIEW_AMBIENT_TEMP: newValue = odbAdapter->getAmbientTemp(); break;
-    case VIEW_OIL_TEMP: newValue = odbAdapter->getOilTemp(); break;
-    case VIEW_ABS_LOAD: newValue = odbAdapter->getAbsLoad(); break;
-    default: newValue = INT_MIN;
-  }
-  return newValue;
-}
-
-void setValueForViewType(int viewTypeId, int newValue) {
-  switch (viewTypeId) {
-    case VIEW_BATTERY_VOLTAGE: odbAdapter->setVoltage(newValue); break;
-    case VIEW_KPH: odbAdapter->setKph(newValue); break;
-    case VIEW_RPM: odbAdapter->setRpm(newValue); break;
-    case VIEW_COOLANT_TEMP: odbAdapter->setCoolantTemp(newValue); break;        
-    case VIEW_INTAKE_TEMP: odbAdapter->setIntakeTemp(newValue); break;
-    case VIEW_TIMING_ADV: odbAdapter->setTimingAdvance(newValue); break;
-    case VIEW_ENGINE_LOAD: odbAdapter->setEngineLoad(newValue); break;
-    case VIEW_MAF_RATE: odbAdapter->setMafRate(newValue); break;
-    case VIEW_SHORT_FUEL_TRIM: odbAdapter->setShortFuelTrim(newValue); break;
-    case VIEW_LONG_FUEL_TRIM: odbAdapter->setLongFuelTrim(newValue); break;
-    case VIEW_THROTTLE: odbAdapter->setThrottle(newValue); break;
-    //supportedPIDs_21_40
-    case VIEW_FUEL_LEVEL: odbAdapter->setFuelLevel(newValue); break;
-    //supportedPIDs_41_60
-    case VIEW_AMBIENT_TEMP: odbAdapter->setAmbientTemp(newValue); break;
-    case VIEW_OIL_TEMP: odbAdapter->setOilTemp(newValue); break;
-    case VIEW_ABS_LOAD: odbAdapter->setAbsLoad(newValue); break;
-    case VIEW_NONE: break;    
-    default: break;
-  }
-}
-
-bool readObdValue(int viewTypeId) {
-
-  int newValue = 0;
-  bool doAction = true;
-
-  switch (viewTypeId) {
-    case VIEW_BATTERY_VOLTAGE: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_batteryVoltage;
-          #else
-            newValue = int(obd->batteryVoltage() * 10);
-          #endif
-          break;
-    case VIEW_KPH:
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_kph;
-          #else
-            newValue = (int)obd->kph(); 
-          #endif
-          break;
-    case VIEW_RPM: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_rpm;
-          #else
-            newValue = (int)obd->rpm(); 
-          #endif
-          break;
-    case VIEW_COOLANT_TEMP: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_engineCoolantTemp;
-          #else
-            newValue = (int)obd->engineCoolantTemp(); 
-          #endif
-          break;    
-    case VIEW_INTAKE_TEMP:
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_intakeAirTemp;
-          #else
-            newValue = (int)obd->intakeAirTemp(); 
-          #endif
-          break;
-    case VIEW_TIMING_ADV: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_timingAdvance;
-          #else
-            newValue = (int)obd->timingAdvance(); 
-          #endif
-          break;
-    case VIEW_ENGINE_LOAD: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_engineLoad;
-          #else
-            newValue = (int)obd->engineLoad(); 
-          #endif
-          break;
-    case VIEW_MAF_RATE: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_mafRate;
-          #else
-            newValue = (int)obd->mafRate(); 
-          #endif
-          break;
-    case VIEW_SHORT_FUEL_TRIM: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_shortFuelTrim;
-          #else
-            newValue = (int)obd->shortTermFuelTrimBank_1(); 
-          #endif
-          break;
-    case VIEW_LONG_FUEL_TRIM: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_longFuelTrim;
-          #else
-            newValue = (int)obd->longTermFuelTrimBank_1(); 
-          #endif
-          break;
-    case VIEW_THROTTLE: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_throttle;
-          #else
-            newValue = (int)obd->throttle(); 
-          #endif
-          break;
-    //supportedPIDs_21_40
-    case VIEW_FUEL_LEVEL: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_fuelLevel;
-          #else
-            newValue = (int)obd->fuelLevel(); 
-          #endif
-          break;
-    //supportedPIDs_41_60
-    case VIEW_AMBIENT_TEMP:
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_ambientAirTemp;
-          #else
-            newValue = (int)obd->ambientAirTemp(); 
-          #endif 
-          break;
-    case VIEW_OIL_TEMP: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_oilTemp;
-          #else
-            newValue = (int)obd->oilTemp(); 
-          #endif
-          break;
-    case VIEW_ABS_LOAD: 
-          #ifdef MOCK_OBD
-            newValue = MOCK_OBD_absLoad;
-          #else
-            newValue = (int)obd->absLoad(); 
-          #endif
-          break;
-    case VIEW_NONE:
-          doAction = false;
-          debug->println(DEBUG_LEVEL_INFO, "Inactive view");
-          break;
-    default:
-          doAction = false;
-          debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
-          debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
-  }
-
-  #ifdef MOCK_OBD
-    bool saveValue = true;
-  #else
-    bool saveValue = false;
-
-    if (doAction) {      
-      delay(DELAY_READING);
-      if (obd->nb_rx_state == ELM_SUCCESS) {
-        saveValue = true;
-        debug->println(DEBUG_LEVEL_DEBUG, "OBD Read SUCCESS");  
-        debug->print(DEBUG_LEVEL_DEBUG, "----------------> value readed: ");
-        debug->println(DEBUG_LEVEL_DEBUG, newValue);
-      } else if (obd->nb_rx_state != ELM_GETTING_MSG) {
-        debug->println(DEBUG_LEVEL_DEBUG, "OBD Read ERROR");  
-        newValue = INT_MIN;
-        saveValue = true;
-      }
-    }
-  #endif
-
-    if (saveValue) {
-      setValueForViewType(viewTypeId, newValue);
-    }
-  return saveValue;
 }
 
 void checkKeypad() {
@@ -536,6 +338,8 @@ void checkKeypad() {
         memset(oldTimeString, 0, TIME_LENGTH);
       }*/
     }
+    mySettings->setActiveView(myDisplays[1]->nextView);
+    mySettings->setSecondaryActiveView(myDisplays[1]->secondaryActiveView);
     mySettings->save();
 
   } else if (digitalRead(PIN_DOWN_KEY) == LOW || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
@@ -576,6 +380,8 @@ void checkKeypad() {
         memset(oldTimeString, 0, TIME_LENGTH);
       }*/
     }
+    mySettings->setActiveView(myDisplays[1]->nextView);
+    mySettings->setSecondaryActiveView(myDisplays[1]->secondaryActiveView);
     mySettings->save();
   }
 }
@@ -614,27 +420,6 @@ bool drawActiveGauge() {
   return changeView;
 }
 
-bool readValueForViewType(int viewId) {
-
-  bool valueReaded = false;
-  int count = 0;
-
-  debug->print(DEBUG_LEVEL_DEBUG, "Getting info for gauge id: ");
-  debug->println(DEBUG_LEVEL_DEBUG, viewId);
-  debug->println(DEBUG_LEVEL_DEBUG, "Query ODB value");
-  
-  while (!valueReaded) {
-    valueReaded = readObdValue(viewId); 
-    count++;
-    if (count > 200) {
-      debug->println(DEBUG_LEVEL_DEBUG, "Value not readed after 200 times");
-      break;
-    }
-  }
-
-  return valueReaded;
-}
-
 void loop() {
   
 #ifdef USE_MULTI_THREAD
@@ -657,12 +442,18 @@ void loop() {
         viewId = myGauges[viewIndex]->getId();
       }
 
-      bool valueReaded = readValueForViewType(viewId);
+      bool valueReaded = odbAdapter->readValueForViewType(viewId);
 
       int newValue = INT_MIN;
       if (valueReaded) {
         
-        newValue = getValueForViewType(viewId);          
+        newValue = odbAdapter->getValueForViewType(viewId);
+
+        debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
+        debug->println(DEBUG_LEVEL_DEBUG2, newValue);
+        debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
+        debug->println(DEBUG_LEVEL_DEBUG2, myGauges[viewIndex]->data.value);
+
         bool redrawView = myGauges[viewIndex]->data.value != newValue;
         myGauges[viewIndex]->data.value = newValue;
 
@@ -670,7 +461,7 @@ void loop() {
           int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
           int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
 
-          newValue = getValueForViewType(secondaryViewId);
+          newValue = odbAdapter->getValueForViewType(secondaryViewId);
           if (!redrawView) {
             for (int i=1; i<MAX_VIEWS+1; i++){
               if (myGauges[i]->getId() == secondaryViewId) {

@@ -73,7 +73,9 @@ void keypad_task(void *pvParameters) {
           memset(oldTimeString, 0, TIME_LENGTH);
         }*/
       }
-      mySettings.save();
+      mySettings->setActiveView(myDisplays[1]->activeView);
+      mySettings->setSecondaryActiveView(myDisplays[1]->secondaryActiveView);
+      mySettings->save();
       xSemaphoreGive(keyPadSemaphore);
       yield();
 
@@ -112,7 +114,9 @@ void keypad_task(void *pvParameters) {
           memset(oldTimeString, 0, TIME_LENGTH);
         }*/
       }
-      mySettings.save();
+      mySettings->setActiveView(myDisplays[1]->activeView);
+      mySettings->setSecondaryActiveView(myDisplays[1]->secondaryActiveView);
+      mySettings->save();
       xSemaphoreGive(keyPadSemaphore);
       yield();
 

@@ -26,11 +26,11 @@ void Settings::load() {
   #ifdef ENABLE_EEPROM    
     if (myEEPROM->hasSignature()) {
         debug->println(DEBUG_LEVEL_INFO, "Signature OK");
-        this->activeView = myEEPROM->readByte(EEPROM_DISPLAY1_NEXT_VIEW);
-        this->secondaryActiveView = myEEPROM->readByte(EEPROM_DISPLAY1_SECONDARY_VIEW);
+        this->activeView = myEEPROM->readInt(EEPROM_DISPLAY1_NEXT_VIEW);
+        this->secondaryActiveView = myEEPROM->readInt(EEPROM_DISPLAY1_SECONDARY_VIEW);
         #ifdef ENABLE_SECOND_DISPLAY
-            nextView2 = myEEPROM->readByte(EEPROM_DISPLAY2_NEXT_VIEW);
-            secondaryActiveView2 = myEEPROM->readByte(EEPROM_DISPLAY2_SECONDARY_VIEW);
+            nextView2 = myEEPROM->readInt(EEPROM_DISPLAY2_NEXT_VIEW);
+            secondaryActiveView2 = myEEPROM->readInt(EEPROM_DISPLAY2_SECONDARY_VIEW);
         #endif
     } else {
       debug->println(DEBUG_LEVEL_INFO, "No signature");
@@ -53,11 +53,11 @@ void Settings::save() {
       myEEPROM->createSignature();
     }
     debug->println(DEBUG_LEVEL_DEBUG, "Writing data to EEPROM");
-    myEEPROM->writeByte(EEPROM_DISPLAY1_NEXT_VIEW, myDisplays[1]->nextView);
-    myEEPROM->writeByte(EEPROM_DISPLAY1_SECONDARY_VIEW, myDisplays[1]->secondaryActiveView);
+    myEEPROM->writeInt(EEPROM_DISPLAY1_NEXT_VIEW, this->activeView);
+    myEEPROM->writeInt(EEPROM_DISPLAY1_SECONDARY_VIEW, this->secondaryActiveView);
     #ifdef ENABLE_SECOND_DISPLAY
-      myEEPROM->writeByte(EEPROM_DISPLAY2_NEXT_VIEW, myDisplays[2]->nextView);
-      myEEPROM->writeByte(EEPROM_DISPLAY2_SECONDARY_VIEW, myDisplays[2]->secondaryActiveView);
+      myEEPROM->writeByte(EEPROM_DISPLAY2_NEXT_VIEW, this->activeView2);
+      myEEPROM->writeByte(EEPROM_DISPLAY2_SECONDARY_VIEW, this->secondaryActiveView2);
     #endif
   #endif
   debug->println(DEBUG_LEVEL_DEBUG, "[OK] Saving settings");
@@ -76,7 +76,15 @@ void Settings::setDefaults() {
 int Settings::getActiveView() {
     return this->activeView;
 }
+
+void Settings::setActiveView(int activeView) {
+    this->activeView = activeView;
+}
     
 int Settings::getSecondaryActiveView() {
     return this->secondaryActiveView;
+}
+
+void Settings::setSecondaryActiveView(int secondaryActiveView) {
+    this->secondaryActiveView = secondaryActiveView;
 }

@@ -30,6 +30,9 @@ class Settings {
 
     int getActiveView();
     int getSecondaryActiveView();
+
+    void setActiveView(int activeView);
+    void setSecondaryActiveView(int secondaryActiveView);
 };
 
 #endif
