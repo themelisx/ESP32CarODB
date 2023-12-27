@@ -40,7 +40,6 @@ class OdbAdapter {
     String deviceAddr;
     bool foundOBD2;
 
-    //supportedPIDs_1_20
     int voltage;
     int kph;
     int rpm;
@@ -53,10 +52,8 @@ class OdbAdapter {
     int longFuelTrim;
     int throttle;
 
-    //supportedPIDs_21_40
     int fuelLevel;
 
-    //supportedPIDs_41_60
     int ambientTemp;
     int oilTemp;
     int absLoad;
@@ -84,7 +81,6 @@ class OdbAdapter {
     void setValueForViewType(int viewTypeId, int newValue);
     bool readObdValue(int viewTypeId);
 
-    //supportedPIDs_1_20
     int getVoltage();
     void setVoltage(int voltage);
 
@@ -118,11 +114,9 @@ class OdbAdapter {
     int getThrottle();
     void setThrottle(int throttle);
 
-    //supportedPIDs_21_40
     int getFuelLevel();
     void setFuelLevel(int fuelLevel);
 
-    //supportedPIDs_41_60
     int getAmbientTemp();
     void setAmbientTemp(int ambientTemp);
 

@@ -330,9 +330,7 @@ int OdbAdapter::getValueForViewType(int viewId) {
     case VIEW_LONG_FUEL_TRIM: newValue = getLongFuelTrim(); break;
     case VIEW_THROTTLE: newValue = getThrottle(); break;
     case VIEW_MAF_RATE: newValue = getMafRate(); break;
-    //supportedPIDs_21_40
     case VIEW_FUEL_LEVEL: newValue = getFuelLevel(); break;
-    //supportedPIDs_41_60
     case VIEW_AMBIENT_TEMP: newValue = getAmbientTemp(); break;
     case VIEW_OIL_TEMP: newValue = getOilTemp(); break;
     case VIEW_ABS_LOAD: newValue = getAbsLoad(); break;
@@ -354,9 +352,7 @@ void OdbAdapter::setValueForViewType(int viewTypeId, int newValue) {
     case VIEW_LONG_FUEL_TRIM: setLongFuelTrim(newValue); break;
     case VIEW_THROTTLE: setThrottle(newValue); break;
     case VIEW_MAF_RATE: setMafRate(newValue); break;
-    //supportedPIDs_21_40
     case VIEW_FUEL_LEVEL: setFuelLevel(newValue); break;
-    //supportedPIDs_41_60
     case VIEW_AMBIENT_TEMP: setAmbientTemp(newValue); break;
     case VIEW_OIL_TEMP: setOilTemp(newValue); break;
     case VIEW_ABS_LOAD: setAbsLoad(newValue); break;
@@ -375,126 +371,49 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
   int newValue = 0;
   bool doAction = true;
 
-  switch (viewTypeId) {
-    case VIEW_BATTERY_VOLTAGE: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 10, MOCK_OBD_batteryVoltage + 10);
-          #else
-            newValue = int(obd->batteryVoltage() * 10);
-          #endif
-          break;
-    case VIEW_KPH:
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_kph - 10, MOCK_OBD_kph + 10);
-          #else
-            newValue = (int)obd->kph(); 
-          #endif
-          break;
-    case VIEW_RPM: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_rpm - 100, MOCK_OBD_rpm + 100);
-          #else
-            newValue = (int)obd->rpm(); 
-          #endif
-          break;
-    case VIEW_COOLANT_TEMP: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 15, MOCK_OBD_engineCoolantTemp + 15);
-          #else
-            newValue = (int)obd->engineCoolantTemp(); 
-          #endif
-          break;    
-    case VIEW_INTAKE_TEMP:
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 5, MOCK_OBD_intakeAirTemp + 5);
-          #else
-            newValue = (int)obd->intakeAirTemp(); 
-          #endif
-          break;
-    case VIEW_TIMING_ADV: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_timingAdvance - 5, MOCK_OBD_timingAdvance + 5);
-          #else
-            newValue = (int)obd->timingAdvance(); 
-          #endif
-          break;
-    case VIEW_ENGINE_LOAD: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_engineLoad - 10, MOCK_OBD_engineLoad + 10);
-          #else
-            newValue = (int)obd->engineLoad(); 
-          #endif
-          break;
-    case VIEW_MAF_RATE: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_mafRate - 3, MOCK_OBD_mafRate + 3);
-          #else
-            newValue = (int)obd->mafRate(); 
-          #endif
-          break;
-    case VIEW_SHORT_FUEL_TRIM: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_shortFuelTrim - 5, MOCK_OBD_shortFuelTrim + 5);
-          #else
-            newValue = (int)obd->shortTermFuelTrimBank_1(); 
-          #endif
-          break;
-    case VIEW_LONG_FUEL_TRIM: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_longFuelTrim - 5, MOCK_OBD_longFuelTrim + 5);
-          #else
-            newValue = (int)obd->longTermFuelTrimBank_1(); 
-          #endif
-          break;
-    case VIEW_THROTTLE: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_throttle - 10, MOCK_OBD_throttle + 10);
-          #else
-            newValue = (int)obd->throttle(); 
-          #endif
-          break;
-    //supportedPIDs_21_40
-    case VIEW_FUEL_LEVEL: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_fuelLevel - 15, MOCK_OBD_fuelLevel + 15);
-          #else
-            newValue = (int)obd->fuelLevel(); 
-          #endif
-          break;
-    //supportedPIDs_41_60
-    case VIEW_AMBIENT_TEMP:
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_ambientAirTemp - 10, MOCK_OBD_ambientAirTemp + 10);
-          #else
-            newValue = (int)obd->ambientAirTemp(); 
-          #endif 
-          break;
-    case VIEW_OIL_TEMP: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_oilTemp - 15, MOCK_OBD_oilTemp + 15);
-          #else
-            newValue = (int)obd->oilTemp(); 
-          #endif
-          break;
-    case VIEW_ABS_LOAD: 
-          #ifdef MOCK_OBD
-            newValue = getRandomNumber(MOCK_OBD_absLoad - 5, MOCK_OBD_absLoad + 5);
-          #else
-            newValue = (int)obd->absLoad(); 
-          #endif
-          break;
-    case VIEW_NONE:
-          doAction = false;
-          debug->println(DEBUG_LEVEL_INFO, "Inactive view");
-          break;
-    default:
-          doAction = false;
-          debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
-          debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
-  }
-
   #ifdef MOCK_OBD
     bool saveValue = true;
+
+    switch (viewTypeId) {
+      case VIEW_BATTERY_VOLTAGE: 
+              newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 10, MOCK_OBD_batteryVoltage + 10); break;
+      case VIEW_KPH: 
+              newValue = getRandomNumber(MOCK_OBD_kph - 10, MOCK_OBD_kph + 10); break;
+      case VIEW_RPM: 
+              newValue = getRandomNumber(MOCK_OBD_rpm - 100, MOCK_OBD_rpm + 100); break;
+      case VIEW_COOLANT_TEMP: 
+              newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 15, MOCK_OBD_engineCoolantTemp + 15); break;    
+      case VIEW_INTAKE_TEMP:
+              newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 5, MOCK_OBD_intakeAirTemp + 5); break;
+      case VIEW_TIMING_ADV: 
+              newValue = getRandomNumber(MOCK_OBD_timingAdvance - 5, MOCK_OBD_timingAdvance + 5); break;
+      case VIEW_ENGINE_LOAD: 
+              newValue = getRandomNumber(MOCK_OBD_engineLoad - 10, MOCK_OBD_engineLoad + 10); break;
+      case VIEW_MAF_RATE: 
+              newValue = getRandomNumber(MOCK_OBD_mafRate - 3, MOCK_OBD_mafRate + 3); break;
+      case VIEW_SHORT_FUEL_TRIM: 
+              newValue = getRandomNumber(MOCK_OBD_shortFuelTrim - 5, MOCK_OBD_shortFuelTrim + 5); break;
+      case VIEW_LONG_FUEL_TRIM: 
+              newValue = getRandomNumber(MOCK_OBD_longFuelTrim - 5, MOCK_OBD_longFuelTrim + 5); break;
+      case VIEW_THROTTLE: 
+              newValue = getRandomNumber(MOCK_OBD_throttle - 10, MOCK_OBD_throttle + 10); break;
+      case VIEW_FUEL_LEVEL: 
+              newValue = getRandomNumber(MOCK_OBD_fuelLevel - 15, MOCK_OBD_fuelLevel + 15); break;
+      case VIEW_AMBIENT_TEMP:
+              newValue = getRandomNumber(MOCK_OBD_ambientAirTemp - 10, MOCK_OBD_ambientAirTemp + 10); break;
+      case VIEW_OIL_TEMP: 
+              newValue = getRandomNumber(MOCK_OBD_oilTemp - 15, MOCK_OBD_oilTemp + 15); break;
+      case VIEW_ABS_LOAD: 
+              newValue = getRandomNumber(MOCK_OBD_absLoad - 5, MOCK_OBD_absLoad + 5); break;
+      case VIEW_NONE:
+            doAction = false;
+            debug->println(DEBUG_LEVEL_INFO, "Inactive view");
+            break;
+      default:
+            doAction = false;
+            debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
+            debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
+    }
 
     debug->println(DEBUG_LEVEL_DEBUG2, "OBD Read SUCCESS");  
     debug->print(DEBUG_LEVEL_DEBUG2, "----------------> value readed: ");
@@ -502,6 +421,47 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
 
   #else
     bool saveValue = false;
+
+    switch (viewTypeId) {
+      case VIEW_BATTERY_VOLTAGE: 
+            newValue = int(obd->batteryVoltage() * 10); break;
+      case VIEW_KPH:
+            newValue = (int)obd->kph(); break;
+      case VIEW_RPM: 
+            newValue = (int)obd->rpm(); break;
+      case VIEW_COOLANT_TEMP: 
+            newValue = (int)obd->engineCoolantTemp(); break;    
+      case VIEW_INTAKE_TEMP:
+            newValue = (int)obd->intakeAirTemp(); break;
+      case VIEW_TIMING_ADV: 
+            newValue = (int)obd->timingAdvance(); break;
+      case VIEW_ENGINE_LOAD: 
+            newValue = (int)obd->engineLoad(); break;
+      case VIEW_MAF_RATE: 
+            newValue = (int)obd->mafRate(); break;
+      case VIEW_SHORT_FUEL_TRIM: 
+            newValue = (int)obd->shortTermFuelTrimBank_1(); break;
+      case VIEW_LONG_FUEL_TRIM: 
+            newValue = (int)obd->longTermFuelTrimBank_1(); break;
+      case VIEW_THROTTLE: 
+            newValue = (int)obd->throttle(); break;
+      case VIEW_FUEL_LEVEL: 
+            newValue = (int)obd->fuelLevel(); break;
+      case VIEW_AMBIENT_TEMP:
+            newValue = (int)obd->ambientAirTemp(); break;
+      case VIEW_OIL_TEMP: 
+            newValue = (int)obd->oilTemp(); break;
+      case VIEW_ABS_LOAD: 
+            newValue = (int)obd->absLoad(); break;
+      case VIEW_NONE:
+            doAction = false;
+            debug->println(DEBUG_LEVEL_INFO, "Inactive view");
+            break;
+      default:
+            doAction = false;
+            debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
+            debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
+    }
 
     if (doAction) {      
       delay(DELAY_READING);
@@ -536,7 +496,6 @@ void OdbAdapter::setDeviceAddress(String deviceAddr) {
     this->deviceAddr = deviceAddr;
 }
 
-//supportedPIDs_1_20
 int OdbAdapter::getVoltage() {
     return this->voltage;
 }
@@ -613,7 +572,6 @@ void OdbAdapter::setThrottle(int throttle) {
     this->throttle = throttle;
 }
 
-//supportedPIDs_21_40
 int OdbAdapter::getFuelLevel() {
     return this->fuelLevel;
 }
@@ -621,7 +579,6 @@ void OdbAdapter::setFuelLevel(int fuelLevel) {
     this->fuelLevel = fuelLevel;
 }
 
-//supportedPIDs_41_60
 int OdbAdapter::getAmbientTemp() {
     return this->ambientTemp;
 }
