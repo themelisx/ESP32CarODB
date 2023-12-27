@@ -145,10 +145,10 @@ void setup() {
   myGauges[1] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   // KM/h
   myGauges[2] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
-  //myGauges[2]->addSecondaryView(VIEW_RPM, (char*)"%d");
+  myGauges[2]->addSecondaryView(VIEW_RPM, (char*)"%d");
   // RPM  
   myGauges[3] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
-  //myGauges[3]->addSecondaryView(VIEW_KPH, (char*)"%d");
+  myGauges[3]->addSecondaryView(VIEW_KPH, (char*)"%d");
   // Engine coolant  
   myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
   //myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"%d C");
@@ -247,17 +247,11 @@ void setup() {
     NULL,           // Parameter of the task
     0,              // Priority of the task
     &t_core1_obd,   // Task handle to keep track of created task
-    0);             // Pin task to core 1
+    1);             // Pin task to core 1
 
   vTaskSuspend(t_core1_obd);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up Keypad Manager...");
-
-  pinMode(PIN_UP_KEY, INPUT_PULLUP);
-  pinMode(PIN_DOWN_KEY, INPUT_PULLUP);
-  pinMode(PIN_LEFT_KEY, INPUT_PULLUP);
-  pinMode(PIN_RIGHT_KEY, INPUT_PULLUP);
-  pinMode(PIN_ENTER_KEY, INPUT_PULLUP);
 
   xTaskCreatePinnedToCore(
     keypad_task,      // Task function.
@@ -266,7 +260,7 @@ void setup() {
     NULL,             // Parameter of the task
     0,                // Priority of the task
     &t_core0_keypad,  // Task handle to keep track of created task
-    0);               // Pin task to core 0
+    1);               // Pin task to core 1
 
   vTaskSuspend(t_core0_keypad);
 
@@ -280,7 +274,7 @@ void setup() {
 
   debug->println(DEBUG_LEVEL_INFO, "Starting OBD...");
   vTaskResume(t_core1_obd);
-  
+
 #else
 
   activeDisplay = 1;
