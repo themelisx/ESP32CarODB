@@ -34,10 +34,18 @@ TaskHandle_t t_core0_keypad;
 TaskHandle_t t_core1_obd;
 
 // Semaphores
-SemaphoreHandle_t keyPadSemaphore;
+SemaphoreHandle_t semaphoreActiveDisplay;
+SemaphoreHandle_t semaphoreActiveView;
 SemaphoreHandle_t btConnectedSemaphore;
 SemaphoreHandle_t obdConnectedSemaphore;
 SemaphoreHandle_t obdValueSemaphore;
+
+int realActiveDisplay;
+#else
+unsigned long lastTime;
+int viewId;
+int viewIndex;
+int activeDisplay;
 #endif
 
 Debug *debug;
@@ -56,8 +64,6 @@ OdbAdapter *odbAdapter;
   char oldTimeString[TIME_LENGTH];
 #endif
 
-int activeDisplay;
-
 Displays *myDisplays[MAX_DISPLAYS + 1];
 Gauge *myGauges[MAX_VIEWS + 1];
 Settings *mySettings;
@@ -68,11 +74,6 @@ Settings *mySettings;
   bool testDownKey = false;
 #endif
   
-bool shouldCheck = true;
-
-int viewId;
-int viewIndex;
-unsigned long lastTime;
 
 void setup() {
 
@@ -86,12 +87,14 @@ void setup() {
   btConnectedSemaphore = xSemaphoreCreateMutex();
   obdConnectedSemaphore = xSemaphoreCreateMutex();
   obdValueSemaphore = xSemaphoreCreateMutex();
-  keyPadSemaphore = xSemaphoreCreateMutex();
+  semaphoreActiveDisplay = xSemaphoreCreateMutex();
+  semaphoreActiveView = xSemaphoreCreateMutex();
 
   xSemaphoreGive(btConnectedSemaphore);
   xSemaphoreGive(obdConnectedSemaphore);
   xSemaphoreGive(obdValueSemaphore);
-  xSemaphoreGive(keyPadSemaphore);
+  xSemaphoreGive(semaphoreActiveDisplay);
+  xSemaphoreGive(semaphoreActiveView);
 #endif
 
   mySettings = new Settings();
@@ -211,12 +214,18 @@ void setup() {
   //myGauges[6]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
   //myGauges[6]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
 
-  activeDisplay = 1;
-  myDisplays[activeDisplay]->activeView = mySettings->getActiveView();
-  myDisplays[activeDisplay]->nextView = -1;
-  myDisplays[activeDisplay]->secondaryActiveView = mySettings->getSecondaryActiveView();
+  pinMode(PIN_UP_KEY, INPUT_PULLUP);
+  pinMode(PIN_DOWN_KEY, INPUT_PULLUP);
+  pinMode(PIN_LEFT_KEY, INPUT_PULLUP);
+  pinMode(PIN_RIGHT_KEY, INPUT_PULLUP);
+  pinMode(PIN_ENTER_KEY, INPUT_PULLUP);
 
 #ifdef USE_MULTI_THREAD
+  realActiveDisplay = 1;
+  myDisplays[realActiveDisplay]->activeView = mySettings->getActiveView();
+  myDisplays[realActiveDisplay]->nextView = -1;
+  myDisplays[realActiveDisplay]->secondaryActiveView = mySettings->getSecondaryActiveView();
+
   debug->println(DEBUG_LEVEL_INFO, "Staring up View Manager 1...");
 
   xTaskCreatePinnedToCore(
@@ -271,7 +280,13 @@ void setup() {
 
   debug->println(DEBUG_LEVEL_INFO, "Starting OBD...");
   vTaskResume(t_core1_obd);
+  
 #else
+
+  activeDisplay = 1;
+  myDisplays[activeDisplay]->activeView = mySettings->getActiveView();
+  myDisplays[activeDisplay]->nextView = -1;
+  myDisplays[activeDisplay]->secondaryActiveView = mySettings->getSecondaryActiveView();
 
   #ifndef MOCK_OBD
     // if device does not have pin use the follow
@@ -282,19 +297,14 @@ void setup() {
     odbAdapter->setObdConnected(true);
   #endif
 
-  pinMode(PIN_UP_KEY, INPUT_PULLUP);
-  pinMode(PIN_DOWN_KEY, INPUT_PULLUP);
-  pinMode(PIN_LEFT_KEY, INPUT_PULLUP);
-  pinMode(PIN_RIGHT_KEY, INPUT_PULLUP);
-  pinMode(PIN_ENTER_KEY, INPUT_PULLUP);
-
-  debug->println(DEBUG_LEVEL_INFO, "Setup completed");
-
   lastTime = millis();
 #endif
 
+  debug->println(DEBUG_LEVEL_INFO, "Setup completed");
+
 }
 
+#ifndef USE_MULTI_THREAD
 void checkKeypad() {
   // KeyPad
   if (digitalRead(PIN_LEFT_KEY) == LOW) { // LEFT KEY PRESSED
@@ -427,6 +437,7 @@ bool drawActiveGauge() {
 
   return changeView;
 }
+#endif
 
 void loop() {
   

@@ -21,11 +21,11 @@
   #include "myRTC.h"
 #endif
 
-extern int activeDisplay;
 extern ELM327 *obd;
 
 #ifdef USE_MULTI_THREAD
-extern SemaphoreHandle_t keyPadSemaphore;
+extern SemaphoreHandle_t semaphoreActiveDisplay;
+extern SemaphoreHandle_t semaphoreActiveView;
 extern SemaphoreHandle_t btConnectedSemaphore;
 extern SemaphoreHandle_t obdConnectedSemaphore;
 extern SemaphoreHandle_t obdValueSemaphore;
@@ -35,6 +35,10 @@ extern TaskHandle_t t_core0_tft1;
 extern TaskHandle_t t_core0_tft2;
 extern TaskHandle_t t_core0_keypad;
 extern TaskHandle_t t_core1_obd;
+
+extern int realActiveDisplay;
+#else
+extern int activeDisplay;
 #endif
 
 extern Debug *debug;

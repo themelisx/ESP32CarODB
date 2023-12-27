@@ -5,7 +5,7 @@
 //#define ENABLE_ELM327_DEBUG_LOGS
 
 // Mock OBD for testing without real OBD device 
-//#define MOCK_OBD
+#define MOCK_OBD
 
 // Mock values for testing without real OBD device //
 // Enable only one of the follow
@@ -21,6 +21,7 @@
 //////////////
 // Enable EEPROM to save settings in EEPROM
 #define ENABLE_EEPROM
+#define USE_MULTI_THREAD
 
 
 /////////////////
