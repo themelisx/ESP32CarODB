@@ -2,6 +2,7 @@ Car OBD multi gauge for ESP32
 TFT Adafruit GC9A01A
 
 Features:
+* OBD ELM327 Bluetooth / WiFi
 * Multi-thread / Dual core
 * Graphical display
 * Low/High values for every gauge (with warning colors)
