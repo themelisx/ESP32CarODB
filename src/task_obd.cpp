@@ -13,156 +13,66 @@ void obd_task(void *pvParameters) {
   debug->print(DEBUG_LEVEL_INFO, "OBD manager task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
-  bool shouldCheck = true;
-  int newValue;
-  int runs;
+  int activeDisplay;
+  int viewId;
+  int viewIndex;
 
   #ifndef MOCK_OBD
     // if device does not have pin use the follow
-    bool connected = odbAdapter.connect(OBD_DEVICE_NAME, nullptr);
-    //bool connected = odbAdapter.connect(OBD_DEVICE_NAME, OBD_DEVICE_PIN);
+    //odbAdapter->connect(nullptr);
+    //bool connected = odbAdapter->connect(OBD_DEVICE_PIN);
   #else
-    odbAdapter.setDeviceConnected(true);
-    odbAdapter.setObdConnected(true);
+    srand(time(NULL));
+    odbAdapter->setDeviceConnected(true);
+    odbAdapter->setObdConnected(true);
   #endif
 
   for (;;) {
 
-    runs = 0;
+    activeDisplay = getActiveDisplay();
+    viewIndex = myDisplays[activeDisplay]->getActiveView();    
+    viewId = myGauges[viewIndex]->getId();
 
-    if (odbAdapter.isDeviceConnected() && odbAdapter.isOBDConnected()) {
-      for (int i = 1; i < MAX_DISPLAYS + 1; i++) {
-        //if (myDisplays[activeDisplay].enabled) {
-        runs++;
-        newValue = INT_MIN;
+    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
+      debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
 
-        xSemaphoreTake(keyPadSemaphore, portMAX_DELAY);
-        int activeViewId = myDisplays[activeDisplay]->activeView;
-        xSemaphoreGive(keyPadSemaphore);
+      bool valueReaded = odbAdapter->readValueForViewType(viewId);
+      yield();
+
+      if (valueReaded) {
+        myGauges[viewIndex]->data.value = odbAdapter->getValueForViewType(viewId);
+        debug->print(DEBUG_LEVEL_DEBUG, "Value readed: ");
+        debug->println(DEBUG_LEVEL_DEBUG, myGauges[viewIndex]->data.value);
         yield();
 
-        debug->print(DEBUG_LEVEL_INFO, "Getting info for gauge id: ");
-        debug->println(DEBUG_LEVEL_INFO, activeViewId);
+        xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+        int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
+        if (secondaryViewIdx != VIEW_NONE) {          
+          int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
+          xSemaphoreGive(semaphoreActiveView);
 
-        bool goToNext = false;
-        do {
-          shouldCheck = true;
-          
-          //xSemaphoreTake(keyPadSemaphore, portMAX_DELAY);
-          xSemaphoreTake(obdValueSemaphore, portMAX_DELAY);
-          switch (activeViewId) {
-            case VIEW_BATTERY_VOLTAGE: 
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_batteryVoltage;
-                  #else
-                    newValue = obd.batteryVoltage() * 10;
-                  #endif
-                  odbAdapter.setVoltage(newValue);
-                  break;
-            case VIEW_KPH:
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_kph;
-                  #else
-                    newValue = obd.kph(); 
-                  #endif
-                  odbAdapter.setKph(newValue);
-                  break;
-            case VIEW_RPM: 
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_rpm;
-                  #else
-                    newValue = obd.rpm(); 
-                  #endif
-                  debug->println(DEBUG_LEVEL_DEBUG2, "set rpm");
-                  odbAdapter.setRpm(newValue);
-                  break;
-            case VIEW_COOLANT_TEMP: 
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_engineCoolantTemp;
-                  #else
-                    newValue = obd.engineCoolantTemp(); 
-                  #endif
-                  odbAdapter.setCoolantTemp(newValue);
-                  break;
-            //case VIEW_OIL_TEMP: newValue = obd.oilTemp(); break;
-            case VIEW_AMBIENT_TEMP:
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_ambientAirTemp;
-                  #else
-                    newValue = obd.ambientAirTemp(); 
-                  #endif 
-                  odbAdapter.setAmbientTemp(newValue);
-                  break;
-            case VIEW_INTAKE_TEMP:
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_intakeAirTemp;
-                  #else
-                    newValue = obd.intakeAirTemp(); 
-                  #endif
-                  odbAdapter.setIntakeTemp(newValue);
-                  break;
-            case VIEW_TIMING_ADV: 
-                  #ifdef MOCK_OBD
-                    newValue = MOCK_OBD_timingAdvance;
-                  #else
-                    newValue = obd.timingAdvance(); 
-                  #endif
-                  odbAdapter.setTimingAdvance(newValue);
-                  break;
-            case VIEW_NONE:
-              shouldCheck = false;
-              debug->println(DEBUG_LEVEL_INFO, "Inactive view");
-              break;
-            default:
-              shouldCheck = false;
-              debug->print(DEBUG_LEVEL_INFO, activeViewId);
-              debug->println(DEBUG_LEVEL_INFO, " is an unknown view");
-          }
-          xSemaphoreGive(obdValueSemaphore);
-          //xSemaphoreGive(keyPadSemaphore);
+          debug->print(DEBUG_LEVEL_DEBUG2, "Secondary Index: ");
+          debug->println(DEBUG_LEVEL_DEBUG2, secondaryViewIdx);
+          debug->print(DEBUG_LEVEL_DEBUG2, "Secondary ID: ");
+          debug->println(DEBUG_LEVEL_DEBUG2, secondaryViewId);
+
+          valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
           yield();
-
-          debug->print(DEBUG_LEVEL_INFO, "New value: ");
-          debug->println(DEBUG_LEVEL_INFO, newValue);
-
-          if (shouldCheck) {
-            #ifdef MOCK_OBD
-              //xSemaphoreTake(keyPadSemaphore, portMAX_DELAY);
-              xSemaphoreTake(myGauges[activeViewId]->semaphore, portMAX_DELAY);
-              myGauges[activeViewId]->data.value = newValue;
-              xSemaphoreGive(myGauges[activeViewId]->semaphore);
-              //xSemaphoreGive(keyPadSemaphore);
-              yield();
-              goToNext = true;
-              vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
-            #else
-              if (obd.nb_rx_state == ELM_SUCCESS) {
-                if (newValue != INT_MIN) {
-                  xSemaphoreTake(myGauges[activeViewId]->semaphore, portMAX_DELAY);
-                  myGauges[activeViewId]->data.value = newValue;
-                  xSemaphoreGive(myGauges[activeViewId]->semaphore);
-                }
-                goToNext = true;
-                vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
-              } else if (obd.nb_rx_state == ELM_GETTING_MSG) {
-                vTaskDelay(DELAY_READING / portTICK_PERIOD_MS);
-              } else {
-                goToNext = true;
-                debug->println(DEBUG_LEVEL_INFO, "OBD Read error");
-              }
-            #endif
+          if (valueReaded) {
+            myGauges[viewIndex]->secondaryViews.value[secondaryViewIdx] = odbAdapter->getValueForViewType(secondaryViewId);
+            yield();
           } else {
-            goToNext = true;
+            debug->println(DEBUG_LEVEL_DEBUG2, "secondary value NOT readed");
           }
-        } while (goToNext == false);
-        //}
+        } else {
+          xSemaphoreGive(semaphoreActiveView);
+        }
+
+      } else {
+          debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
       }
     }
-
-    if (runs == 0) {
-      yield();
-      vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
-    }
+    vTaskDelay(myGauges[viewId]->getInterval() / portTICK_PERIOD_MS);
   }
 }
 

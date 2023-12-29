@@ -27,6 +27,10 @@ class Displays {
     int getScreenHeight();
     void printMsg(const char *buf);
 
+    int getActiveDisplay();
+    int getActiveView();
+    void setActiveView(int newActiveView);
+
     Adafruit_GC9A01A *getTFT();
 
 };
