@@ -1,5 +1,11 @@
-Car OBD multi gauge for ESP32
-TFT Adafruit GC9A01A
+Car OBD multi gauge
+
+Board: ESP32
+
+TFT: Adafruit GC9A01A 
+Resolution: 240x240
+Display size: Φ32.4mm
+Dimension: 40.4×37.5(mm) Φ37.5(mm)
 
 Features:
 * OBD ELM327 Bluetooth / WiFi
