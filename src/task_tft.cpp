@@ -12,6 +12,7 @@ bool drawActiveGauge(int activeDisplay, int viewId) {
   
   bool changeView = false;
 
+  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
     myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
 
@@ -37,29 +38,10 @@ bool drawActiveGauge(int activeDisplay, int viewId) {
       myGauges[viewId]->drawBorders();
     }
     changeView = true;
-  } 
+  }
+  xSemaphoreGive(semaphoreActiveView);
 
   return changeView;
-}
-
-int getActiveView(int activeDisplay) {
-  
-  int ret;
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-  ret = myDisplays[activeDisplay]->activeView;
-  xSemaphoreGive(semaphoreActiveView);
-  return ret;
-
-}
-
-int getActiveDisplay() {
-
-  int ret;
-  xSemaphoreTake(semaphoreActiveDisplay, portMAX_DELAY);
-  ret = realActiveDisplay;
-  xSemaphoreGive(semaphoreActiveDisplay);
-  return ret;
-
 }
 
 void tft1_task(void *pvParameters) {
@@ -72,9 +54,8 @@ void tft1_task(void *pvParameters) {
   
   for (;;) {
 
-
     activeDisplay = getActiveDisplay();
-    viewIndex = getActiveView(activeDisplay);
+    viewIndex = myDisplays[activeDisplay]->getActiveView();
     
     viewId = myGauges[viewIndex]->getId();
 
@@ -82,54 +63,28 @@ void tft1_task(void *pvParameters) {
       
       if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
 
-        bool changeView = drawActiveGauge(activeDisplay, viewId);
-        if (changeView) {
+        debug->println(DEBUG_LEVEL_DEBUG, "TFT Loop");
+        if (drawActiveGauge(activeDisplay, viewIndex)) {
+
           debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
-          activeDisplay = getActiveDisplay();
-          viewIndex = getActiveView(activeDisplay);
-          viewId = myGauges[viewIndex]->getId();
-        }
-
-        bool valueReaded = odbAdapter->readValueForViewType(viewId);
-
-        int newValue = INT_MIN;
-        if (valueReaded) {
           
-          newValue = odbAdapter->getValueForViewType(viewId);
-
-          //debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
-          //debug->println(DEBUG_LEVEL_DEBUG2, newValue);
-          //debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
-          //debug->println(DEBUG_LEVEL_DEBUG2, myGauges[viewIndex]->data.value);
-
-          bool redrawView = myGauges[viewIndex]->data.value != newValue;
-          myGauges[viewIndex]->data.value = newValue;
-
-          // TODO: semaphore for secondraryActiveView
-          if (myDisplays[activeDisplay]->secondaryActiveView != VIEW_NONE) {
-            int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
-            int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
-
-            valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
-            if (valueReaded) {
-              newValue = odbAdapter->getValueForViewType(secondaryViewId);
-              if (myGauges[viewIndex]->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
-                redrawView = true;
-              }
-              myGauges[viewIndex]->secondaryViews.value[secondaryViewIdx] = newValue;
-            }
-          }
-
-          if (redrawView || changeView) { 
-            //debug->println(DEBUG_LEVEL_DEBUG, "Draw gauge request");
-            myGauges[viewIndex]->drawGauge(changeView);
-          }
+          activeDisplay = getActiveDisplay();
+          viewIndex = myDisplays[activeDisplay]->getActiveView();
+          viewId = myGauges[viewIndex]->getId();
+          
+          myGauges[viewIndex]->draw(true);
 
         } else {
-            debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
+
+          if (myGauges[viewIndex]->valueHasChanged()) {
+            debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
+            myGauges[viewIndex]->draw(false);
+          } else {
+            debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
+          }
         }
 
-        vTaskDelay(myGauges[viewId]->getInterval() / portTICK_PERIOD_MS);
+        vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
 
       } else {
         myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);

@@ -36,9 +36,9 @@ TaskHandle_t t_core1_obd;
 // Semaphores
 SemaphoreHandle_t semaphoreActiveDisplay;
 SemaphoreHandle_t semaphoreActiveView;
+SemaphoreHandle_t semaphoreData;
 SemaphoreHandle_t btConnectedSemaphore;
 SemaphoreHandle_t obdConnectedSemaphore;
-SemaphoreHandle_t obdValueSemaphore;
 
 int realActiveDisplay;
 #else
@@ -73,7 +73,18 @@ Settings *mySettings;
 #else
   bool testDownKey = false;
 #endif
-  
+
+#ifdef USE_MULTI_THREAD
+int getActiveDisplay() {
+
+  int ret;
+  xSemaphoreTake(semaphoreActiveDisplay, portMAX_DELAY);
+  ret = realActiveDisplay;
+  xSemaphoreGive(semaphoreActiveDisplay);
+  return ret;
+
+}
+#endif
 
 void setup() {
 
@@ -86,15 +97,15 @@ void setup() {
 #ifdef USE_MULTI_THREAD
   btConnectedSemaphore = xSemaphoreCreateMutex();
   obdConnectedSemaphore = xSemaphoreCreateMutex();
-  obdValueSemaphore = xSemaphoreCreateMutex();
   semaphoreActiveDisplay = xSemaphoreCreateMutex();
   semaphoreActiveView = xSemaphoreCreateMutex();
+  semaphoreData = xSemaphoreCreateMutex();
 
   xSemaphoreGive(btConnectedSemaphore);
   xSemaphoreGive(obdConnectedSemaphore);
-  xSemaphoreGive(obdValueSemaphore);
   xSemaphoreGive(semaphoreActiveDisplay);
   xSemaphoreGive(semaphoreActiveView);
+  xSemaphoreGive(semaphoreData);
 #endif
 
   mySettings = new Settings();
@@ -151,68 +162,36 @@ void setup() {
   myGauges[3]->addSecondaryView(VIEW_KPH, (char*)"%d");
   // Engine coolant  
   myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
-  //myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"%d C");
+  myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"%d C");
   // Intake
   myGauges[5] = new Gauge(myDisplays[1], VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
-  //myGauges[5]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"%d C");
+  myGauges[5]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"%d C");
   // Advance
   myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
   // Throttle
   myGauges[7] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  //myGauges[7]->addSecondaryView(VIEW_ENGINE_LOAD, (char*)"%d");
+  myGauges[7]->addSecondaryView(VIEW_ENGINE_LOAD, (char*)"%d");
   //  Engine load
   myGauges[8] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  //myGauges[8]->addSecondaryView(VIEW_THROTTLE, (char*)"%d");
+  myGauges[8]->addSecondaryView(VIEW_THROTTLE, (char*)"%d");
   // Short fuel trims
   myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  //myGauges[9]->addSecondaryView(VIEW_LONG_FUEL_TRIM, (char*)"%d");
+  myGauges[9]->addSecondaryView(VIEW_LONG_FUEL_TRIM, (char*)"%d");
   // Long fuel trims
   myGauges[10] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  //myGauges[10]->addSecondaryView(VIEW_SHORT_FUEL_TRIM, (char*)"%d");
+  myGauges[10]->addSecondaryView(VIEW_SHORT_FUEL_TRIM, (char*)"%d");
   // MAF rate
   //myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);
-  
-  //supportedPIDs_21_40
   // Fuel level
   //myGauges[12] = new Gauge(myDisplays[1], VIEW_FUEL_LEVEL, TYPE_GAUGE_GRAPH, DELAY_VIEW_FUEL_LEVEL, (char*)"FUEL", (char*)"%d", RED, WHITE, true, false, 0, 15, 100, 100);
-  
-  //supportedPIDs_41_60
   // Ambient  
   //myGauges[13] = new Gauge(myDisplays[1], VIEW_AMBIENT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_AMBIENT_AIR_TEMP, (char*)"Out", (char*)"%d C", BLUE, WHITE, true, false, -30, 3, 50, 50);
   // Oil temp
   //myGauges[14] = new Gauge(myDisplays[1], VIEW_OIL_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_OIL_TEMP, (char*)"OIL", (char*)"%d C", BLUE, RED, true, true, -30, 40, 110, 150);
   // Abs Load
   //myGauges[15] = new Gauge(myDisplays[1], VIEW_ABS_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ABS_LOAD, (char*)"A LOAD", (char*)"%d", WHITE, RED, false, false, 0, 0, 100, 100);
-
-  
+ 
   //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
-
-
-  //myGauges[1]->addSecondaryView(VIEW_RPM, (char*)"%d");
-  //myGauges[1]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[1]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[1]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
-
-  //myGauges[2]->addSecondaryView(VIEW_KPH, (char*)"%d");
-  //myGauges[2]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[2]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[2]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
-
-  //myGauges[3]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[3]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[3]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
-
-  //myGauges[4]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[4]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
-
-  //myGauges[5]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"I: %d C");
-  //myGauges[5]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  //myGauges[5]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
-
-  //myGauges[6]->addSecondaryView(VIEW_AMBIENT_TEMP, (char*)"O: %d C");
-  //myGauges[6]->addSecondaryView(VIEW_COOLANT_TEMP, (char*)"E: %d C");
-  //myGauges[6]->addSecondaryView(VIEW_BATTERY_VOLTAGE, (char*)"%0.1f V");
 
   pinMode(PIN_UP_KEY, INPUT_PULLUP);
   pinMode(PIN_DOWN_KEY, INPUT_PULLUP);
@@ -266,12 +245,11 @@ void setup() {
 
   debug->println(DEBUG_LEVEL_INFO, "Setup completed\nStarting tasks...");
 
-  vTaskResume(t_core0_tft1);  
-  delay(1000);
-
+  vTaskResume(t_core0_tft1);
+  delay(200);
   vTaskResume(t_core0_keypad);
-  delay(1000);
-
+  delay(200);
+  
   debug->println(DEBUG_LEVEL_INFO, "Starting OBD...");
   vTaskResume(t_core1_obd);
 
@@ -487,7 +465,7 @@ void loop() {
 
         if (redrawView || changeView) { 
           //debug->println(DEBUG_LEVEL_DEBUG, "Draw gauge request");
-          myGauges[viewIndex]->drawGauge(changeView);
+          myGauges[viewIndex]->draw(changeView);
         }
 
       } else {

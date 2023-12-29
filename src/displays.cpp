@@ -34,6 +34,31 @@ void Displays::printMsg(const char *buf) {
   tft->print(buf);
 }
 
+int Displays::getActiveView() {
+  
+  int ret;
+  #ifdef USE_MULTI_THREAD
+  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+  #endif
+  ret = this->activeView;
+  #ifdef USE_MULTI_THREAD
+  xSemaphoreGive(semaphoreActiveView);
+  #endif
+  return ret;
+
+}
+
+void Displays::setActiveView(int newActiveView) {
+ 
+  #ifdef USE_MULTI_THREAD
+  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+  #endif
+  this->activeView = newActiveView;
+  #ifdef USE_MULTI_THREAD
+  xSemaphoreGive(semaphoreActiveView);
+  #endif
+}
+
 int Displays::getScreenWidth() {
     return this->screenWidth;
 }

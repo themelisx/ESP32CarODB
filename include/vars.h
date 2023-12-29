@@ -26,9 +26,9 @@ extern ELM327 *obd;
 #ifdef USE_MULTI_THREAD
 extern SemaphoreHandle_t semaphoreActiveDisplay;
 extern SemaphoreHandle_t semaphoreActiveView;
+extern SemaphoreHandle_t semaphoreData;
 extern SemaphoreHandle_t btConnectedSemaphore;
 extern SemaphoreHandle_t obdConnectedSemaphore;
-extern SemaphoreHandle_t obdValueSemaphore;
 
 // Tasks
 extern TaskHandle_t t_core0_tft1;
@@ -37,6 +37,7 @@ extern TaskHandle_t t_core0_keypad;
 extern TaskHandle_t t_core1_obd;
 
 extern int realActiveDisplay;
+extern int getActiveDisplay();
 #else
 extern int activeDisplay;
 #endif

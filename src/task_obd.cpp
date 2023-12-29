@@ -13,21 +13,61 @@ void obd_task(void *pvParameters) {
   debug->print(DEBUG_LEVEL_INFO, "OBD manager task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
+  int activeDisplay;
+  int viewId;
+  int viewIndex;
+
   #ifndef MOCK_OBD
     // if device does not have pin use the follow
     //odbAdapter->connect(nullptr);
     //bool connected = odbAdapter->connect(OBD_DEVICE_PIN);
   #else
+    srand(time(NULL));
     odbAdapter->setDeviceConnected(true);
     odbAdapter->setObdConnected(true);
   #endif
 
   for (;;) {
 
-      //obdValueSemaphore
+    activeDisplay = getActiveDisplay();
+    viewIndex = myDisplays[activeDisplay]->getActiveView();    
+    viewId = myGauges[viewIndex]->getId();
 
+    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
+      debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
+
+      bool valueReaded = odbAdapter->readValueForViewType(viewId);
       yield();
-      vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
+
+      if (valueReaded) {
+        myGauges[viewIndex]->data.value = odbAdapter->getValueForViewType(viewId);
+        debug->print(DEBUG_LEVEL_DEBUG, "Value readed: ");
+        debug->println(DEBUG_LEVEL_DEBUG, myGauges[viewIndex]->data.value);
+        yield();
+
+        xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+        if (myDisplays[activeDisplay]->secondaryActiveView != VIEW_NONE) {
+          int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
+          int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
+          xSemaphoreGive(semaphoreActiveView);
+
+          valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
+          yield();
+          if (valueReaded) {
+            myGauges[viewIndex]->secondaryViews.value[secondaryViewIdx] = odbAdapter->getValueForViewType(secondaryViewId);
+            yield();
+          } else {
+            debug->println(DEBUG_LEVEL_DEBUG2, "secondary value NOT readed");
+          }
+        } else {
+          xSemaphoreGive(semaphoreActiveView);
+        }
+
+      } else {
+          debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
+      }
+    }
+    vTaskDelay(myGauges[viewId]->getInterval() / portTICK_PERIOD_MS);
   }
 }
 

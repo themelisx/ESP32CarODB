@@ -49,6 +49,9 @@ class Gauge {
 
     int screenHeight;
     int screenWidth;
+
+    int halfScreenHeight;
+    int halfScreenWidth;
     
     int outerRadius;
     int innerRadius;
@@ -84,6 +87,13 @@ class Gauge {
     
     Gauge *gauge;
 
+    void drawGaugeLine(int angle, int color);
+    void drawCenterString(const char *buf);
+    void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
+    void drawBottomString(const char *buf, int fColor, int bgColor);
+    void getFormattedValue(int newValue, char *buf);
+    void drawDateTime();
+
   public:
     Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
 
@@ -107,14 +117,10 @@ class Gauge {
     void setFrontColor(int fColor);
     void setBackColor(int bColor);    
     void setFontSize(int sz);
-    void getFormattedValue(int newValue, char *buf);
-    void drawDateTime();
-    void drawGauge(bool repaint);
-    void drawGaugeLine(int angle, int color);
+    
+    void draw(bool repaint);    
     void drawBorders();
-    void drawCenterString(const char *buf);
-    void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
-    void drawBottomString(const char *buf, int fColor, int bgColor);
+    bool valueHasChanged();
 
 };
 
