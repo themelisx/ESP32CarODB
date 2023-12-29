@@ -90,7 +90,7 @@ void setup() {
 
   // Initialize Serial and set debug level
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_DEBUG);
+  debug->start(115200, DEBUG_LEVEL_INFO);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
@@ -175,10 +175,10 @@ void setup() {
   myGauges[8] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
   myGauges[8]->addSecondaryView(VIEW_THROTTLE, (char*)"%d");
   // Short fuel trims
-  myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   myGauges[9]->addSecondaryView(VIEW_LONG_FUEL_TRIM, (char*)"%d");
   // Long fuel trims
-  myGauges[10] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_GAUGE_GRAPH, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  myGauges[10] = new Gauge(myDisplays[1], VIEW_LONG_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   myGauges[10]->addSecondaryView(VIEW_SHORT_FUEL_TRIM, (char*)"%d");
   // MAF rate
   //myGauges[11] = new Gauge(myDisplays[1], VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);

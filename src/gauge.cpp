@@ -115,14 +115,37 @@ void Gauge::setFontSize(int sz) {
 }
 
 void Gauge::getFormattedValue(int newValue, char *buf) {
+  //char tmpBuf[16];
+
   if (this->getId() == VIEW_BATTERY_VOLTAGE) {
     setFontSize(26);
     float x = (float)newValue / 10;
     sprintf(buf, data.strFormat, x);
   } else {
     setFontSize(26);
-    sprintf(buf, data.strFormat, newValue);
+    sprintf(buf, data.strFormat, newValue);    
   }
+  
+  /*
+  // Add space before and after char '1'
+	int i = 0;
+  int j = 0;
+	while (tmpBuf[i]) {
+    if (tmpBuf[i] == '1') {
+      if (i > 0) {
+        buf[j] = ' '; j++;
+      }
+      buf[j] = '1'; j++;
+      if (tmpBuf[i+1] != 0) {
+        buf[j] = ' ';
+      }
+    } else {
+      buf[j] = tmpBuf[i];
+    }
+    j++;
+		i++;
+	}
+  */
 }
 
 
@@ -364,24 +387,7 @@ void Gauge::drawCenterString(const char *buf) {
   display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
   display->setCursor(x - w / 2, y + h / 2);
   display->print(buf);
-
-  /*
-  sprintf(buf2, "%s", "11:11");  
-  display->getTextBounds(buf2, x, y, &x1, &y1, &w, &h);
-  display->setCursor(x - w / 2, y + h / 2);
-  display->print(buf2);
-  debug->print(DEBUG_LEVEL_DEBUG2, ("w=");
-  debug->println(DEBUG_LEVEL_DEBUG2, w);
-
-  sprintf(buf2, "%s", "00:00");  
-  display->getTextBounds(buf2, x, y, &x1, &y1, &w, &h);
-  display->setCursor(x - w / 2, y + h / 2);
-  display->print(buf2);
-  debug->print(DEBUG_LEVEL_DEBUG2, "w=");
-  debug->println(DEBUG_LEVEL_DEBUG2, w);
-  */
-
-  
+ 
 }
 
 void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgColor) {
