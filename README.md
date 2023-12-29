@@ -8,3 +8,10 @@ Features:
 * Dual gauge display
 * Up to two TFT displays
 * User settings (saved in EEPROM)
+
+![alt text](https://github.com/themelisx/ESP32CarODB/blob/main/photos/IMG_20231229_184141.jpg?raw=true)
+
+![alt text](https://github.com/themelisx/ESP32CarODB/blob/main/photos/IMG_20231229_184143.jpg?raw=true)
+
+![alt text](https://github.com/themelisx/ESP32CarODB/blob/main/photos/IMG_20231229_184202.jpg?raw=true)
+
