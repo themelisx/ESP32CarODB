@@ -46,10 +46,15 @@ void obd_task(void *pvParameters) {
         yield();
 
         xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-        if (myDisplays[activeDisplay]->secondaryActiveView != VIEW_NONE) {
-          int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
+        int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
+        if (secondaryViewIdx != VIEW_NONE) {          
           int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
           xSemaphoreGive(semaphoreActiveView);
+
+          debug->print(DEBUG_LEVEL_DEBUG2, "Secondary Index: ");
+          debug->println(DEBUG_LEVEL_DEBUG2, secondaryViewIdx);
+          debug->print(DEBUG_LEVEL_DEBUG2, "Secondary ID: ");
+          debug->println(DEBUG_LEVEL_DEBUG2, secondaryViewId);
 
           valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
           yield();

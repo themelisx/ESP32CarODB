@@ -341,7 +341,9 @@ void Gauge::draw(bool repaint) {
         }
       }
 
-      drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+      // TODO: fix this
+      //drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+      drawUpperString(true, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
     }   
   }    
 }

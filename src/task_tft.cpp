@@ -8,13 +8,13 @@
 #include "vars.h"
 #include "displays.h"
 
-bool drawActiveGauge(int activeDisplay, int viewId) {
+bool drawActiveGauge(int activeDisplay, int viewIndex) {
   
   bool changeView = false;
 
   xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
-    myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewId]->secondaryViews.activeView) {
+    myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewIndex]->secondaryViews.activeView) {
 
     if (myDisplays[activeDisplay]->nextView == -1) { // First run
       myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
@@ -23,19 +23,19 @@ bool drawActiveGauge(int activeDisplay, int viewId) {
     debug->println(DEBUG_LEVEL_INFO, activeDisplay);
 
     myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
-    myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewId]->secondaryViews.activeView;
-    viewId = myDisplays[activeDisplay]->nextView;
+    myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewIndex]->secondaryViews.activeView;
+    viewIndex = myDisplays[activeDisplay]->nextView;
 
     debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-    debug->println(DEBUG_LEVEL_INFO, myGauges[viewId]->data.title);
+    debug->println(DEBUG_LEVEL_INFO, myGauges[viewIndex]->data.title);
 
     myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
 
-    myGauges[viewId]->data.state = STATE_UNKNOWN;
-    myGauges[viewId]->data.value = myGauges[viewId]->data.min;
+    myGauges[viewIndex]->data.state = STATE_UNKNOWN;
+    myGauges[viewIndex]->data.value = myGauges[viewIndex]->data.min;
 
-    if (myGauges[viewId]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewId]->secondaryViews.activeView == 0) {
-      myGauges[viewId]->drawBorders();
+    if (myGauges[viewIndex]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewIndex]->secondaryViews.activeView == 0) {
+      myGauges[viewIndex]->drawBorders();
     }
     changeView = true;
   }
@@ -49,17 +49,14 @@ void tft1_task(void *pvParameters) {
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
   int activeDisplay;
-  int viewId;
   int viewIndex;
   
   for (;;) {
 
     activeDisplay = getActiveDisplay();
     viewIndex = myDisplays[activeDisplay]->getActiveView();
-    
-    viewId = myGauges[viewIndex]->getId();
 
-    if (viewId != VIEW_NONE) {   
+    if (myGauges[viewIndex]->getId() != VIEW_NONE) {   
       
       if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
 
@@ -69,9 +66,7 @@ void tft1_task(void *pvParameters) {
           debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
           
           activeDisplay = getActiveDisplay();
-          viewIndex = myDisplays[activeDisplay]->getActiveView();
-          viewId = myGauges[viewIndex]->getId();
-          
+          viewIndex = myDisplays[activeDisplay]->getActiveView();          
           myGauges[viewIndex]->draw(true);
 
         } else {
