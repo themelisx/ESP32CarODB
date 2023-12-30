@@ -193,11 +193,13 @@ void setup() {
  
   //myGauges[8] = new Gauge(myDisplays[1], VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
-  pinMode(PIN_UP_KEY, INPUT_PULLUP);
-  pinMode(PIN_DOWN_KEY, INPUT_PULLUP);
-  pinMode(PIN_LEFT_KEY, INPUT_PULLUP);
-  pinMode(PIN_RIGHT_KEY, INPUT_PULLUP);
-  pinMode(PIN_ENTER_KEY, INPUT_PULLUP);
+  pinMode(PIN_UP_KEY, INPUT);
+  pinMode(PIN_DOWN_KEY, INPUT);
+  #ifdef ENABLE_SECOND_DISPLAY
+  pinMode(PIN_LEFT_KEY, INPUT);
+  pinMode(PIN_RIGHT_KEY, INPUT);
+  pinMode(PIN_ENTER_KEY, INPUT);
+  #endif
 
 #ifdef USE_MULTI_THREAD
   realActiveDisplay = 1;

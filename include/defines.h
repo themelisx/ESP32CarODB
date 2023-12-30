@@ -70,11 +70,14 @@
 #define OBD_DEVICE_PIN (char*)"1234"
 
 #define DELAY_KEYPAD 200
+
 #define PIN_UP_KEY 27
 #define PIN_DOWN_KEY 26
+#ifdef ENABLE_SECOND_DISPLAY
 #define PIN_LEFT_KEY 25
 #define PIN_RIGHT_KEY 33
 #define PIN_ENTER_KEY 32
+#endif
 
 #define MAX_DISPLAYS 1
 

@@ -13,12 +13,17 @@ void keypad_task(void *pvParameters) {
   debug->print(DEBUG_LEVEL_INFO, "Keypad manager task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
+  #ifdef USE_MOCK_KEYPAD
   bool testDownKey = true;
+#else
+  bool testDownKey = false;
+#endif
   unsigned long lastTime = millis();
 
   for (;;) {
 
-    if (digitalRead(PIN_LEFT_KEY) == LOW) { // LEFT KEY PRESSED
+    #ifdef ENABLE_SECOND_DISPLAY
+    if (digitalRead(PIN_LEFT_KEY) == HIGH) { // LEFT KEY PRESSED
 
       debug->println(DEBUG_LEVEL_DEBUG, "Left key pressed");
       
@@ -30,7 +35,7 @@ void keypad_task(void *pvParameters) {
       xSemaphoreGive(semaphoreActiveDisplay);
       yield();
 
-    } else if (digitalRead(PIN_RIGHT_KEY) == LOW) {
+    } else if (digitalRead(PIN_RIGHT_KEY) == HIGH) {
 
       debug->println(DEBUG_LEVEL_DEBUG, "Right key pressed");
       
@@ -42,11 +47,13 @@ void keypad_task(void *pvParameters) {
       xSemaphoreGive(semaphoreActiveDisplay);
       yield();
 
-    } else if (digitalRead(PIN_ENTER_KEY) == LOW) { // ENTER KEY PRESSED
+    } else if (digitalRead(PIN_ENTER_KEY) == HIGH) { // ENTER KEY PRESSED
 
       debug->println(DEBUG_LEVEL_DEBUG, "Enter key pressed");
       
-    } else if (digitalRead(PIN_UP_KEY) == LOW) { // UP KEY PRESSED
+    } else 
+    #endif
+    if (digitalRead(PIN_UP_KEY) == HIGH) { // UP KEY PRESSED
 
       debug->println(DEBUG_LEVEL_DEBUG, "Up key pressed");
 
@@ -81,7 +88,7 @@ void keypad_task(void *pvParameters) {
       mySettings->save();      
       yield();
 
-    } else if (digitalRead(PIN_DOWN_KEY) == LOW || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
+    } else if (digitalRead(PIN_DOWN_KEY) == HIGH || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
 
       lastTime = millis();
       bool changeGauge = true;
