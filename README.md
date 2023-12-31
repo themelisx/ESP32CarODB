@@ -16,7 +16,7 @@ Features:
 * Up to two TFT displays
 * User settings (saved in EEPROM)
 
-[![Watch the video](https://github.com/themelisx/ESP32CarODB/blob/main/photos/IMG_20231229_184202.jpg?raw=true)](https://www.youtube.com/watch?v=PNo07G7LrE0)
+[![Watch the video]](https://www.youtube.com/watch?v=PNo07G7LrE0)
 
 ![alt text](https://github.com/themelisx/ESP32CarODB/blob/main/photos/IMG_20231229_184141.jpg?raw=true)
 
