@@ -16,7 +16,7 @@ Features:
 * Up to two TFT displays
 * User settings (saved in EEPROM)
 
-[![Watch the video]](https://www.youtube.com/watch?v=PNo07G7LrE0)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/PNo07G7LrE0?si=lQG4I_3GI_slvfzo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ![alt text](https://github.com/themelisx/ESP32CarODB/blob/main/photos/IMG_20231229_184141.jpg?raw=true)
 
