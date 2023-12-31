@@ -88,7 +88,7 @@ class Gauge {
     Gauge *gauge;
 
     void drawGaugeLine(int angle, int color);
-    void drawCenterString(const char *buf);
+    void drawCenterString(const char *buf, bool clearCircleArea);
     void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
     void drawBottomString(const char *buf, int fColor, int bgColor);
     void getFormattedValue(int newValue, char *buf);

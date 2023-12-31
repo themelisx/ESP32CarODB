@@ -164,7 +164,7 @@ void Gauge::drawDateTime() {
   if (strncmp(timeString, oldTimeString, TIME_LENGTH) != 0) {
     strncpy(oldTimeString, timeString, TIME_LENGTH);
     setFontSize(26);
-    drawCenterString(timeString);
+    drawCenterString(timeString, true);
   }
 }
 
@@ -238,15 +238,23 @@ void Gauge::draw(bool repaint) {
     drawBottomString(data.title, fColor, bColor);
   }
 
-  //debug->println(newValue);
+  // Clear old text  
+  display->setTextColor(BACK_COLOR);
+  if (data.oldValue != INT_MIN) {            
+    getFormattedValue(data.oldValue, valueBuf);
+    drawCenterString(valueBuf, false);
+  } else {
+    drawCenterString("---", false);
+  }
 
-  if (newValue != INT_MIN) {
+  // draw new text
+  if (newValue != INT_MIN) {        
     display->setTextColor(newStateColor);
     getFormattedValue(newValue, valueBuf);
-    drawCenterString(valueBuf);
+    drawCenterString(valueBuf, false);
   } else {
     display->setTextColor(fColor);
-    drawCenterString("---");
+    drawCenterString("---", false);
   }
 
   #ifdef USE_MULTI_THREAD
@@ -272,35 +280,49 @@ void Gauge::draw(bool repaint) {
         xSemaphoreGive(semaphoreData);
         #endif
 
-        int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
-        int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
+        #ifndef DRAW_FAST
+          int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
+          int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
+        #endif
         int oldAngle = map(oldValue, data.min, data.max, gaugeMin, gaugeMax);
         int newAngle = map(newValue, data.min, data.max, gaugeMin, gaugeMax);
 
         if (newValue < oldValue) {
-          for (i = oldAngle; i >= newAngle; i--) {
-            drawGaugeLine(i, bColor);
-          }
-          if (newState != data.state) {
-            for (i = 0; i <= newAngle; i++) {
-              drawGaugeLine(i, newStateColor);
+          #ifdef DRAW_FAST
+            drawGaugeLine(oldAngle, BACK_COLOR);
+            drawGaugeLine(newAngle, newStateColor);
+          #else
+            for (i = oldAngle; i >= newAngle; i--) {
+              drawGaugeLine(i, bColor);
             }
-          }
-        } else {
+            if (newState != data.state) {
+              for (i = 0; i <= newAngle; i++) {
+                drawGaugeLine(i, newStateColor);
+              }
+            }
+          #endif
+        } else {          
           if (newState != data.state) {
             oldAngle = 0;
           }
-          for (i = oldAngle; i <= newAngle; i++) {
-            drawGaugeLine(i, newStateColor);
-          }
+          #ifdef DRAW_FAST
+            drawGaugeLine(oldAngle, BACK_COLOR);
+            drawGaugeLine(newAngle, newStateColor);
+          #else            
+            for (i = oldAngle; i <= newAngle; i++) {
+              drawGaugeLine(i, newStateColor);
+            }
+          #endif
         }
 
-        if (data.low != data.min && newValue < data.low) {
-          drawGaugeLine(lowAngle, data.lowColor);
-        }
-        if (data.high != data.max && newValue < data.high) {
-          drawGaugeLine(highAngle, data.highColor);
-        }
+        #ifndef DRAW_FAST
+          if (data.low != data.min && newValue < data.low) {
+            drawGaugeLine(lowAngle, data.lowColor);
+          }
+          if (data.high != data.max && newValue < data.high) {
+            drawGaugeLine(highAngle, data.highColor);
+          }
+        #endif
       } else {
         debug->println(DEBUG_LEVEL_ERROR, "Out of range");        
       }
@@ -327,11 +349,26 @@ void Gauge::draw(bool repaint) {
     
     int secondaryViewId = secondaryViews.ids[secondaryViewsActiveView];
     newValue = secondaryViews.value[secondaryViewsActiveView];
-    if (newValue != secondaryViews.oldValue[secondaryViewsActiveView]) {
+    int oldValue = secondaryViews.oldValue[secondaryViewsActiveView];
+    if (newValue != oldValue) {
       debug->print(DEBUG_LEVEL_DEBUG2, "Draw upper text: ");
       debug->println(DEBUG_LEVEL_DEBUG2, newValue);
       secondaryViews.oldValue[secondaryViewsActiveView] = newValue;
       
+      // Clear old text
+      if (oldValue == INT_MIN) {
+        sprintf(secondaryBuffer, "%s", "---");
+      } else {
+        if (secondaryViewId == VIEW_BATTERY_VOLTAGE) {
+          float x = (float)oldValue / 10;
+          sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViewsActiveView], x);
+        } else {
+          sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViewsActiveView], oldValue);
+        }
+      }
+      drawUpperString(repaint, secondaryBuffer, BACK_COLOR, BACK_COLOR);
+      
+      // draw new text
       if (newValue == INT_MIN) {
         sprintf(secondaryBuffer, "%s", "---");
       } else {
@@ -343,9 +380,8 @@ void Gauge::draw(bool repaint) {
         }
       }
 
-      // TODO: fix this
-      //drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
-      drawUpperString(true, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+      drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+      //drawUpperString(true, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
     }   
   }    
 }
@@ -380,14 +416,16 @@ void Gauge::drawBorders() {
     bColor);
 }
 
-void Gauge::drawCenterString(const char *buf) {
+void Gauge::drawCenterString(const char *buf, bool clearCircleArea) {
   int x = halfScreenWidth;
   int y = halfScreenHeight;
   int16_t x1, y1;
   uint16_t w, h;
   //char buf2[16];
 
-  display->fillCircle(halfScreenWidth, halfScreenHeight, innerRadius - 2, bColor);
+  if (clearCircleArea) {
+    display->fillCircle(halfScreenWidth, halfScreenHeight, innerRadius - 2, bColor);
+  }
   display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
   display->setCursor(x - w / 2, y + h / 2);
   display->print(buf);
@@ -402,14 +440,11 @@ void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgCol
 
   setFontSize(18);
   display->setTextColor(fColor);
-
-  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
-  
-  display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
+  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
   
   if (repaint) {
-    display->drawRoundRect(47, -23, 146, 72, 20, fColor);
-    
+    display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
+    display->drawRoundRect(47, -23, 146, 72, 20, fColor);    
   }
   display->setCursor(x - w / 2, y + 5);
   display->print(buf);

@@ -12,17 +12,24 @@
 // Values are in defines.h
 
 //#define MOCK_OBD_LOW_VALUES
-#define MOCK_OBD_NORMAL_VALUES
-//#define MOCK_OBD_HIGH_VALUES
+//#define MOCK_OBD_NORMAL_VALUES
+#define MOCK_OBD_HIGH_VALUES
 
 
 //////////////
 // Settings //
 //////////////
-// Enable EEPROM to save settings in EEPROM
+
 #ifdef ESP32
+    // Enable EEPROM to save settings in EEPROM
     #define ENABLE_EEPROM
+
+    // Dual Core
     #define USE_MULTI_THREAD
+#endif
+
+#ifdef ESP8266
+    #define DRAW_FAST
 #endif
 
 
