@@ -22,13 +22,20 @@ bool MyEEPROM::start() {
   debug->print(DEBUG_LEVEL_INFO, this->size);
   debug->println(DEBUG_LEVEL_INFO, " bytes... ");
   
-  if (EEPROM.begin(this->size)) {
-    debug->println(DEBUG_LEVEL_INFO, "Done");
+  #ifdef ESP32  
+    if (EEPROM.begin(this->size)) {
+      debug->println(DEBUG_LEVEL_INFO, "Done");
+      active = true;
+    } else {
+      debug->println(DEBUG_LEVEL_ERROR, "Failed");
+      active = false;
+    }    
+  #endif
+
+  #ifdef ESP8266
+    EEPROM.begin(this->size);
     active = true;
-  } else {
-    debug->println(DEBUG_LEVEL_ERROR, "Failed");
-    active = false;
-  }
+  #endif
   return active;
 }
 
@@ -118,99 +125,100 @@ void MyEEPROM::writeByte(int address, byte myByte) {
   }
 }
 
-size_t MyEEPROM::readString(int address, char* value, size_t maxLen) {
-  if (!active) {
-    showNotActive();
-    return 0;
+#ifdef ESP32
+  size_t MyEEPROM::readString(int address, char* value, size_t maxLen) {
+    if (!active) {
+      showNotActive();
+      return 0;
+    }
+
+    if ((address + maxLen) < this->size) {
+      return EEPROM.readString(address, value, maxLen);
+    } else {
+      showOutOfBoundsError(address, maxLen);
+      return 0;
+    }
   }
 
-  if ((address + maxLen) < this->size) {
-    return EEPROM.readString(address, value, maxLen);
-  } else {
-    showOutOfBoundsError(address, maxLen);
-    return 0;
-  }
-}
+  String MyEEPROM::readString(int address) {
+    if (!active) {
+      showNotActive();
+      return "";
+    }
 
-String MyEEPROM::readString(int address) {
-  if (!active) {
-    showNotActive();
-    return "";
-  }
-
-  if (address < this->size) {
-    return EEPROM.readString(address);
-  } else {
-    showOutOfBoundsError(address);
-    return "";
-  }
-}
-
-size_t MyEEPROM::readBytes(int address, void* value, size_t maxLen) {
-  
-  if (!active) {
-    showNotActive();
-    return 0;
+    if (address < this->size) {
+      return EEPROM.readString(address);
+    } else {
+      showOutOfBoundsError(address);
+      return "";
+    }
   }
 
-  if ((address + maxLen) < this->size) {
-    return EEPROM.readBytes(address, value, maxLen);
-  } else {
-    showOutOfBoundsError(address, maxLen);
-    return 0;
-  }
-}
+  size_t MyEEPROM::readBytes(int address, void* value, size_t maxLen) {
+    
+    if (!active) {
+      showNotActive();
+      return 0;
+    }
 
-size_t MyEEPROM::writeString(int address, const char* value) {
-  
-  if (!active) {
-    showNotActive();
-    return 0;
-  }
-
-  if (address < this->size) {
-    int bytes = EEPROM.writeString(address, value);
-    EEPROM.commit();
-    return bytes;
-  } else {
-    showOutOfBoundsError(address);
-    return 0;
-  }
-}
-
-size_t MyEEPROM::writeString(int address, String value) {
-
-  if (!active) {
-    showNotActive();
-    return 0;
-  }
-  
-  if (address < this->size) {
-    int bytes = EEPROM.writeString(address, value);
-    EEPROM.commit();
-    return bytes;
-  } else {
-    showOutOfBoundsError(address);
-    return 0;
-  }  
-}
-
-size_t MyEEPROM::writeBytes(int address, const void* value, size_t len) {
-
-  if (!active) {
-    showNotActive();
-    return 0;
+    if ((address + maxLen) < this->size) {
+      return EEPROM.readBytes(address, value, maxLen);
+    } else {
+      showOutOfBoundsError(address, maxLen);
+      return 0;
+    }
   }
 
-  if ((address + len) < this->size) {
-    int bytes = EEPROM.writeBytes(address, value, len);
-    EEPROM.commit();
-    return bytes;
-  } else {
-    showOutOfBoundsError(address, len);
-    return 0;
-  }
-}
+  size_t MyEEPROM::writeString(int address, const char* value) {
+    
+    if (!active) {
+      showNotActive();
+      return 0;
+    }
 
+    if (address < this->size) {
+      int bytes = EEPROM.writeString(address, value);
+      EEPROM.commit();
+      return bytes;
+    } else {
+      showOutOfBoundsError(address);
+      return 0;
+    }
+  }
+
+  size_t MyEEPROM::writeString(int address, String value) {
+
+    if (!active) {
+      showNotActive();
+      return 0;
+    }
+    
+    if (address < this->size) {
+      int bytes = EEPROM.writeString(address, value);
+      EEPROM.commit();
+      return bytes;
+    } else {
+      showOutOfBoundsError(address);
+      return 0;
+    }  
+  }
+
+  size_t MyEEPROM::writeBytes(int address, const void* value, size_t len) {
+
+    if (!active) {
+      showNotActive();
+      return 0;
+    }
+
+    if ((address + len) < this->size) {
+      int bytes = EEPROM.writeBytes(address, value, len);
+      EEPROM.commit();
+      return bytes;
+    } else {
+      showOutOfBoundsError(address, len);
+      return 0;
+    }
+  }
+#endif
 
 #endif

@@ -5,7 +5,7 @@
 //#define ENABLE_ELM327_DEBUG_LOGS
 
 // Mock OBD for testing without real OBD device 
-//#define MOCK_OBD
+#define MOCK_OBD
 
 // Mock values for testing without real OBD device //
 // Enable only one of the follow
@@ -20,8 +20,10 @@
 // Settings //
 //////////////
 // Enable EEPROM to save settings in EEPROM
-#define ENABLE_EEPROM
-#define USE_MULTI_THREAD
+#ifdef ESP32
+    #define ENABLE_EEPROM
+    #define USE_MULTI_THREAD
+#endif
 
 
 /////////////////
@@ -45,14 +47,21 @@
 // Connection //
 ////////////////
 // Select connection method (only one of the follow) 
-#define USE_OBD_BLUETOOTH
-//#define USE_OBD_WIFI
+
+#ifdef ESP32
+    #define USE_OBD_BLUETOOTH
+    //#define USE_OBD_WIFI
+#endif
+
+#ifdef ESP8266
+    #define USE_OBD_WIFI
+#endif
 
 
 ////////////
 // Keypad //
 ////////////
-//#define USE_MOCK_KEYPAD
+#define USE_MOCK_KEYPAD
 
 
 

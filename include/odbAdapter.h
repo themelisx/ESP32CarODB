@@ -10,7 +10,12 @@
 #endif
 
 #ifdef USE_OBD_WIFI
-  #include <WiFi.h>
+  #ifdef ESP32
+    #include <WiFi.h>
+  #endif
+  #ifdef ESP8266
+    #include <ESP8266WiFi.h>
+  #endif
 #endif
 
 class OdbAdapter {
@@ -30,7 +35,12 @@ class OdbAdapter {
       WiFiClient SerialDevice;
       const char* ssid = "WiFi_OBDII";
       const char* password = "your-password";
-      IPAddress server(192, 168, 0, 10);
+      #ifdef ESP32
+        IPAddress server(192, 168, 0, 10);
+      #endif
+      #ifdef ESP8266
+        const char* server = "192.168.0.10";
+      #endif
     #endif
 
     bool deviceConnected;

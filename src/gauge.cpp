@@ -184,7 +184,7 @@ bool Gauge::valueHasChanged() {
   } else {    
     if (secondaryViews.activeView != VIEW_NONE) {
       int secondaryViewIdx = secondaryViews.activeView;
-      int secondaryViewId = secondaryViews.ids[secondaryViewIdx];      
+      //int secondaryViewId = secondaryViews.ids[secondaryViewIdx];      
       if (secondaryViews.value[secondaryViewIdx] != secondaryViews.oldValue[secondaryViewIdx]) {
         ret = true;
       }
@@ -203,9 +203,9 @@ void Gauge::draw(bool repaint) {
   char secondaryBuffer[16];
   int newState;
   int newStateColor;
-  int fColorSecondary;
-  int bColorSecondary;
-  int secondaryValue;
+  //int fColorSecondary;
+  //int bColorSecondary;
+  //int secondaryValue;
   bool drawUpper = false;
 
   #ifdef USE_MULTI_THREAD
@@ -215,6 +215,8 @@ void Gauge::draw(bool repaint) {
   #ifdef USE_MULTI_THREAD
   xSemaphoreGive(semaphoreData);
   #endif
+
+  newStateColor = WHITE;
 
   if (newValue < data.min || newValue > data.max) {
     newState = STATE_OUT_OF_RANGE;
@@ -327,7 +329,7 @@ void Gauge::draw(bool repaint) {
     newValue = secondaryViews.value[secondaryViewsActiveView];
     if (newValue != secondaryViews.oldValue[secondaryViewsActiveView]) {
       debug->print(DEBUG_LEVEL_DEBUG2, "Draw upper text: ");
-      debug->println(DEBUG_LEVEL_DEBUG2, secondaryValue);
+      debug->println(DEBUG_LEVEL_DEBUG2, newValue);
       secondaryViews.oldValue[secondaryViewsActiveView] = newValue;
       
       if (newValue == INT_MIN) {

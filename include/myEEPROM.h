@@ -25,14 +25,16 @@ class MyEEPROM {
     byte readByte(int address);
     void writeByte(int address, byte myByte);
 
-    size_t readString(int address, char* value, size_t maxLen);    
-    size_t writeString(int address, const char* value);
+    #ifdef ESP32
+      size_t readString(int address, char* value, size_t maxLen);    
+      size_t writeString(int address, const char* value);
 
-    String readString(int address);
-    size_t writeString(int address, String value);
+      String readString(int address);
+      size_t writeString(int address, String value);
 
-    size_t readBytes(int address, void* value, size_t maxLen);
-    size_t writeBytes(int address, const void* value, size_t len);
+      size_t readBytes(int address, void* value, size_t maxLen);
+      size_t writeBytes(int address, const void* value, size_t len);
+    #endif
 
 };
 
