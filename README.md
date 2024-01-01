@@ -1,6 +1,6 @@
-Car OBD multi gauge
+Car OBD multifunctional instrument
 
-Board: ESP32
+Board: ESP32 (Also supports board ESP8266)
 
 TFT: Adafruit GC9A01A 
 Resolution: 240x240
