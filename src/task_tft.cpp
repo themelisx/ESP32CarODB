@@ -6,94 +6,84 @@
 #include "debug.h"
 #include "gauge.h"
 #include "vars.h"
-#include "displays.h"
-
-bool drawActiveGauge(int activeDisplay, int viewIndex) {
-  
-  bool changeView = false;
-
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-  if (myDisplays[activeDisplay]->activeView != myDisplays[activeDisplay]->nextView || 
-    myDisplays[activeDisplay]->secondaryActiveView != myGauges[viewIndex]->secondaryViews.activeView) {
-
-    if (myDisplays[activeDisplay]->nextView == -1) { // First run
-      myDisplays[activeDisplay]->nextView = myDisplays[activeDisplay]->activeView;
-    }
-    debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-    debug->println(DEBUG_LEVEL_INFO, activeDisplay);
-
-    myDisplays[activeDisplay]->activeView = myDisplays[activeDisplay]->nextView;
-    myDisplays[activeDisplay]->secondaryActiveView = myGauges[viewIndex]->secondaryViews.activeView;
-    viewIndex = myDisplays[activeDisplay]->nextView;
-
-    debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-    debug->println(DEBUG_LEVEL_INFO, myGauges[viewIndex]->data.title);
-
-    myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
-
-    myGauges[viewIndex]->data.state = STATE_UNKNOWN;
-    myGauges[viewIndex]->data.value = myGauges[viewIndex]->data.min;
-
-    if (myGauges[viewIndex]->getType() == TYPE_GAUGE_GRAPH && myGauges[viewIndex]->secondaryViews.activeView == 0) {
-      myGauges[viewIndex]->drawBorders();
-    }
-    changeView = true;
-  }
-  xSemaphoreGive(semaphoreActiveView);
-
-  return changeView;
-}
+#include "display.h"
 
 void tft1_task(void *pvParameters) {
   debug->print(DEBUG_LEVEL_INFO, "View manager task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
-  int activeDisplay;
-  int viewIndex;
+  Display *display;
+  Gauge *gauge;
   
   for (;;) {
 
-    activeDisplay = getActiveDisplay();
-    viewIndex = myDisplays[activeDisplay]->getActiveView();
+    display = displayManager->getDisplay(displayManager->getActiveDisplayId());
+    gauge = display->getActiveGauge();
 
-    if (myGauges[viewIndex]->getId() != VIEW_NONE) {   
-      
-      if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
+    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
 
-        debug->println(DEBUG_LEVEL_DEBUG, "TFT Loop");
-        if (drawActiveGauge(activeDisplay, viewIndex)) {
+      debug->println(DEBUG_LEVEL_DEBUG, "TFT Loop");
 
-          debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
-          
-          activeDisplay = getActiveDisplay();
-          viewIndex = myDisplays[activeDisplay]->getActiveView();          
-          myGauges[viewIndex]->draw(true);
+      bool changeView = false;
 
-        } else {
+      xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+      if (display->activeView != display->nextView || 
+        display->secondaryActiveView != gauge->secondaryViews.activeView) {
 
-          if (myGauges[viewIndex]->valueHasChanged()) {
-            debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
-            myGauges[viewIndex]->draw(false);
-          } else {
-            debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
-          }
+        if (display->nextView == -1) { // First run
+          display->nextView = display->activeView;
         }
+        debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
+        debug->println(DEBUG_LEVEL_INFO, display->getId());
 
-        vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
+        display->activeView = display->nextView;
+        display->secondaryActiveView = gauge->secondaryViews.activeView;
+
+        debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
+        debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
+
+        display->getTFT()->fillScreen(BACK_COLOR);
+
+        gauge->data.state = STATE_UNKNOWN;
+        gauge->data.value = gauge->data.min;
+
+        if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeView == 0) {
+          gauge->drawBorders();
+        }
+        changeView = true;
+      }
+      xSemaphoreGive(semaphoreActiveView);
+
+      if (changeView) {
+
+        debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
+        
+        //activeDisplay = getActiveDisplay();
+        //viewIndex = display->getActiveView();          
+        gauge->draw(true);
 
       } else {
-        myDisplays[activeDisplay]->getTFT()->fillScreen(BACK_COLOR);
-        delay(500);
-        myDisplays[activeDisplay]->printMsg("NO OBD");
-        delay(DELAY_MAIN_TASK);
-        #ifndef MOCK_OBD
-          odbAdapter->connect(nullptr);
-        #endif
+
+        if (gauge->valueHasChanged()) {
+          debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
+          gauge->draw(false);
+        } else {
+          debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
+        }
       }
-      
+
+      vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
+
     } else {
-      //fill blank screen or msg ?
+      display->getTFT()->fillScreen(BACK_COLOR);
+      delay(500);
+      display->printMsg("NO OBD");
+      delay(DELAY_MAIN_TASK);
+      #ifndef MOCK_OBD
+        odbAdapter->connect(nullptr);
+      #endif
     }
+
   }
 }
 

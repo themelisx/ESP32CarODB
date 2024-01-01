@@ -25,7 +25,7 @@
     #define ENABLE_EEPROM
 
     // Dual Core
-    #define USE_MULTI_THREAD
+    //#define USE_MULTI_THREAD
 #endif
 
 #ifdef ESP8266

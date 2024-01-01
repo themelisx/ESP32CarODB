@@ -5,7 +5,7 @@
 #include "Adafruit_GFX.h"
 #include "Adafruit_GC9A01A.h"
 #include "defines.h"
-#include "displays.h"
+#include "display.h"
 
 #define STATE_UNKNOWN -1
 #define STATE_LOW 0
@@ -17,7 +17,7 @@
 
 typedef struct
 {
-  int activeView;
+  int activeViewIndex;
   int count;
   int ids[MAX_SECONDARY_VIEWS + 1];
   int value[MAX_SECONDARY_VIEWS + 1];
@@ -42,7 +42,7 @@ typedef struct
   char *title;
 } S_Gauge;
 
-class Gauge {
+class Gauge: public Display {
   private:
     int fColor;
     int bColor;
@@ -77,9 +77,6 @@ class Gauge {
 
     int activeDisplay;
 
-    Adafruit_GC9A01A *display;
-    
-    Displays *monitor;
     int id;
     int type;
     int interval;
@@ -95,7 +92,7 @@ class Gauge {
     void drawDateTime();
 
   public:
-    Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
+    Gauge(int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
 
     S_Gauge data;
     S_SecondaryViews secondaryViews;

@@ -373,7 +373,6 @@ int OdbAdapter::getRandomNumber(int min, int max) {
 bool OdbAdapter::readObdValue(int viewTypeId) {
 
   int newValue = 0;
-  bool doAction = true;
 
   #ifdef MOCK_OBD
     bool saveValue = true;
@@ -410,11 +409,9 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
       case VIEW_ABS_LOAD: 
               newValue = getRandomNumber(MOCK_OBD_absLoad - 5, MOCK_OBD_absLoad + 5); break;
       case VIEW_NONE:
-            doAction = false;
             debug->println(DEBUG_LEVEL_INFO, "Inactive view");
             break;
       default:
-            doAction = false;
             debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
             debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
     }
@@ -425,6 +422,7 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
 
   #else
     bool saveValue = false;
+    bool doAction = true;
 
     switch (viewTypeId) {
       case VIEW_BATTERY_VOLTAGE: 

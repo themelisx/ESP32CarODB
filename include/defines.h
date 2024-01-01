@@ -93,14 +93,21 @@
 #ifdef ESP32
     #define TFT1_CS 5
     #define TFT1_DC 17
+    #define TFT2_CS 15
+    #define TFT2_DC 17    
 #endif
+
 #ifdef ESP8266
     #define TFT1_CS D0
     #define TFT1_DC D3
+    #define TFT2_CS D4
+    #define TFT2_DC D1    
 #endif
 
-#define TFT2_DC 17
-#define TFT2_CS 15
+#define TFT1_HEIGHT 240
+#define TFT1_WIDTH 240
+#define TFT2_HEIGHT 240
+#define TFT2_WIDTH 240
 
 #define TEST_KEY_DELAY 10000
 #define DELAY_MAIN_MENU_TASK 100

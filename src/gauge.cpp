@@ -1,14 +1,13 @@
 #include <Arduino.h>
 
-#include "gauge.h"
-
 #include "defines.h"
 #include "vars.h"
 #include "debug.h"
 #include "fonts.h"
-#include "displays.h"
+#include "display.h"
+#include "gauge.h"
 
-Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
+Gauge::Gauge(int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
 
     debug->print(DEBUG_LEVEL_INFO, "Creating Gauge (title:'");
     debug->print(DEBUG_LEVEL_INFO, title);
@@ -25,12 +24,11 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
       xSemaphoreGive(this->semaphore);
     #endif
 
-    this->monitor = monitor;
     this->id = id;
     this->type = type;    
     this->interval = interval;
     this->visible = true;
-    this->secondaryViews.activeView = 0;
+    this->secondaryViews.activeViewIndex = 0;
     this->secondaryViews.count = 0;
 
     this->data.min = min;
@@ -47,13 +45,11 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     this->data.strFormat = strFormat;
     this->data.title = title;
 
-    this->screenHeight = monitor->getScreenHeight();
+    this->screenHeight = Display::getScreenHeight();
     this->halfScreenHeight = this->screenHeight / 2;
 
-    this->screenWidth = monitor->getScreenWidth();
+    this->screenWidth = Display::getScreenWidth();
     this->halfScreenWidth = this->screenWidth / 2;
-
-    this->display = monitor->getTFT();
 
     outerRadius = halfScreenHeight - 1;
     innerRadius = outerRadius - 50;
@@ -90,27 +86,27 @@ void Gauge::setBackColor(int bColor) {
 
 void Gauge::setFontSize(int sz) {
   switch (sz) {
-    //case 12: display->setFont(&Seven_Segment12pt7b); break;
-    //case 14: display->setFont(&Seven_Segment14pt7b); break;
+    //case 12: Display::getTFT()->setFont(&Seven_Segment12pt7b); break;
+    //case 14: Display::getTFT()->setFont(&Seven_Segment14pt7b); break;
     /*case 16:
-      display->setFont(&Seven_Segment16pt7b);
+      Display::getTFT()->setFont(&Seven_Segment16pt7b);
       break;  //default*/
-    case 18: display->setFont(&Seven_Segment18pt7b); break;
-    //case 20: display->setFont(&Seven_Segment20pt7b); break;
-    //case 22: display->setFont(&Seven_Segment22pt7b); break;
-    //case 24: display->setFont(&Seven_Segment24pt7b); break;
-    case 26: display->setFont(&Seven_Segment26pt7b); break;
-    //case 28: display->setFont(&Seven_Segment28pt7b); break;
-    //case 30: display->setFont(&Seven_Segment30pt7b); break;
-    //case 32: display->setFont(&Seven_Segment32pt7b); break;
-    //case 34: display->setFont(&Seven_Segment34pt7b); break;
-    //case 36: display->setFont(&Seven_Segment36pt7b); break;
-    //case 38: display->setFont(&Seven_Segment38pt7b); break;
-    //case 40: display->setFont(&Seven_Segment40pt7b); break;
-    //case 42: display->setFont(&Seven_Segment42pt7b); break;
-    //case 44: display->setFont(&Seven_Segment44pt7b); break;
-    //case 46: display->setFont(&Seven_Segment46pt7b); break;
-    default: display->setFont(&Seven_Segment18pt7b); break;
+    case 18: Display::getTFT()->setFont(&Seven_Segment18pt7b); break;
+    //case 20: Display::getTFT()->setFont(&Seven_Segment20pt7b); break;
+    //case 22: Display::getTFT()->setFont(&Seven_Segment22pt7b); break;
+    //case 24: Display::getTFT()->setFont(&Seven_Segment24pt7b); break;
+    case 26: Display::getTFT()->setFont(&Seven_Segment26pt7b); break;
+    //case 28: Display::getTFT()->setFont(&Seven_Segment28pt7b); break;
+    //case 30: Display::getTFT()->setFont(&Seven_Segment30pt7b); break;
+    //case 32: Display::getTFT()->setFont(&Seven_Segment32pt7b); break;
+    //case 34: Display::getTFT()->setFont(&Seven_Segment34pt7b); break;
+    //case 36: Display::getTFT()->setFont(&Seven_Segment36pt7b); break;
+    //case 38: Display::getTFT()->setFont(&Seven_Segment38pt7b); break;
+    //case 40: Display::getTFT()->setFont(&Seven_Segment40pt7b); break;
+    //case 42: Display::getTFT()->setFont(&Seven_Segment42pt7b); break;
+    //case 44: Display::getTFT()->setFont(&Seven_Segment44pt7b); break;
+    //case 46: Display::getTFT()->setFont(&Seven_Segment46pt7b); break;
+    default: Display::getTFT()->setFont(&Seven_Segment18pt7b); break;
   }
 }
 
@@ -182,8 +178,8 @@ bool Gauge::valueHasChanged() {
   if (data.value != data.oldValue) {
     ret = true;
   } else {    
-    if (secondaryViews.activeView != VIEW_NONE) {
-      int secondaryViewIdx = secondaryViews.activeView;
+    if (secondaryViews.activeViewIndex != VIEW_NONE) {
+      int secondaryViewIdx = secondaryViews.activeViewIndex;
       //int secondaryViewId = secondaryViews.ids[secondaryViewIdx];      
       if (secondaryViews.value[secondaryViewIdx] != secondaryViews.oldValue[secondaryViewIdx]) {
         ret = true;
@@ -239,7 +235,7 @@ void Gauge::draw(bool repaint) {
   }
 
   // Clear old text  
-  display->setTextColor(BACK_COLOR);
+  Display::getTFT()->setTextColor(BACK_COLOR);
   if (data.oldValue != INT_MIN) {            
     getFormattedValue(data.oldValue, valueBuf);
     drawCenterString(valueBuf, false);
@@ -249,18 +245,18 @@ void Gauge::draw(bool repaint) {
 
   // draw new text
   if (newValue != INT_MIN) {        
-    display->setTextColor(newStateColor);
+    Display::getTFT()->setTextColor(newStateColor);
     getFormattedValue(newValue, valueBuf);
     drawCenterString(valueBuf, false);
   } else {
-    display->setTextColor(fColor);
+    Display::getTFT()->setTextColor(fColor);
     drawCenterString("---", false);
   }
 
   #ifdef USE_MULTI_THREAD
   xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
-  int secondaryViewsActiveView = secondaryViews.activeView;
+  int secondaryViewsActiveView = secondaryViews.activeViewIndex;
   #ifdef USE_MULTI_THREAD
   xSemaphoreGive(semaphoreActiveView);
   #endif
@@ -268,7 +264,6 @@ void Gauge::draw(bool repaint) {
   if (getType() == TYPE_GAUGE_GRAPH) {
     if (secondaryViewsActiveView == 0) {
       if (newState != STATE_OUT_OF_RANGE) {
-        int i;
 
         #ifdef USE_MULTI_THREAD
         xSemaphoreTake(semaphoreData, portMAX_DELAY);
@@ -292,11 +287,11 @@ void Gauge::draw(bool repaint) {
             drawGaugeLine(oldAngle, BACK_COLOR);
             drawGaugeLine(newAngle, newStateColor);
           #else
-            for (i = oldAngle; i >= newAngle; i--) {
+            for (int i = oldAngle; i >= newAngle; i--) {
               drawGaugeLine(i, bColor);
             }
             if (newState != data.state) {
-              for (i = 0; i <= newAngle; i++) {
+              for (int i = 0; i <= newAngle; i++) {
                 drawGaugeLine(i, newStateColor);
               }
             }
@@ -309,7 +304,7 @@ void Gauge::draw(bool repaint) {
             drawGaugeLine(oldAngle, BACK_COLOR);
             drawGaugeLine(newAngle, newStateColor);
           #else            
-            for (i = oldAngle; i <= newAngle; i++) {
+            for (int i = oldAngle; i <= newAngle; i++) {
               drawGaugeLine(i, newStateColor);
             }
           #endif
@@ -394,19 +389,19 @@ void Gauge::drawGaugeLine(int angle, int color) {
   if (angleAfter >= 359)
     angleAfter = angle + 1 - 359;
 
-  display->fillTriangle(x[angleBefore], y[angleBefore], x2[angleBefore], y2[angleBefore], x2[angleAfter], y2[angleAfter], color);
-  display->fillTriangle(x2[angleAfter], y2[angleAfter], x[angleBefore], y[angleBefore], x[angleAfter], y[angleAfter], color);
+  Display::getTFT()->fillTriangle(x[angleBefore], y[angleBefore], x2[angleBefore], y2[angleBefore], x2[angleAfter], y2[angleAfter], color);
+  Display::getTFT()->fillTriangle(x2[angleAfter], y2[angleAfter], x[angleBefore], y[angleBefore], x[angleAfter], y[angleAfter], color);
   
 }
 
 void Gauge::drawBorders() {
-  display->drawCircle(halfScreenWidth, halfScreenHeight, outerRadius, fColor);
-  display->drawCircle(halfScreenWidth, halfScreenHeight, innerRadius, fColor);
+  Display::getTFT()->drawCircle(halfScreenWidth, halfScreenHeight, outerRadius, fColor);
+  Display::getTFT()->drawCircle(halfScreenWidth, halfScreenHeight, innerRadius, fColor);
 
-  display->drawLine(x[357], y[357], x2[357], y2[357], fColor);
-  display->drawLine(x[gaugeMax + 2], y[gaugeMax + 2], x2[gaugeMax + 2], y2[gaugeMax + 2], fColor);
+  Display::getTFT()->drawLine(x[357], y[357], x2[357], y2[357], fColor);
+  Display::getTFT()->drawLine(x[gaugeMax + 2], y[gaugeMax + 2], x2[gaugeMax + 2], y2[gaugeMax + 2], fColor);
 
-  display->fillTriangle(
+  Display::getTFT()->fillTriangle(
     halfScreenWidth + 2,
     halfScreenHeight + 2,
     halfScreenWidth + cos((angleStart - 2) * rad) * screenWidth,
@@ -424,11 +419,11 @@ void Gauge::drawCenterString(const char *buf, bool clearCircleArea) {
   //char buf2[16];
 
   if (clearCircleArea) {
-    display->fillCircle(halfScreenWidth, halfScreenHeight, innerRadius - 2, bColor);
+    Display::getTFT()->fillCircle(halfScreenWidth, halfScreenHeight, innerRadius - 2, bColor);
   }
-  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
-  display->setCursor(x - w / 2, y + h / 2);
-  display->print(buf);
+  Display::getTFT()->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
+  Display::getTFT()->setCursor(x - w / 2, y + h / 2);
+  Display::getTFT()->print(buf);
  
 }
 
@@ -439,15 +434,15 @@ void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgCol
   int y = 34;
 
   setFontSize(18);
-  display->setTextColor(fColor);
-  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
+  Display::getTFT()->setTextColor(fColor);
+  Display::getTFT()->getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
   
   if (repaint) {
-    display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
-    display->drawRoundRect(47, -23, 146, 72, 20, fColor);    
+    Display::getTFT()->fillRoundRect(48, -24, 144, 72, 20, bgColor);
+    Display::getTFT()->drawRoundRect(47, -23, 146, 72, 20, fColor);    
   }
-  display->setCursor(x - w / 2, y + 5);
-  display->print(buf);
+  Display::getTFT()->setCursor(x - w / 2, y + 5);
+  Display::getTFT()->print(buf);
 }
 
 void Gauge::drawBottomString(const char *buf, int fColor, int bgColor) {
@@ -456,16 +451,16 @@ void Gauge::drawBottomString(const char *buf, int fColor, int bgColor) {
   int x = 120;
   int y = 220;
 
-  display->setTextColor(fColor);
+  Display::getTFT()->setTextColor(fColor);
 
-  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
+  Display::getTFT()->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
   
-  display->fillRoundRect(48, 180, 144, 72, 20, bgColor);
+  Display::getTFT()->fillRoundRect(48, 180, 144, 72, 20, bgColor);
   
-  display->drawRoundRect(48, 188, 144, 72, 20, fColor);
+  Display::getTFT()->drawRoundRect(48, 188, 144, 72, 20, fColor);
   
-  display->setCursor(x - w / 2, y + 5);
-  display->print(buf);
+  Display::getTFT()->setCursor(x - w / 2, y + 5);
+  Display::getTFT()->print(buf);
   
 }
 
@@ -481,16 +476,16 @@ void Gauge::addSecondaryView(int secondaryViewId, char *strFormat) {
         debug->println(DEBUG_LEVEL_ERROR, "Cannot add more views");
     }
     if (type == TYPE_DUAL_TEXT) {
-        secondaryViews.activeView = 1;
+        secondaryViews.activeViewIndex = 1;
     }
 }
 
 int Gauge::getViewHeight() {
-    return monitor->getScreenHeight();
+    return Display::getScreenHeight();
 }
 
 int Gauge::getViewWidth() {
-    return monitor->getScreenWidth();
+    return Display::getScreenWidth();
 }
 
 int Gauge::getId() {
