@@ -71,20 +71,33 @@
 
 #define DELAY_KEYPAD 200
 
-#define PIN_UP_KEY 27
-#define PIN_DOWN_KEY 26
-#ifdef ENABLE_SECOND_DISPLAY
-#define PIN_LEFT_KEY 25
-#define PIN_RIGHT_KEY 33
-#define PIN_ENTER_KEY 32
+#ifdef ESP32
+    #define PIN_UP_KEY 27
+    #define PIN_DOWN_KEY 26
+    #ifdef ENABLE_SECOND_DISPLAY
+        #define PIN_LEFT_KEY 25
+        #define PIN_RIGHT_KEY 33
+        #define PIN_ENTER_KEY 32
+    #endif
+#endif
+#ifdef ESP8266
+    #define PIN_UP_KEY D1
+    #define PIN_DOWN_KEY D2
 #endif
 
 #define MAX_DISPLAYS 1
 
 #define DELAY_BT_DISCOVER_TIME 5000
 
-#define TFT1_DC 17
-#define TFT1_CS 5
+
+#ifdef ESP32
+    #define TFT1_CS 5
+    #define TFT1_DC 17
+#endif
+#ifdef ESP8266
+    #define TFT1_CS D0
+    #define TFT1_DC D3
+#endif
 
 #define TFT2_DC 17
 #define TFT2_CS 15

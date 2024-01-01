@@ -91,7 +91,9 @@ bool OdbAdapter::isOBDConnected() {
 
 void OdbAdapter::disconnect() {
     if (SerialDevice.connected()) {
-        SerialDevice.disconnect();        
+        #ifdef ESP32
+            SerialDevice.disconnect();        
+        #endif
     }
     setDeviceConnected(false);
     setObdConnected(false);
@@ -131,6 +133,7 @@ bool OdbAdapter::connect(char *pin) {
         debug->println(DEBUG_LEVEL_ERROR, "OBDII Adaptor not found!");
     }
   }
+  return deviceConnected;
 }
 #endif
 

@@ -1,5 +1,11 @@
 #include <Arduino.h>
-#include <WiFi.h>
+#ifdef ESP32
+    #include <WiFi.h>
+  #endif
+  #ifdef ESP8266
+    #include <ESP8266WiFi.h>
+  #endif
+
 #include <ELMduino.h>
 
 #include "defines.h"
@@ -90,7 +96,7 @@ void setup() {
 
   // Initialize Serial and set debug level
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_INFO);
+  debug->start(115200, DEBUG_LEVEL_DEBUG2);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
@@ -118,6 +124,9 @@ void setup() {
     debug->println(DEBUG_LEVEL_INFO, "Disabling WiFi...");  
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
+  #endif
+  #ifdef USE_OBD_WIFI
+    odbAdapter = new OdbAdapter("OBDII", "192.168.0.10");
   #endif
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up TFT1...");
@@ -196,9 +205,9 @@ void setup() {
   pinMode(PIN_UP_KEY, INPUT);
   pinMode(PIN_DOWN_KEY, INPUT);
   #ifdef ENABLE_SECOND_DISPLAY
-  pinMode(PIN_LEFT_KEY, INPUT);
-  pinMode(PIN_RIGHT_KEY, INPUT);
-  pinMode(PIN_ENTER_KEY, INPUT);
+    pinMode(PIN_LEFT_KEY, INPUT);
+    pinMode(PIN_RIGHT_KEY, INPUT);
+    pinMode(PIN_ENTER_KEY, INPUT);
   #endif
 
 #ifdef USE_MULTI_THREAD
@@ -281,6 +290,7 @@ void setup() {
 #ifndef USE_MULTI_THREAD
 void checkKeypad() {
   // KeyPad
+  #ifdef ENABLE_SECOND_DISPLAY
   if (digitalRead(PIN_LEFT_KEY) == LOW) { // LEFT KEY PRESSED
 
     debug->println(DEBUG_LEVEL_DEBUG, "Left key pressed");
@@ -303,7 +313,9 @@ void checkKeypad() {
 
     debug->println(DEBUG_LEVEL_DEBUG, "Enter key pressed");
     
-  } else if (digitalRead(PIN_UP_KEY) == LOW) { // UP KEY PRESSED
+  } else 
+  #endif
+  if (digitalRead(PIN_UP_KEY) == LOW) { // UP KEY PRESSED
 
     debug->println(DEBUG_LEVEL_DEBUG, "Up key pressed");
 

@@ -91,6 +91,7 @@ void Debug::print(int debugLevel, double n, int digits) {
     }
 }
 
+#ifdef ESP32
 void Debug::print(int debugLevel, const Printable& x) {
     if (debugLevel <= this->debugLevel) {
         Serial.print(x);
@@ -102,6 +103,7 @@ void Debug::print(int debugLevel, struct tm * timeinfo, const char * format) {
         Serial.print(timeinfo, format);
     }
 }
+#endif
 
 void Debug::println(int debugLevel, const __FlashStringHelper *ifsh) {
     if (debugLevel <= this->debugLevel) {
@@ -181,6 +183,7 @@ void Debug::println(int debugLevel, double num, int digits) {
     }
 }
 
+#ifdef ESP32
 void Debug::println(int debugLevel, const Printable& x) {
     if (debugLevel <= this->debugLevel) {
         Serial.println(x);
@@ -192,3 +195,4 @@ void Debug::println(int debugLevel, struct tm * timeinfo, const char * format) {
         Serial.println(timeinfo, format);
     }
 }
+#endif
