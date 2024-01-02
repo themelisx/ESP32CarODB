@@ -88,11 +88,11 @@ int Display::getActiveViewIndex() {
   
   int ret;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   ret = this->activeViewIndex;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 
@@ -102,11 +102,11 @@ int Display::getActiveViewId() {
   
   int ret;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   ret = myGauges[activeViewIndex]->getId();
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 
@@ -116,11 +116,11 @@ Gauge* Display::getActiveGauge() {
   
   Gauge *ret;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   ret = myGauges[activeViewIndex];
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 
@@ -129,33 +129,33 @@ Gauge* Display::getActiveGauge() {
 void Display::setActiveView(int newActiveView) {
  
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   this->activeViewIndex = newActiveView;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
 }
 
 void Display::setNextView(int newNextView) {
  
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   this->nextViewIndex = newNextView;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
 }
 
 int Display::getNextView() {
   int ret;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   ret = this->nextViewIndex;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 }
@@ -164,11 +164,11 @@ int Display::getSecondaryActiveView() {
   
   int ret;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   ret = this->secondaryActiveView;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 
@@ -177,11 +177,11 @@ int Display::getSecondaryActiveView() {
 void Display::setSecondaryActiveView(int newSecondaryActiveView) {
  
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   this->secondaryActiveView = newSecondaryActiveView;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
 }
 
@@ -193,6 +193,54 @@ int Display::getScreenHeight() {
     return this->screenHeight;
 }
 
-Adafruit_GC9A01A* Display::getTFT() {
+/*Adafruit_GC9A01A* Display::getTFT() {
     return this->tft;
+}*/
+
+void Display::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
+  tft->drawCircle(x0, y0, r, color);
+}
+
+void Display::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
+  tft->drawLine(x0, y0, x1, y1, color);
+}
+
+void Display::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+  tft->fillTriangle(x0, y0, x1, y1, x2, y2, color);
+}
+
+void Display::setTextColor(uint16_t c) {
+  tft->setTextColor(c);
+}
+
+void Display::fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
+  tft->fillCircle(x0, y0, r, color);
+}
+
+void Display::getTextBounds(const char *string, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
+  tft->getTextBounds(string,  x, y, x1, y1, w, h);
+}
+
+void Display::setCursor(int16_t x, int16_t y) {
+  tft->setCursor(x, y);
+}
+
+void Display::fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) {
+  tft->fillRoundRect(x0, y0, w, h, radius, color);
+}
+
+void Display::drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) {
+  tft->drawRoundRect(x0, y0, w, h, radius, color);
+}
+
+void Display::print(const char *str) {
+  tft->print(str);
+}
+
+void Display::setFont(const GFXfont *f) {
+  tft->setFont(f);
+}
+
+void Display::fillScreen(uint16_t color) {
+  tft->fillScreen(color);
 }

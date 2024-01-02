@@ -135,7 +135,8 @@ void setup() {
   #endif
 
   debug->println(DEBUG_LEVEL_INFO, "Creating gauges...");
-  Display *display = displayManager->getDisplay(1);
+  display = displayManager->getDisplay(1);
+  displayManager->setActiveDisplay(1);
   
   // Battery  
   display->addGauge(VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
@@ -160,11 +161,11 @@ void setup() {
   display->addGauge(VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
   display->addSecondaryView(VIEW_ENGINE_LOAD, VIEW_THROTTLE, (char*)"%d");
   // Short fuel trims
-  display->addGauge(VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  display->addSecondaryView(VIEW_SHORT_FUEL_TRIM, VIEW_LONG_FUEL_TRIM, (char*)"%d");
+  //display->addGauge(VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  //display->addSecondaryView(VIEW_SHORT_FUEL_TRIM, VIEW_LONG_FUEL_TRIM, (char*)"%d");
   // Long fuel trims
-  display->addGauge(VIEW_LONG_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  display->addSecondaryView(VIEW_LONG_FUEL_TRIM, VIEW_SHORT_FUEL_TRIM, (char*)"%d");
+  //display->addGauge(VIEW_LONG_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  //display->addSecondaryView(VIEW_LONG_FUEL_TRIM, VIEW_SHORT_FUEL_TRIM, (char*)"%d");
   // MAF rate
   //display->addGauge(VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);
   // Fuel level
@@ -178,7 +179,6 @@ void setup() {
  
   //display->addGauge(VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
-  displayManager->setActiveDisplay(1);
   display->setActiveView(mySettings->getActiveView(1));
   display->setNextView(-1);
   display->setSecondaryActiveView(mySettings->getSecondaryActiveView(1));
@@ -333,7 +333,8 @@ void loop() {
       debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
       debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
 
-      display->getTFT()->fillScreen(BACK_COLOR);
+      display->fillScreen(BACK_COLOR);
+      gauge->fillScreen(RED);
 
       gauge->data.state = STATE_UNKNOWN;
       gauge->data.value = gauge->data.min;
@@ -389,7 +390,7 @@ void loop() {
     delay(gauge->getInterval());
 
   } else {
-    display->getTFT()->fillScreen(BACK_COLOR);
+    display->fillScreen(BACK_COLOR);
     delay(500);
     display->printMsg("NO OBD");
     delay(DELAY_MAIN_TASK);

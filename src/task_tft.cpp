@@ -42,7 +42,7 @@ void tft1_task(void *pvParameters) {
         debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
         debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
 
-        display->getTFT()->fillScreen(BACK_COLOR);
+        display->fillScreen(BACK_COLOR);
 
         gauge->data.state = STATE_UNKNOWN;
         gauge->data.value = gauge->data.min;
@@ -75,7 +75,7 @@ void tft1_task(void *pvParameters) {
       vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
 
     } else {
-      display->getTFT()->fillScreen(BACK_COLOR);
+      display->fillScreen(BACK_COLOR);
       delay(500);
       display->printMsg("NO OBD");
       delay(DELAY_MAIN_TASK);

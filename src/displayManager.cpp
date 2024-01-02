@@ -10,7 +10,8 @@
 
 
 DisplayManager::DisplayManager() {
-
+    activeDisplay = 0;
+    count = 0;
 }
 
 bool DisplayManager::addDisplay(int displayID, int8_t _CS, int8_t _DC, int screenWidth, int screenHeight) {

@@ -10,10 +10,6 @@ class Gauge;
 
 class Display {
   private:
-    Adafruit_GC9A01A *tft;
-
-    Gauge *myGauges[MAX_VIEWS + 1];
-
     int id;
 
     int screenWidth;
@@ -27,6 +23,9 @@ class Display {
     int nextViewIndex;
     int secondaryActiveView;
     int count;
+
+    Adafruit_GC9A01A *tft;
+    Gauge *myGauges[MAX_VIEWS + 1];
 
   public:
 
@@ -57,7 +56,20 @@ class Display {
 
     void setSecondaryActiveView(int newSecondaryActiveView);
 
-    Adafruit_GC9A01A* getTFT();
+    //Adafruit_GC9A01A* getTFT();
+
+    void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+    void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    void setTextColor(uint16_t c);
+    void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    void getTextBounds(const char *string, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h);
+    void setCursor(int16_t x, int16_t y);
+    void fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+    void drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color);
+    void print(const char *str);
+    void setFont(const GFXfont *f);
+    void fillScreen(uint16_t color);
 };
 
 #endif

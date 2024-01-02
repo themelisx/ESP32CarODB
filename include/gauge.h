@@ -66,7 +66,6 @@ class Gauge: public Display {
     float y[360];
     float x2[360];
     float y2[360];
-
     
     #ifdef ENABLE_RTC_CLOCK
       char dateString[DATE_LENGTH];
