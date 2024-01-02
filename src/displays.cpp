@@ -15,7 +15,7 @@ Display::Display(int id, int8_t _CS, int8_t _DC, int screenWidth, int screenHeig
     
     debug->println(DEBUG_LEVEL_DEBUG, "::Display activated");
 
-    tft = new Adafruit_GC9A01A(_CS, _DC);
+    //tft = new Adafruit_GC9A01A(_CS, _DC);
     tft->begin();
     tft->setRotation(0);
     tft->fillScreen(BLACK);

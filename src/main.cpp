@@ -334,7 +334,6 @@ void loop() {
       debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
 
       display->fillScreen(BACK_COLOR);
-      gauge->fillScreen(RED);
 
       gauge->data.state = STATE_UNKNOWN;
       gauge->data.value = gauge->data.min;

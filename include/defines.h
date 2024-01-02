@@ -101,7 +101,7 @@
     #define TFT1_CS D0
     #define TFT1_DC D3
     #define TFT2_CS D4
-    #define TFT2_DC D1    
+    #define TFT2_DC D1
 #endif
 
 #define TFT1_HEIGHT 240

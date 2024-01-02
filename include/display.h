@@ -24,7 +24,7 @@ class Display {
     int secondaryActiveView;
     int count;
 
-    Adafruit_GC9A01A *tft;
+    Adafruit_GC9A01A tft(TFT1_CS, TFT1_DC);
     Gauge *myGauges[MAX_VIEWS + 1];
 
   public:
