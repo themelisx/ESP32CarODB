@@ -281,13 +281,13 @@ void checkKeypad() {
     
   } else 
   #endif
-  if (digitalRead(PIN_UP_KEY) == HIGH) { // UP KEY PRESSED
+  if (digitalRead(PIN_UP_KEY) == LOW) { // UP KEY PRESSED
 
     debug->println(DEBUG_LEVEL_DEBUG, "Up key pressed");
     displayManager->goToPreviousView();
     delay(DELAY_VIEW_CHANGE);
 
-  } else if (digitalRead(PIN_DOWN_KEY) == HIGH || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
+  } else if (digitalRead(PIN_DOWN_KEY) == LOW || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
 
     lastTime = millis();
     debug->println(DEBUG_LEVEL_DEBUG, "Down key pressed");
@@ -364,15 +364,17 @@ void loop() {
       gauge->data.value = newValue;
 
       int secondaryViewIdx = gauge->secondaryViews.activeViewIndex;
-      int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
+      if (secondaryViewIdx != 0) {
+        int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
 
-      valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
-      if (valueReaded) {
-        newValue = odbAdapter->getValueForViewType(secondaryViewId);
-        if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
-          redrawView = true;
+        valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
+        if (valueReaded) {
+          newValue = odbAdapter->getValueForViewType(secondaryViewId);
+          if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
+            redrawView = true;
+          }
+          gauge->secondaryViews.value[secondaryViewIdx] = newValue;
         }
-        gauge->secondaryViews.value[secondaryViewIdx] = newValue;
       }
 
       if (redrawView || changeView) { 
