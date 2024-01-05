@@ -2,7 +2,7 @@
 // OBD - ELM327 //
 //////////////////
 // Enable ELM327 (internal) debug logs
-#define ENABLE_ELM327_DEBUG_LOGS
+//#define ENABLE_ELM327_DEBUG_LOGS
 
 // Mock OBD for testing without real OBD device 
 //#define MOCK_OBD
@@ -56,8 +56,8 @@
 // Select connection method (only one of the follow) 
 
 #ifdef ESP32
-    //#define USE_OBD_BLUETOOTH
-    #define USE_OBD_WIFI
+    #define USE_OBD_BLUETOOTH
+    //#define USE_OBD_WIFI
 #endif
 
 #ifdef ESP8266

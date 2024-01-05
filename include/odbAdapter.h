@@ -33,7 +33,7 @@ class OdbAdapter {
 
     #ifdef USE_OBD_WIFI
       WiFiClient SerialDevice;
-      const char* ssid = "WiFi_OBDII";
+      const char* ssid = "WIFI_OBDII";
       const char* password = "your-password";
       const char* server = "192.168.0.10";
     #endif

@@ -96,7 +96,7 @@ void setup() {
 
   // Initialize Serial and set debug level
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_DEBUG2);
+  debug->start(115200, DEBUG_LEVEL_INFO);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
