@@ -165,10 +165,10 @@ void setup() {
   myGauges[1] = new Gauge(myDisplays[1], VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   // KM/h
   myGauges[2] = new Gauge(myDisplays[1], VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
-  myGauges[2]->addSecondaryView(VIEW_RPM, (char*)"%d");
+  //myGauges[2]->addSecondaryView(VIEW_RPM, (char*)"%d");
   // RPM  
   myGauges[3] = new Gauge(myDisplays[1], VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
-  myGauges[3]->addSecondaryView(VIEW_KPH, (char*)"%d");
+  //myGauges[3]->addSecondaryView(VIEW_KPH, (char*)"%d");
   // Engine coolant  
   myGauges[4] = new Gauge(myDisplays[1], VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
   myGauges[4]->addSecondaryView(VIEW_INTAKE_TEMP, (char*)"%d C");
@@ -179,10 +179,10 @@ void setup() {
   myGauges[6] = new Gauge(myDisplays[1], VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
   // Throttle
   myGauges[7] = new Gauge(myDisplays[1], VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  myGauges[7]->addSecondaryView(VIEW_ENGINE_LOAD, (char*)"%d");
+  //myGauges[7]->addSecondaryView(VIEW_ENGINE_LOAD, (char*)"%d");
   //  Engine load
   myGauges[8] = new Gauge(myDisplays[1], VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  myGauges[8]->addSecondaryView(VIEW_THROTTLE, (char*)"%d");
+  //myGauges[8]->addSecondaryView(VIEW_THROTTLE, (char*)"%d");
   // Short fuel trims
   myGauges[9] = new Gauge(myDisplays[1], VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   myGauges[9]->addSecondaryView(VIEW_LONG_FUEL_TRIM, (char*)"%d");
