@@ -90,11 +90,6 @@ bool OdbAdapter::isOBDConnected() {
 }*/
 
 void OdbAdapter::disconnect() {
-    if (SerialDevice.connected()) {
-        #ifdef ESP32
-            SerialDevice.disconnect();        
-        #endif
-    }
     setDeviceConnected(false);
     setObdConnected(false);
 }
