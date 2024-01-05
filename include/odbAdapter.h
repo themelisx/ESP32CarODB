@@ -35,12 +35,7 @@ class OdbAdapter {
       WiFiClient SerialDevice;
       const char* ssid = "WiFi_OBDII";
       const char* password = "your-password";
-      #ifdef ESP32
-        IPAddress server(192, 168, 0, 10);
-      #endif
-      #ifdef ESP8266
-        const char* server = "192.168.0.10";
-      #endif
+      const char* server = "192.168.0.10";
     #endif
 
     bool deviceConnected;

@@ -12,10 +12,9 @@
 #include <ELMduino.h>
 
 #include "debug.h"
-#include "displays.h"
-#include "gauge.h"
 #include "structs.h"
 #include "settings.h"
+#include "displayManager.h"
 
 #ifdef ENABLE_RTC_CLOCK
   #include "myRTC.h"
@@ -35,16 +34,10 @@ extern TaskHandle_t t_core0_tft1;
 extern TaskHandle_t t_core0_tft2;
 extern TaskHandle_t t_core0_keypad;
 extern TaskHandle_t t_core1_obd;
-
-extern int realActiveDisplay;
-extern int getActiveDisplay();
-#else
-extern int activeDisplay;
 #endif
 
 extern Debug *debug;
-extern Displays *myDisplays[MAX_DISPLAYS];
-extern Gauge *myGauges[MAX_VIEWS + 1];
+extern DisplayManager *displayManager;
 
 extern Settings *mySettings;
 extern OdbAdapter *odbAdapter;

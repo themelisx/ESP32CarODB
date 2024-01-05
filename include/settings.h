@@ -21,6 +21,9 @@ class Settings {
     int activeView;
     int secondaryActiveView;
 
+    int activeView2;
+    int secondaryActiveView2;
+
   public:
     Settings();
 
@@ -28,11 +31,11 @@ class Settings {
     void save();
     void setDefaults();
 
-    int getActiveView();
-    int getSecondaryActiveView();
+    int getActiveView(int displayID);
+    int getSecondaryActiveView(int displayID);
 
-    void setActiveView(int activeView);
-    void setSecondaryActiveView(int secondaryActiveView);
+    void setActiveView(int displayID, int activeView);
+    void setSecondaryActiveView(int displayID, int secondaryActiveView);
 };
 
 #endif

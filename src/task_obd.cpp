@@ -7,15 +7,14 @@
 #include "debug.h"
 #include "gauge.h"
 #include "vars.h"
-#include "displays.h"
 
 void obd_task(void *pvParameters) {
   debug->print(DEBUG_LEVEL_INFO, "OBD manager task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
-  int activeDisplay;
   int viewId;
   int viewIndex;
+  Gauge *gauge;
 
   #ifndef MOCK_OBD
     // if device does not have pin use the follow
@@ -29,9 +28,7 @@ void obd_task(void *pvParameters) {
 
   for (;;) {
 
-    activeDisplay = getActiveDisplay();
-    viewIndex = myDisplays[activeDisplay]->getActiveView();    
-    viewId = myGauges[viewIndex]->getId();
+    gauge = displayManager->getDisplay(displayManager->getActiveDisplayId())->getActiveGauge();
 
     if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
       debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
@@ -40,15 +37,15 @@ void obd_task(void *pvParameters) {
       yield();
 
       if (valueReaded) {
-        myGauges[viewIndex]->data.value = odbAdapter->getValueForViewType(viewId);
+        gauge->data.value = odbAdapter->getValueForViewType(viewId);
         debug->print(DEBUG_LEVEL_DEBUG, "Value readed: ");
-        debug->println(DEBUG_LEVEL_DEBUG, myGauges[viewIndex]->data.value);
+        debug->println(DEBUG_LEVEL_DEBUG, gauge->data.value);
         yield();
 
         xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-        int secondaryViewIdx = myGauges[viewIndex]->secondaryViews.activeView;
+        int secondaryViewIdx = gauge->secondaryViews.activeView;
         if (secondaryViewIdx != VIEW_NONE) {          
-          int secondaryViewId = myGauges[viewIndex]->secondaryViews.ids[secondaryViewIdx];
+          int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
           xSemaphoreGive(semaphoreActiveView);
 
           debug->print(DEBUG_LEVEL_DEBUG2, "Secondary Index: ");
@@ -59,7 +56,7 @@ void obd_task(void *pvParameters) {
           valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
           yield();
           if (valueReaded) {
-            myGauges[viewIndex]->secondaryViews.value[secondaryViewIdx] = odbAdapter->getValueForViewType(secondaryViewId);
+            gauge->secondaryViews.value[secondaryViewIdx] = odbAdapter->getValueForViewType(secondaryViewId);
             yield();
           } else {
             debug->println(DEBUG_LEVEL_DEBUG2, "secondary value NOT readed");
@@ -72,7 +69,7 @@ void obd_task(void *pvParameters) {
           debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
       }
     }
-    vTaskDelay(myGauges[viewId]->getInterval() / portTICK_PERIOD_MS);
+    vTaskDelay(gauge->getInterval() / portTICK_PERIOD_MS);
   }
 }
 
