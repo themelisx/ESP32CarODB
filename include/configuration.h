@@ -5,7 +5,7 @@
 //#define ENABLE_ELM327_DEBUG_LOGS
 
 // Mock OBD for testing without real OBD device 
-//#define MOCK_OBD
+#define MOCK_OBD
 
 // Mock values for testing without real OBD device //
 // Enable only one of the follow
@@ -25,7 +25,7 @@
     #define ENABLE_EEPROM
 
     // Dual Core
-    //#define USE_MULTI_THREAD
+    #define USE_MULTI_THREAD
 #endif
 
 #ifdef ESP8266

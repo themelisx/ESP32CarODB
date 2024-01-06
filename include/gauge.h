@@ -74,18 +74,17 @@ class Gauge: public Display {
       char oldTimeString[TIME_LENGTH];
     #endif
 
-    int activeDisplay;
-
     int id;
     int type;
     int interval;
     bool visible;
+    bool repaint;
     
     Gauge *gauge;
 
     void drawGaugeLine(int angle, int color);
     void drawCenterString(const char *buf, bool clearCircleArea);
-    void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
+    void drawUpperString(const char *buf, int fColor, int bgColor);
     void drawBottomString(const char *buf, int fColor, int bgColor);
     void getFormattedValue(int newValue, char *buf);
     void drawDateTime();
@@ -114,9 +113,11 @@ class Gauge: public Display {
     void setBackColor(int bColor);    
     void setFontSize(int sz);
     
-    void draw(bool repaint);    
+    void draw();    
     void drawBorders();
     bool valueHasChanged();
+    void setRepaint(bool repaint);
+    bool needsRepaint();
 
 };
 

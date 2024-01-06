@@ -26,6 +26,7 @@ Gauge::Gauge(int id, int type, int interval, char *title, char *strFormat, int l
 
     this->id = id;
     this->type = type;    
+    this->repaint = true;
     this->interval = interval;
     this->visible = true;
     this->secondaryViews.activeViewIndex = 0;
@@ -166,13 +167,26 @@ void Gauge::drawDateTime() {
 
 #endif
 
+void Gauge::setRepaint(bool repaint) {
+  if (repaint) {
+    debug->println(DEBUG_LEVEL_DEBUG2, "Set repaint TRUE");
+  } else {
+    debug->println(DEBUG_LEVEL_DEBUG2, "Set repaint FALSE");
+  }
+  this->repaint = repaint;
+}
+
+bool Gauge::needsRepaint() {
+  return this->repaint;
+}
+
 bool Gauge::valueHasChanged() {
 
   bool ret = false;
 
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreData, portMAX_DELAY);
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
 
   if (data.value != data.oldValue) {
@@ -187,13 +201,13 @@ bool Gauge::valueHasChanged() {
     }
   }
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreData);
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreData);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 }
 
-void Gauge::draw(bool repaint) {
+void Gauge::draw() {
 
   char valueBuf[16];
   char secondaryBuffer[16];
@@ -202,14 +216,15 @@ void Gauge::draw(bool repaint) {
   //int fColorSecondary;
   //int bColorSecondary;
   //int secondaryValue;
-  bool drawUpper = false;
+
+  debug->println(DEBUG_LEVEL_DEBUG2, "Gauge::Draw");
 
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
   #endif
   int newValue = this->data.value;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreData);
+    xSemaphoreGive(semaphoreData);
   #endif
 
   newStateColor = WHITE;
@@ -254,11 +269,11 @@ void Gauge::draw(bool repaint) {
   }
 
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
   int secondaryViewsActiveView = secondaryViews.activeViewIndex;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
 
   if (getType() == TYPE_GAUGE_GRAPH) {
@@ -321,11 +336,7 @@ void Gauge::draw(bool repaint) {
       } else {
         debug->println(DEBUG_LEVEL_ERROR, "Out of range");        
       }
-    } else {
-      drawUpper = true;
-    }
-  } else if (getType() == TYPE_DUAL_TEXT) {
-    drawUpper = true;
+    } 
   }
 
   data.state = newState;
@@ -340,7 +351,7 @@ void Gauge::draw(bool repaint) {
   xSemaphoreGive(semaphoreData);
   #endif
 
-  if (drawUpper && secondaryViewsActiveView != 0) {
+  if ( (getType() == TYPE_GAUGE_GRAPH && secondaryViewsActiveView != 0) || getType() == TYPE_DUAL_TEXT) {
     
     int secondaryViewId = secondaryViews.ids[secondaryViewsActiveView];
     newValue = secondaryViews.value[secondaryViewsActiveView];
@@ -361,7 +372,7 @@ void Gauge::draw(bool repaint) {
           sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViewsActiveView], oldValue);
         }
       }
-      drawUpperString(repaint, secondaryBuffer, BACK_COLOR, BACK_COLOR);
+      drawUpperString(secondaryBuffer, BACK_COLOR, BACK_COLOR);
       
       // draw new text
       if (newValue == INT_MIN) {
@@ -375,10 +386,10 @@ void Gauge::draw(bool repaint) {
         }
       }
 
-      drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
-      //drawUpperString(true, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+      drawUpperString(secondaryBuffer, FRONT_COLOR, BACK_COLOR);
     }   
-  }    
+  }
+  setRepaint(false);
 }
 
 void Gauge::drawGaugeLine(int angle, int color) {
@@ -427,7 +438,7 @@ void Gauge::drawCenterString(const char *buf, bool clearCircleArea) {
  
 }
 
-void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgColor) {
+void Gauge::drawUpperString(const char *buf, int fColor, int bgColor) {
   int16_t x1, y1;
   uint16_t w, h;
   int x = 120;

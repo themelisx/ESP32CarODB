@@ -195,7 +195,8 @@ int Display::getScreenHeight() {
     return this->screenHeight;
 }
 
-/*Adafruit_GC9A01A* Display::getTFT() {
+/*
+Adafruit_GC9A01A* Display::getTFT() {
     return this->tft;
 }*/
 

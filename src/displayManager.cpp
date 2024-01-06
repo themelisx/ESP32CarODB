@@ -79,15 +79,16 @@ void DisplayManager::goToPreviousView() {
     }
 
     if (changeGauge) {
-    display->setActiveView(display->getActiveViewIndex() - 1);
-    if (display->getNextView() == 0) {
-        display->setNextView(display->getTotalGauges());
+        display->setActiveView(display->getActiveViewIndex() - 1);
+        if (display->getNextView() == 0) {
+            display->setNextView(display->getTotalGauges());
+        }
+        /*if (display->nextView == VIEW_DATE_TIME) {
+            memset(oldDateString, 0, DATE_LENGTH);
+            memset(oldTimeString, 0, TIME_LENGTH);
+        }*/
     }
-    /*if (display->nextView == VIEW_DATE_TIME) {
-        memset(oldDateString, 0, DATE_LENGTH);
-        memset(oldTimeString, 0, TIME_LENGTH);
-    }*/
-    }
+    display->getActiveGauge()->setRepaint(true);
     
     mySettings->setActiveView(display->getId(), display->getActiveViewId());
     mySettings->setSecondaryActiveView(display->getId(), display->getSecondaryActiveView());
@@ -138,6 +139,8 @@ void DisplayManager::goToNextView() {
             memset(oldTimeString, 0, TIME_LENGTH);
         }*/
     }
+
+    display->getActiveGauge()->setRepaint(true);
 
     mySettings->setActiveView(display->getId(), display->getActiveViewId());
     mySettings->setSecondaryActiveView(display->getId(), display->getSecondaryActiveView());

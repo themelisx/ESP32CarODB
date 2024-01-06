@@ -39,13 +39,14 @@
   SemaphoreHandle_t btConnectedSemaphore;
   SemaphoreHandle_t obdConnectedSemaphore;
 #else
-  Gauge* gauge;
-  Display* display;
+  Gauge* gauge;  
 
   unsigned long lastTime;
   //int viewId;
   //int viewIndex;
 #endif
+
+Display* display;
 
 Debug *debug;
 ELM327 *obd;
@@ -76,7 +77,7 @@ void setup() {
 
   // Initialize Serial and set debug level
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_DEBUG2);
+  debug->start(115200, DEBUG_LEVEL_INFO);
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 
@@ -312,11 +313,9 @@ void loop() {
 
   debug->println(DEBUG_LEVEL_DEBUG2, "--- LOOP ---");
 
-  gauge = displayManager->getDisplay(displayManager->getActiveDisplayId())->getActiveGauge();
+  gauge = display->getActiveGauge();
 
   if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
-
-    bool changeView = false;
 
     if (display->getActiveViewIndex() != display->getNextView() || 
       display->getSecondaryActiveView() != gauge->secondaryViews.activeViewIndex) {
@@ -330,6 +329,8 @@ void loop() {
       display->setActiveView(display->getNextView());
       display->setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
 
+      gauge = display->getActiveGauge();
+
       debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
       debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
 
@@ -341,12 +342,9 @@ void loop() {
       if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeViewIndex == 0) {
         gauge->drawBorders();
       }
-      changeView = true;
-    } 
-
-    if (changeView) {
+      gauge->setRepaint(true);
       debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
-    }
+    } 
 
     bool valueReaded = odbAdapter->readValueForViewType(display->getActiveViewId());
 
@@ -377,9 +375,9 @@ void loop() {
         }
       }
 
-      if (redrawView || changeView) { 
+      if (redrawView || gauge->needsRepaint()) { 
         //debug->println(DEBUG_LEVEL_DEBUG, "Draw gauge request");
-        gauge->draw(changeView);
+        gauge->draw();
       }
 
     } else {

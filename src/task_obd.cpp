@@ -33,38 +33,37 @@ void obd_task(void *pvParameters) {
     if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
       debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
 
-      bool valueReaded = odbAdapter->readValueForViewType(viewId);
-      yield();
+      bool valueReaded = odbAdapter->readValueForViewType(gauge->getActiveViewId());
 
+      int newValue = INT_MIN;
       if (valueReaded) {
-        gauge->data.value = odbAdapter->getValueForViewType(viewId);
-        debug->print(DEBUG_LEVEL_DEBUG, "Value readed: ");
-        debug->println(DEBUG_LEVEL_DEBUG, gauge->data.value);
-        yield();
+        
+        newValue = odbAdapter->getValueForViewType(gauge->getActiveViewId());
 
-        xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-        int secondaryViewIdx = gauge->secondaryViews.activeView;
-        if (secondaryViewIdx != VIEW_NONE) {          
+        if (gauge->data.value != newValue) {
+          debug->println(DEBUG_LEVEL_DEBUG2, "Value has changed");
+          /*
+          debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
+          debug->println(DEBUG_LEVEL_DEBUG2, newValue);
+          debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
+          debug->println(DEBUG_LEVEL_DEBUG2, gauge->data.value);
+          */
+        }
+        gauge->data.value = newValue;
+
+        int secondaryViewIdx = gauge->secondaryViews.activeViewIndex;
+        if (secondaryViewIdx != 0) {
           int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
-          xSemaphoreGive(semaphoreActiveView);
-
-          debug->print(DEBUG_LEVEL_DEBUG2, "Secondary Index: ");
-          debug->println(DEBUG_LEVEL_DEBUG2, secondaryViewIdx);
-          debug->print(DEBUG_LEVEL_DEBUG2, "Secondary ID: ");
-          debug->println(DEBUG_LEVEL_DEBUG2, secondaryViewId);
 
           valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
-          yield();
           if (valueReaded) {
-            gauge->secondaryViews.value[secondaryViewIdx] = odbAdapter->getValueForViewType(secondaryViewId);
-            yield();
-          } else {
-            debug->println(DEBUG_LEVEL_DEBUG2, "secondary value NOT readed");
+            newValue = odbAdapter->getValueForViewType(secondaryViewId);
+            if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
+              debug->println(DEBUG_LEVEL_DEBUG2, "Secondary value has changed");
+            }
+            gauge->secondaryViews.value[secondaryViewIdx] = newValue;
           }
-        } else {
-          xSemaphoreGive(semaphoreActiveView);
         }
-
       } else {
           debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
       }

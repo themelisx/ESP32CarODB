@@ -27,17 +27,17 @@ void tft1_task(void *pvParameters) {
       bool changeView = false;
 
       xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-      if (display->activeView != display->nextView || 
-        display->secondaryActiveView != gauge->secondaryViews.activeView) {
+      if (display->getActiveViewIndex() != display->getNextView() || 
+        display->getSecondaryActiveView() != gauge->secondaryViews.activeViewIndex) {
 
-        if (display->nextView == -1) { // First run
-          display->nextView = display->activeView;
+        if (display->getNextView() == -1) { // First run
+          display->setNextView(display->getActiveViewIndex());
         }
         debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-        debug->println(DEBUG_LEVEL_INFO, display->getId());
+        debug->println(DEBUG_LEVEL_INFO, display->getActiveViewId());
 
-        display->activeView = display->nextView;
-        display->secondaryActiveView = gauge->secondaryViews.activeView;
+        display->setActiveView(display->getNextView());
+        display->setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
 
         debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
         debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
@@ -47,26 +47,24 @@ void tft1_task(void *pvParameters) {
         gauge->data.state = STATE_UNKNOWN;
         gauge->data.value = gauge->data.min;
 
-        if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeView == 0) {
+        if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeViewIndex == 0) {
           gauge->drawBorders();
         }
         changeView = true;
-      }
+        gauge->setRepaint(true);
+      } 
       xSemaphoreGive(semaphoreActiveView);
 
       if (changeView) {
 
-        debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
-        
-        //activeDisplay = getActiveDisplay();
-        //viewIndex = display->getActiveView();          
-        gauge->draw(true);
+        debug->println(DEBUG_LEVEL_DEBUG, "Change view request");        
+        gauge->draw();
 
       } else {
 
         if (gauge->valueHasChanged()) {
           debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
-          gauge->draw(false);
+          gauge->draw();
         } else {
           debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
         }
