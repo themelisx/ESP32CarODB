@@ -15,6 +15,9 @@ void obd_task(void *pvParameters) {
   int viewId;
   int viewIndex;
   Gauge *gauge;
+  #ifdef ENABLE_SECOND_DISPLAY
+  Gauge *gauge2;
+  #endif
 
   #ifndef MOCK_OBD
     // if device does not have pin use the follow
@@ -28,7 +31,12 @@ void obd_task(void *pvParameters) {
 
   for (;;) {
 
-    odbAdapter->updateOBDValue();
+    gauge = displayManager->getDisplay(1)->getActiveGauge();
+    odbAdapter->updateOBDValue(gauge);
+    #ifdef ENABLE_SECOND_DISPLAY
+      gauge2 = displayManager->getDisplay(2)->getActiveGauge();
+      odbAdapter->updateOBDValue(gauge2);
+    #endif
 
   }
 }

@@ -18,7 +18,7 @@ class DisplayManager {
   public:
     DisplayManager();
 
-    bool addDisplay(int displayID, int8_t _CS, int8_t _DC, int screenWidth, int screenHeight);
+    bool addDisplay(Adafruit_GC9A01A* monitor, int displayID, int screenWidth, int screenHeight);
     Display *getDisplay(int DisplayID);
 
     int getActiveDisplayId();

@@ -41,11 +41,11 @@
     #endif
 
     #ifdef MOCK_OBD_HIGH_VALUES
-        #define MOCK_OBD_batteryVoltage 148
+        #define MOCK_OBD_batteryVoltage 140
         #define MOCK_OBD_kph 180
-        #define MOCK_OBD_rpm 7500
-        #define MOCK_OBD_engineCoolantTemp 120
-        #define MOCK_OBD_intakeAirTemp 95
+        #define MOCK_OBD_rpm 6000
+        #define MOCK_OBD_engineCoolantTemp 100
+        #define MOCK_OBD_intakeAirTemp 80
         #define MOCK_OBD_timingAdvance 40
         #define MOCK_OBD_engineLoad 85
         #define MOCK_OBD_mafRate 7
@@ -171,12 +171,13 @@
 #define TYPE_DATE 4
 
 #define NO_IMAGE -1
-
+/*
 #define STATE_UNKNOWN -1
 #define STATE_LOW 0
 #define STATE_NORMAL 1
 #define STATE_HIGH 2
 #define STATE_OUT_OF_RANGE 3
+*/
 
 #define DATE_LENGTH 9
 #define TIME_LENGTH 6

@@ -14,11 +14,11 @@ DisplayManager::DisplayManager() {
     count = 0;
 }
 
-bool DisplayManager::addDisplay(int displayID, int8_t _CS, int8_t _DC, int screenWidth, int screenHeight) {
+bool DisplayManager::addDisplay(Adafruit_GC9A01A* monitor, int displayID, int screenWidth, int screenHeight) {
     if (count < MAX_DISPLAYS) {
         count++;
         debug->println(DEBUG_LEVEL_INFO, "Staring up display...");
-        myDisplays[count] = new Display(displayID, _CS, _DC, screenWidth, screenHeight);
+        myDisplays[count] = new Display(monitor, displayID, screenWidth, screenHeight);
         return true;
     } else {
         debug->println(DEBUG_LEVEL_ERROR, "Cannot add more display");

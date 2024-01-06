@@ -5,12 +5,14 @@
 #include "Adafruit_GFX.h"
 #include "Adafruit_GC9A01A.h"
 #include "defines.h"
+#include "gauge.h"
 
 class Gauge;
 
 class Display {
   private:
     int id;
+    Adafruit_GC9A01A* tft;
 
     int screenWidth;
     int screenWidthCenter;
@@ -28,8 +30,7 @@ class Display {
 
   public:
 
-    Display();
-    Display(int id, int8_t _CS, int8_t _DC, int screenWidth, int screenHeight);
+    Display(Adafruit_GC9A01A* monitor, int id, int screenWidth, int screenHeight);
 
     void updateDisplay();
     int getId();
@@ -56,7 +57,7 @@ class Display {
 
     void setSecondaryActiveView(int newSecondaryActiveView);
 
-    //Adafruit_GC9A01A* getTFT();
+    Adafruit_GC9A01A* getTFT();
 
     void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
     void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);

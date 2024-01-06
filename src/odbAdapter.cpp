@@ -321,12 +321,12 @@ void OdbAdapter::updateOBDValue(Gauge* gauge) {
     if (isDeviceConnected() && isOBDConnected()) {
       debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
 
-      bool valueReaded = readValueForViewType(gauge->getActiveViewId());
+      bool valueReaded = readValueForViewType(gauge->getId());
 
       int newValue = INT_MIN;
       if (valueReaded) {
         
-        newValue = getValueForViewType(gauge->getActiveViewId());
+        newValue = getValueForViewType(gauge->getId());
 
         if (gauge->data.value != newValue) {
           debug->println(DEBUG_LEVEL_DEBUG2, "Value has changed");
@@ -423,15 +423,15 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
 
     switch (viewTypeId) {
       case VIEW_BATTERY_VOLTAGE: 
-              newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 10, MOCK_OBD_batteryVoltage + 10); break;
+              newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 20, MOCK_OBD_batteryVoltage + 20); break;
       case VIEW_KPH: 
-              newValue = getRandomNumber(MOCK_OBD_kph - 10, MOCK_OBD_kph + 10); break;
+              newValue = getRandomNumber(MOCK_OBD_kph - 20, MOCK_OBD_kph + 20); break;
       case VIEW_RPM: 
-              newValue = getRandomNumber(MOCK_OBD_rpm - 100, MOCK_OBD_rpm + 100); break;
+              newValue = getRandomNumber(MOCK_OBD_rpm - 1000, MOCK_OBD_rpm + 1000); break;
       case VIEW_COOLANT_TEMP: 
-              newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 15, MOCK_OBD_engineCoolantTemp + 15); break;    
+              newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 30, MOCK_OBD_engineCoolantTemp + 30); break;    
       case VIEW_INTAKE_TEMP:
-              newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 5, MOCK_OBD_intakeAirTemp + 5); break;
+              newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 20, MOCK_OBD_intakeAirTemp + 20); break;
       case VIEW_TIMING_ADV: 
               newValue = getRandomNumber(MOCK_OBD_timingAdvance - 5, MOCK_OBD_timingAdvance + 5); break;
       case VIEW_ENGINE_LOAD: 

@@ -7,7 +7,7 @@
 #include "display.h"
 #include "gauge.h"
 
-Gauge::Gauge(int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
+Gauge::Gauge(Display* display, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
 
     debug->print(DEBUG_LEVEL_INFO, "Creating Gauge (title:'");
     debug->print(DEBUG_LEVEL_INFO, title);
@@ -25,6 +25,7 @@ Gauge::Gauge(int id, int type, int interval, char *title, char *strFormat, int l
     #endif
 
     this->id = id;
+    this->display = display;
     this->type = type;    
     this->repaint = true;
     this->interval = interval;
@@ -38,7 +39,7 @@ Gauge::Gauge(int id, int type, int interval, char *title, char *strFormat, int l
     this->data.max = max;
     this->data.value = INT_MIN;
     this->data.oldValue = INT_MIN;
-    this->data.state = STATE_OUT_OF_RANGE;
+    this->data.state = STATE_UNKNOWN;
     this->data.lowColor = lowColor;
     this->data.highColor = highColor;
     this->data.useLowWarning = useLowWarning;
@@ -46,10 +47,10 @@ Gauge::Gauge(int id, int type, int interval, char *title, char *strFormat, int l
     this->data.strFormat = strFormat;
     this->data.title = title;
 
-    this->screenHeight = Display::getScreenHeight();
+    this->screenHeight = display->getScreenHeight();
     this->halfScreenHeight = this->screenHeight / 2;
 
-    this->screenWidth = Display::getScreenWidth();
+    this->screenWidth = display->getScreenWidth();
     this->halfScreenWidth = this->screenWidth / 2;
 
     outerRadius = halfScreenHeight - 1;
@@ -87,27 +88,27 @@ void Gauge::setBackColor(int bColor) {
 
 void Gauge::setFontSize(int sz) {
   switch (sz) {
-    //case 12: Display::setFont(&Seven_Segment12pt7b); break;
-    //case 14: Display::setFont(&Seven_Segment14pt7b); break;
+    //case 12: display->setFont(&Seven_Segment12pt7b); break;
+    //case 14: display->setFont(&Seven_Segment14pt7b); break;
     /*case 16:
-      Display::setFont(&Seven_Segment16pt7b);
+      display->setFont(&Seven_Segment16pt7b);
       break;  //default*/
-    case 18: Display::setFont(&Seven_Segment18pt7b); break;
-    //case 20: Display::setFont(&Seven_Segment20pt7b); break;
-    //case 22: Display::setFont(&Seven_Segment22pt7b); break;
-    //case 24: Display::setFont(&Seven_Segment24pt7b); break;
-    case 26: Display::setFont(&Seven_Segment26pt7b); break;
-    //case 28: Display::setFont(&Seven_Segment28pt7b); break;
-    //case 30: Display::setFont(&Seven_Segment30pt7b); break;
-    //case 32: Display::setFont(&Seven_Segment32pt7b); break;
-    //case 34: Display::setFont(&Seven_Segment34pt7b); break;
-    //case 36: Display::setFont(&Seven_Segment36pt7b); break;
-    //case 38: Display::setFont(&Seven_Segment38pt7b); break;
-    //case 40: Display::setFont(&Seven_Segment40pt7b); break;
-    //case 42: Display::setFont(&Seven_Segment42pt7b); break;
-    //case 44: Display::setFont(&Seven_Segment44pt7b); break;
-    //case 46: Display::setFont(&Seven_Segment46pt7b); break;
-    default: Display::setFont(&Seven_Segment18pt7b); break;
+    case 18: display->setFont(&Seven_Segment18pt7b); break;
+    //case 20: display->setFont(&Seven_Segment20pt7b); break;
+    //case 22: display->setFont(&Seven_Segment22pt7b); break;
+    //case 24: display->setFont(&Seven_Segment24pt7b); break;
+    case 26: display->setFont(&Seven_Segment26pt7b); break;
+    //case 28: display->setFont(&Seven_Segment28pt7b); break;
+    //case 30: display->setFont(&Seven_Segment30pt7b); break;
+    //case 32: display->setFont(&Seven_Segment32pt7b); break;
+    //case 34: display->setFont(&Seven_Segment34pt7b); break;
+    //case 36: display->setFont(&Seven_Segment36pt7b); break;
+    //case 38: display->setFont(&Seven_Segment38pt7b); break;
+    //case 40: display->setFont(&Seven_Segment40pt7b); break;
+    //case 42: display->setFont(&Seven_Segment42pt7b); break;
+    //case 44: display->setFont(&Seven_Segment44pt7b); break;
+    //case 46: display->setFont(&Seven_Segment46pt7b); break;
+    default: display->setFont(&Seven_Segment18pt7b); break;
   }
 }
 
@@ -213,6 +214,7 @@ void Gauge::draw() {
   char secondaryBuffer[16];
   int newState;
   int newStateColor;
+  int newValueToDraw;
   //int fColorSecondary;
   //int bColorSecondary;
   //int secondaryValue;
@@ -229,9 +231,16 @@ void Gauge::draw() {
 
   newStateColor = WHITE;
 
-  if (newValue < data.min || newValue > data.max) {
-    newState = STATE_OUT_OF_RANGE;
+  if (newValue < data.min) {
+    newState = STATE_LOW;
+    newStateColor = data.lowColor;
+    newValueToDraw = data.min;
+  } else if (newValue > data.max) {
+    newState = STATE_HIGH;
+    newStateColor = data.highColor;
+    newValueToDraw = data.max;
   } else {
+    newValueToDraw = newValue;
     if (data.low != data.min && newValue >= data.min && newValue < data.low) {
       newState = STATE_LOW;
       newStateColor = data.lowColor;
@@ -250,7 +259,7 @@ void Gauge::draw() {
   }
 
   // Clear old text  
-  Display::setTextColor(BACK_COLOR);
+  display->setTextColor(BACK_COLOR);
   if (data.oldValue != INT_MIN) {            
     getFormattedValue(data.oldValue, valueBuf);
     drawCenterString(valueBuf, false);
@@ -260,11 +269,11 @@ void Gauge::draw() {
 
   // draw new text
   if (newValue != INT_MIN) {        
-    Display::setTextColor(newStateColor);
+    display->setTextColor(newStateColor);
     getFormattedValue(newValue, valueBuf);
     drawCenterString(valueBuf, false);
   } else {
-    Display::setTextColor(fColor);
+    display->setTextColor(fColor);
     drawCenterString("---", false);
   }
 
@@ -278,64 +287,64 @@ void Gauge::draw() {
 
   if (getType() == TYPE_GAUGE_GRAPH) {
     if (secondaryViewsActiveView == 0) {
-      if (newState != STATE_OUT_OF_RANGE) {
+      #ifdef USE_MULTI_THREAD
+      xSemaphoreTake(semaphoreData, portMAX_DELAY);
+      #endif
 
-        #ifdef USE_MULTI_THREAD
-        xSemaphoreTake(semaphoreData, portMAX_DELAY);
-        #endif
+      int oldValueToDraw = data.oldValue;
+      if (oldValueToDraw < data.min) {
+        oldValueToDraw = data.min;
+      } else if (oldValueToDraw > data.max) {
+        oldValueToDraw = data.max;
+      }      
 
-        int oldValue = data.oldValue;
+      #ifdef USE_MULTI_THREAD
+      xSemaphoreGive(semaphoreData);
+      #endif
 
-        #ifdef USE_MULTI_THREAD
-        xSemaphoreGive(semaphoreData);
-        #endif
+      #ifndef DRAW_FAST
+        int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
+        int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
+      #endif
+      int oldAngle = map(oldValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
+      int newAngle = map(newValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
 
-        #ifndef DRAW_FAST
-          int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
-          int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
-        #endif
-        int oldAngle = map(oldValue, data.min, data.max, gaugeMin, gaugeMax);
-        int newAngle = map(newValue, data.min, data.max, gaugeMin, gaugeMax);
-
-        if (newValue < oldValue) {
-          #ifdef DRAW_FAST
-            drawGaugeLine(oldAngle, BACK_COLOR);
-            drawGaugeLine(newAngle, newStateColor);
-          #else
-            for (int i = oldAngle; i >= newAngle; i--) {
-              drawGaugeLine(i, bColor);
+      if (newValueToDraw < oldValueToDraw) {
+        #ifdef DRAW_FAST
+          drawGaugeLine(oldAngle, BACK_COLOR);
+          drawGaugeLine(newAngle, newStateColor);
+        #else
+          for (int i = oldAngle; i >= newAngle; i--) {
+            drawGaugeLine(i, bColor);
+          }
+          if (newState != data.state) {
+            for (int i = 0; i <= newAngle; i++) {
+              drawGaugeLine(i, newStateColor);
             }
-            if (newState != data.state) {
-              for (int i = 0; i <= newAngle; i++) {
-                drawGaugeLine(i, newStateColor);
-              }
-            }
-          #endif
-        } else {          
+          }
+        #endif
+      } else {        
+        #ifdef DRAW_FAST
+          drawGaugeLine(oldAngle, BACK_COLOR);
+          drawGaugeLine(newAngle, newStateColor);
+        #else            
           if (newState != data.state) {
             oldAngle = 0;
           }
-          #ifdef DRAW_FAST
-            drawGaugeLine(oldAngle, BACK_COLOR);
-            drawGaugeLine(newAngle, newStateColor);
-          #else            
-            for (int i = oldAngle; i <= newAngle; i++) {
-              drawGaugeLine(i, newStateColor);
-            }
-          #endif
-        }
-
-        #ifndef DRAW_FAST
-          if (data.low != data.min && newValue < data.low) {
-            drawGaugeLine(lowAngle, data.lowColor);
-          }
-          if (data.high != data.max && newValue < data.high) {
-            drawGaugeLine(highAngle, data.highColor);
+          for (int i = oldAngle; i <= newAngle; i++) {
+            drawGaugeLine(i, newStateColor);
           }
         #endif
-      } else {
-        debug->println(DEBUG_LEVEL_ERROR, "Out of range");        
       }
+
+      #ifndef DRAW_FAST
+        if (data.low != data.min && newValueToDraw < data.low) {
+          drawGaugeLine(lowAngle, data.lowColor);
+        }
+        if (data.high != data.max && newValueToDraw < data.high) {
+          drawGaugeLine(highAngle, data.highColor);
+        }
+      #endif
     } 
   }
 
@@ -400,19 +409,19 @@ void Gauge::drawGaugeLine(int angle, int color) {
   if (angleAfter >= 359)
     angleAfter = angle + 1 - 359;
 
-  Display::fillTriangle(x[angleBefore], y[angleBefore], x2[angleBefore], y2[angleBefore], x2[angleAfter], y2[angleAfter], color);
-  Display::fillTriangle(x2[angleAfter], y2[angleAfter], x[angleBefore], y[angleBefore], x[angleAfter], y[angleAfter], color);
+  display->fillTriangle(x[angleBefore], y[angleBefore], x2[angleBefore], y2[angleBefore], x2[angleAfter], y2[angleAfter], color);
+  display->fillTriangle(x2[angleAfter], y2[angleAfter], x[angleBefore], y[angleBefore], x[angleAfter], y[angleAfter], color);
   
 }
 
 void Gauge::drawBorders() {
-  Display::drawCircle(halfScreenWidth, halfScreenHeight, outerRadius, fColor);
-  Display::drawCircle(halfScreenWidth, halfScreenHeight, innerRadius, fColor);
+  display->drawCircle(halfScreenWidth, halfScreenHeight, outerRadius, fColor);
+  display->drawCircle(halfScreenWidth, halfScreenHeight, innerRadius, fColor);
 
-  Display::drawLine(x[357], y[357], x2[357], y2[357], fColor);
-  Display::drawLine(x[gaugeMax + 2], y[gaugeMax + 2], x2[gaugeMax + 2], y2[gaugeMax + 2], fColor);
+  display->drawLine(x[357], y[357], x2[357], y2[357], fColor);
+  display->drawLine(x[gaugeMax + 2], y[gaugeMax + 2], x2[gaugeMax + 2], y2[gaugeMax + 2], fColor);
 
-  Display::fillTriangle(
+  display->fillTriangle(
     halfScreenWidth + 2,
     halfScreenHeight + 2,
     halfScreenWidth + cos((angleStart - 2) * rad) * screenWidth,
@@ -430,11 +439,11 @@ void Gauge::drawCenterString(const char *buf, bool clearCircleArea) {
   //char buf2[16];
 
   if (clearCircleArea) {
-    Display::fillCircle(halfScreenWidth, halfScreenHeight, innerRadius - 2, bColor);
+    display->fillCircle(halfScreenWidth, halfScreenHeight, innerRadius - 2, bColor);
   }
-  Display::getTextBounds(buf, x, y, &x1, &y1, &w, &h);
-  Display::setCursor(x - w / 2, y + h / 2);
-  Display::print(buf);
+  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
+  display->setCursor(x - w / 2, y + h / 2);
+  display->print(buf);
  
 }
 
@@ -445,15 +454,15 @@ void Gauge::drawUpperString(const char *buf, int fColor, int bgColor) {
   int y = 34;
 
   setFontSize(18);
-  Display::setTextColor(fColor);
-  Display::getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
+  display->setTextColor(fColor);
+  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
   
   if (repaint) {
-    Display::fillRoundRect(48, -24, 144, 72, 20, bgColor);
-    Display::drawRoundRect(47, -23, 146, 72, 20, fColor);    
+    display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
+    display->drawRoundRect(47, -23, 146, 72, 20, fColor);    
   }
-  Display::setCursor(x - w / 2, y + 5);
-  Display::print(buf);
+  display->setCursor(x - w / 2, y + 5);
+  display->print(buf);
 }
 
 void Gauge::drawBottomString(const char *buf, int fColor, int bgColor) {
@@ -462,16 +471,16 @@ void Gauge::drawBottomString(const char *buf, int fColor, int bgColor) {
   int x = 120;
   int y = 220;
 
-  Display::setTextColor(fColor);
+  display->setTextColor(fColor);
 
-  Display::getTextBounds(buf, x, y, &x1, &y1, &w, &h);
+  display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);
   
-  Display::fillRoundRect(48, 180, 144, 72, 20, bgColor);
+  display->fillRoundRect(48, 180, 144, 72, 20, bgColor);
   
-  Display::drawRoundRect(48, 188, 144, 72, 20, fColor);
+  display->drawRoundRect(48, 188, 144, 72, 20, fColor);
   
-  Display::setCursor(x - w / 2, y + 5);
-  Display::print(buf);
+  display->setCursor(x - w / 2, y + 5);
+  display->print(buf);
   
 }
 
@@ -491,12 +500,16 @@ void Gauge::addSecondaryView(int secondaryViewId, char *strFormat) {
     }
 }
 
+Display* Gauge::getDisplay() {
+  return this->display;
+}
+
 int Gauge::getViewHeight() {
-    return Display::getScreenHeight();
+    return display->getScreenHeight();
 }
 
 int Gauge::getViewWidth() {
-    return Display::getScreenWidth();
+    return display->getScreenWidth();
 }
 
 int Gauge::getId() {

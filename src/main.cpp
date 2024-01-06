@@ -47,7 +47,7 @@
 #endif
 
 Display* display;
-Adafruit_GC9A01A tft(TFT1_CS, TFT1_DC);
+Adafruit_GC9A01A tft1(TFT1_CS, TFT1_DC);
 
 Debug *debug;
 ELM327 *obd;
@@ -97,7 +97,7 @@ void setup() {
 #endif
 
   displayManager = new DisplayManager();
-  displayManager->addDisplay(1, TFT1_CS, TFT1_DC, TFT1_WIDTH, TFT1_HEIGHT);
+  displayManager->addDisplay(&tft1, 1, TFT1_WIDTH, TFT1_HEIGHT);
   #ifdef ENABLE_STARTUP_LOGO
     displayManager->showStartupLogo(1);
   #endif
@@ -144,24 +144,24 @@ void setup() {
   display->addGauge(VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   // KM/h
   display->addGauge(VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
-  display->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
+  //display->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
   // RPM  
   display->addGauge(VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
-  display->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
+  //display->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
   // Engine coolant  
-  display->addGauge(VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 120);
-  display->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"%d C");
+  display->addGauge(VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 130);
+  //display->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"%d C");
   // Intake
   display->addGauge(VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
-  display->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"%d C");
+  //display->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"%d C");
   // Advance
-  display->addGauge(VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
+  //display->addGauge(VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
   // Throttle
-  display->addGauge(VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  display->addSecondaryView(VIEW_THROTTLE, VIEW_ENGINE_LOAD, (char*)"%d");
+  //display->addGauge(VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  //display->addSecondaryView(VIEW_THROTTLE, VIEW_ENGINE_LOAD, (char*)"%d");
   //  Engine load
-  display->addGauge(VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
-  display->addSecondaryView(VIEW_ENGINE_LOAD, VIEW_THROTTLE, (char*)"%d");
+  //display->addGauge(VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  //display->addSecondaryView(VIEW_ENGINE_LOAD, VIEW_THROTTLE, (char*)"%d");
   // Short fuel trims
   //display->addGauge(VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
   //display->addSecondaryView(VIEW_SHORT_FUEL_TRIM, VIEW_LONG_FUEL_TRIM, (char*)"%d");

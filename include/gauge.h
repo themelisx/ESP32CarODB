@@ -8,10 +8,9 @@
 #include "display.h"
 
 #define STATE_UNKNOWN -1
-#define STATE_LOW 0
-#define STATE_NORMAL 1
-#define STATE_HIGH 2
-#define STATE_OUT_OF_RANGE 3
+#define STATE_LOW 1
+#define STATE_NORMAL 2
+#define STATE_HIGH 3
 
 #define rad 0.01745
 
@@ -42,7 +41,9 @@ typedef struct
   char *title;
 } S_Gauge;
 
-class Gauge: public Display {
+class Display;
+
+class Gauge {
   private:
     int fColor;
     int bColor;
@@ -81,6 +82,7 @@ class Gauge: public Display {
     bool repaint;
     
     Gauge *gauge;
+    Display *display;
 
     void drawGaugeLine(int angle, int color);
     void drawCenterString(const char *buf, bool clearCircleArea);
@@ -90,7 +92,7 @@ class Gauge: public Display {
     void drawDateTime();
 
   public:
-    Gauge(int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
+    Gauge(Display* display, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
 
     S_Gauge data;
     S_SecondaryViews secondaryViews;
@@ -101,6 +103,7 @@ class Gauge: public Display {
     
     void addSecondaryView(int secondaryViewId, char *strFormat);
 
+    Display* getDisplay();
     int getViewHeight();
     int getViewWidth();
 

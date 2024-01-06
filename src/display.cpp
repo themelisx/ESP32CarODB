@@ -7,20 +7,14 @@
 #include "vars.h"
 #include "fonts.h"
 
-
-
-Display::Display() {
-
-}
-
-Display::Display(int id, int8_t _CS, int8_t _DC, int screenWidth, int screenHeight) {
+Display::Display(Adafruit_GC9A01A* monitor, int id, int screenWidth, int screenHeight) {
     
     debug->println(DEBUG_LEVEL_DEBUG, "::Display activated");
 
-    //tft = new Adafruit_GC9A01A(_CS, _DC);
-    tft.begin();
-    tft.setRotation(0);
-    tft.fillScreen(BLACK);
+    this->tft = monitor;
+    this->tft->begin();
+    this->tft->setRotation(0);
+    this->tft->fillScreen(BLACK);
 
     this->id = id;
     this->screenHeight = screenHeight;
@@ -53,13 +47,15 @@ void Display::updateDisplay() {
             getSecondaryActiveView() != gauge->secondaryViews.activeViewIndex) {
 
             if (getNextView() == -1) { // First run
-            setNextView(getActiveViewIndex());
+              setNextView(getActiveViewIndex());
             }
             debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
             debug->println(DEBUG_LEVEL_INFO, getActiveViewId());
 
             setActiveView(getNextView());
             setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
+
+            gauge = getActiveGauge();
 
             debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
             debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
@@ -70,7 +66,7 @@ void Display::updateDisplay() {
             gauge->data.value = gauge->data.min;
 
             if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeViewIndex == 0) {
-            gauge->drawBorders();
+              gauge->drawBorders();
             }
             changeView = true;
             gauge->setRepaint(true);
@@ -122,7 +118,7 @@ int Display::getTotalGauges() {
 bool Display::addGauge(int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max){
   if (totalGauges <= MAX_VIEWS) {
     totalGauges++;
-    myGauges[totalGauges] = new Gauge(id, type, interval, title, strFormat, lowColor, highColor, useLowWarning, useHighWarning, min, low, high, max);
+    myGauges[totalGauges] = new Gauge(this, id, type, interval, title, strFormat, lowColor, highColor, useLowWarning, useHighWarning, min, low, high, max);
     return true;
   } else {
     debug->println(DEBUG_LEVEL_ERROR, "Cannot add more Gauges");
@@ -155,11 +151,11 @@ void Display::printMsg(const char *buf) {
 
   int16_t x1, y1;
   uint16_t w, h;
-  tft.setFont(&Seven_Segment18pt7b);
-  tft.fillScreen(BACK_COLOR);
-  tft.getTextBounds(buf, screenWidthCenter, screenHeightCenter, &x1, &y1, &w, &h);
-  tft.setCursor(screenWidthCenter - w / 2, screenHeightCenter + h / 2);
-  tft.print(buf);
+  tft->setFont(&Seven_Segment18pt7b);
+  tft->fillScreen(BACK_COLOR);
+  tft->getTextBounds(buf, screenWidthCenter, screenHeightCenter, &x1, &y1, &w, &h);
+  tft->setCursor(screenWidthCenter - w / 2, screenHeightCenter + h / 2);
+  tft->print(buf);
 }
 
 int Display::getActiveViewIndex() {
@@ -271,55 +267,54 @@ int Display::getScreenHeight() {
     return this->screenHeight;
 }
 
-/*
 Adafruit_GC9A01A* Display::getTFT() {
     return this->tft;
-}*/
+}
 
 void Display::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
-  tft.drawCircle(x0, y0, r, color);
+  tft->drawCircle(x0, y0, r, color);
 }
 
 void Display::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-  tft.drawLine(x0, y0, x1, y1, color);
+  tft->drawLine(x0, y0, x1, y1, color);
 }
 
 void Display::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-  tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+  tft->fillTriangle(x0, y0, x1, y1, x2, y2, color);
 }
 
 void Display::setTextColor(uint16_t c) {
-  tft.setTextColor(c);
+  tft->setTextColor(c);
 }
 
 void Display::fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
-  tft.fillCircle(x0, y0, r, color);
+  tft->fillCircle(x0, y0, r, color);
 }
 
 void Display::getTextBounds(const char *string, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h) {
-  tft.getTextBounds(string,  x, y, x1, y1, w, h);
+  tft->getTextBounds(string,  x, y, x1, y1, w, h);
 }
 
 void Display::setCursor(int16_t x, int16_t y) {
-  tft.setCursor(x, y);
+  tft->setCursor(x, y);
 }
 
 void Display::fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) {
-  tft.fillRoundRect(x0, y0, w, h, radius, color);
+  tft->fillRoundRect(x0, y0, w, h, radius, color);
 }
 
 void Display::drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h, int16_t radius, uint16_t color) {
-  tft.drawRoundRect(x0, y0, w, h, radius, color);
+  tft->drawRoundRect(x0, y0, w, h, radius, color);
 }
 
 void Display::print(const char *str) {
-  tft.print(str);
+  tft->print(str);
 }
 
 void Display::setFont(const GFXfont *f) {
-  tft.setFont(f);
+  tft->setFont(f);
 }
 
 void Display::fillScreen(uint16_t color) {
-  tft.fillScreen(color);
+  tft->fillScreen(color);
 }
