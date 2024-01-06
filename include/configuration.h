@@ -56,8 +56,8 @@
 // Select connection method (only one of the follow) 
 
 #ifdef ESP32
-    //#define USE_OBD_BLUETOOTH
-    #define USE_OBD_WIFI
+    #define USE_OBD_BLUETOOTH
+    //#define USE_OBD_WIFI
 #endif
 
 #ifdef ESP8266
