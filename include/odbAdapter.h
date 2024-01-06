@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "defines.h"
+#include "gauge.h"
 
 #ifdef USE_OBD_BLUETOOTH
     #include <BluetoothSerial.h>
@@ -70,6 +71,7 @@ class OdbAdapter {
     OdbAdapter(String deviceName, String deviceAddr);
 
     void setFoundOBD2(bool found);
+    void updateOBDValue(Gauge* gauge);
 
     bool connect(char *pin);
     void disconnect();

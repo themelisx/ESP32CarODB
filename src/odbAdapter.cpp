@@ -8,6 +8,7 @@
 #include <ELMduino.h>
 
 #include "odbAdapter.h"
+#include "gauge.h"
 
 #include "debug.h"
 #include "vars.h"
@@ -312,6 +313,54 @@ bool OdbAdapter::readValueForViewType(int viewId) {
   }
 
   return valueReaded;
+}
+
+void OdbAdapter::updateOBDValue(Gauge* gauge) {
+    //Gauge* gauge = displayManager->getDisplay(displayManager->getActiveDisplayId())->getActiveGauge();
+
+    if (isDeviceConnected() && isOBDConnected()) {
+      debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
+
+      bool valueReaded = readValueForViewType(gauge->getActiveViewId());
+
+      int newValue = INT_MIN;
+      if (valueReaded) {
+        
+        newValue = getValueForViewType(gauge->getActiveViewId());
+
+        if (gauge->data.value != newValue) {
+          debug->println(DEBUG_LEVEL_DEBUG2, "Value has changed");
+          /*
+          debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
+          debug->println(DEBUG_LEVEL_DEBUG2, newValue);
+          debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
+          debug->println(DEBUG_LEVEL_DEBUG2, gauge->data.value);
+          */
+        }
+        gauge->data.value = newValue;
+
+        int secondaryViewIdx = gauge->secondaryViews.activeViewIndex;
+        if (secondaryViewIdx != 0) {
+          int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
+
+          valueReaded = readValueForViewType(secondaryViewId);
+          if (valueReaded) {
+            newValue = getValueForViewType(secondaryViewId);
+            if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
+              debug->println(DEBUG_LEVEL_DEBUG2, "Secondary value has changed");
+            }
+            gauge->secondaryViews.value[secondaryViewIdx] = newValue;
+          }
+        }
+      } else {
+          debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
+      }
+    }
+    #ifdef USE_MULTI_THREAD
+        vTaskDelay(gauge->getInterval() / portTICK_PERIOD_MS);
+    #else
+        delay(gauge->getInterval());
+    #endif
 }
 
 int OdbAdapter::getValueForViewType(int viewId) {

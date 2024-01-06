@@ -31,6 +31,7 @@ class Display {
     Display();
     Display(int id, int8_t _CS, int8_t _DC, int screenWidth, int screenHeight);
 
+    void updateDisplay();
     int getId();
     int getTotalGauges();
 

@@ -7,7 +7,7 @@
 #include "vars.h"
 #include "fonts.h"
 
-Adafruit_GC9A01A tft(TFT1_CS, TFT1_DC);
+
 
 Display::Display() {
 
@@ -33,6 +33,82 @@ Display::Display(int id, int8_t _CS, int8_t _DC, int screenWidth, int screenHeig
     this->secondaryActiveView = 0;
     this->count = 0;
     this->totalGauges = 0;
+}
+
+void Display::updateDisplay() {
+
+    //Display *display = displayManager->getDisplay(displayManager->getActiveDisplayId());
+    Gauge *gauge = getActiveGauge();
+
+    debug->println(DEBUG_LEVEL_DEBUG, "Update display");
+
+    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
+
+        bool changeView = false;
+
+        #ifdef USE_MULTI_THREAD
+        xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+        #endif
+        if (getActiveViewIndex() != getNextView() || 
+            getSecondaryActiveView() != gauge->secondaryViews.activeViewIndex) {
+
+            if (getNextView() == -1) { // First run
+            setNextView(getActiveViewIndex());
+            }
+            debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
+            debug->println(DEBUG_LEVEL_INFO, getActiveViewId());
+
+            setActiveView(getNextView());
+            setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
+
+            debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
+            debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
+
+            fillScreen(BACK_COLOR);
+
+            gauge->data.state = STATE_UNKNOWN;
+            gauge->data.value = gauge->data.min;
+
+            if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeViewIndex == 0) {
+            gauge->drawBorders();
+            }
+            changeView = true;
+            gauge->setRepaint(true);
+        } 
+        #ifdef USE_MULTI_THREAD
+        xSemaphoreGive(semaphoreActiveView);
+        #endif
+
+        if (changeView) {
+
+            debug->println(DEBUG_LEVEL_DEBUG, "Change view request");        
+            gauge->draw();
+
+        } else {
+
+            if (gauge->valueHasChanged()) {
+            debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
+            gauge->draw();
+            } else {
+            debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
+            }
+        }
+
+        #ifdef USE_MULTI_THREAD
+            vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
+        #else
+            delay(DELAY_REFRESH_VIEW);
+        #endif
+
+    } /*else {
+        fillScreen(BACK_COLOR);
+        delay(500);
+        printMsg("NO OBD");
+        delay(DELAY_MAIN_TASK);
+        #ifndef MOCK_OBD
+            odbAdapter->connect(nullptr);
+        #endif
+    }*/    
 }
 
 int Display::getId() {

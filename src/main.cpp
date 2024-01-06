@@ -47,6 +47,7 @@
 #endif
 
 Display* display;
+Adafruit_GC9A01A tft(TFT1_CS, TFT1_DC);
 
 Debug *debug;
 ELM327 *obd;
@@ -302,8 +303,6 @@ void checkKeypad() {
 #endif
 
 
-
-
 void loop() {
   
 #ifdef USE_MULTI_THREAD
@@ -313,82 +312,14 @@ void loop() {
 
   debug->println(DEBUG_LEVEL_DEBUG2, "--- LOOP ---");
 
-  gauge = display->getActiveGauge();
+  if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {    
 
-  if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
-
-    if (display->getActiveViewIndex() != display->getNextView() || 
-      display->getSecondaryActiveView() != gauge->secondaryViews.activeViewIndex) {
-
-      if (display->getNextView() == -1) { // First run
-        display->setNextView(display->getActiveViewIndex());
-      }
-      debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-      debug->println(DEBUG_LEVEL_INFO, display->getActiveViewId());
-
-      display->setActiveView(display->getNextView());
-      display->setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
-
-      gauge = display->getActiveGauge();
-
-      debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-      debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
-
-      display->fillScreen(BACK_COLOR);
-
-      gauge->data.state = STATE_UNKNOWN;
-      gauge->data.value = gauge->data.min;
-
-      if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeViewIndex == 0) {
-        gauge->drawBorders();
-      }
-      gauge->setRepaint(true);
-      debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
-    } 
-
-    bool valueReaded = odbAdapter->readValueForViewType(display->getActiveViewId());
-
-    int newValue = INT_MIN;
-    if (valueReaded) {
-      
-      newValue = odbAdapter->getValueForViewType(display->getActiveViewId());
-
-      //debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
-      //debug->println(DEBUG_LEVEL_DEBUG2, newValue);
-      //debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
-      //debug->println(DEBUG_LEVEL_DEBUG2, gauge->data.value);
-
-      bool redrawView = gauge->data.value != newValue;
-      gauge->data.value = newValue;
-
-      int secondaryViewIdx = gauge->secondaryViews.activeViewIndex;
-      if (secondaryViewIdx != 0) {
-        int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
-
-        valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
-        if (valueReaded) {
-          newValue = odbAdapter->getValueForViewType(secondaryViewId);
-          if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
-            redrawView = true;
-          }
-          gauge->secondaryViews.value[secondaryViewIdx] = newValue;
-        }
-      }
-
-      if (redrawView || gauge->needsRepaint()) { 
-        //debug->println(DEBUG_LEVEL_DEBUG, "Draw gauge request");
-        gauge->draw();
-      }
-
-    } else {
-        debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
-    }
-
-    checkKeypad();
-
-    delay(gauge->getInterval());
+    display->updateDisplay();
+    checkKeypad(); 
+    odbAdapter->updateOBDValue(display->getActiveGauge());
 
   } else {
+
     display->fillScreen(BACK_COLOR);
     delay(500);
     display->printMsg("NO OBD");
@@ -396,6 +327,7 @@ void loop() {
     #ifndef MOCK_OBD
       odbAdapter->connect(nullptr);
     #endif
+
   }
 
 #endif

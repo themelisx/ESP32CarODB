@@ -38,6 +38,7 @@ extern TaskHandle_t t_core1_obd;
 
 extern Debug *debug;
 extern DisplayManager *displayManager;
+extern Adafruit_GC9A01A tft;
 
 extern Settings *mySettings;
 extern OdbAdapter *odbAdapter;

@@ -28,47 +28,8 @@ void obd_task(void *pvParameters) {
 
   for (;;) {
 
-    gauge = displayManager->getDisplay(displayManager->getActiveDisplayId())->getActiveGauge();
+    odbAdapter->updateOBDValue();
 
-    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
-      debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
-
-      bool valueReaded = odbAdapter->readValueForViewType(gauge->getActiveViewId());
-
-      int newValue = INT_MIN;
-      if (valueReaded) {
-        
-        newValue = odbAdapter->getValueForViewType(gauge->getActiveViewId());
-
-        if (gauge->data.value != newValue) {
-          debug->println(DEBUG_LEVEL_DEBUG2, "Value has changed");
-          /*
-          debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
-          debug->println(DEBUG_LEVEL_DEBUG2, newValue);
-          debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
-          debug->println(DEBUG_LEVEL_DEBUG2, gauge->data.value);
-          */
-        }
-        gauge->data.value = newValue;
-
-        int secondaryViewIdx = gauge->secondaryViews.activeViewIndex;
-        if (secondaryViewIdx != 0) {
-          int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
-
-          valueReaded = odbAdapter->readValueForViewType(secondaryViewId);
-          if (valueReaded) {
-            newValue = odbAdapter->getValueForViewType(secondaryViewId);
-            if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
-              debug->println(DEBUG_LEVEL_DEBUG2, "Secondary value has changed");
-            }
-            gauge->secondaryViews.value[secondaryViewIdx] = newValue;
-          }
-        }
-      } else {
-          debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
-      }
-    }
-    vTaskDelay(gauge->getInterval() / portTICK_PERIOD_MS);
   }
 }
 
