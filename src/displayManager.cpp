@@ -10,8 +10,10 @@
 
 
 DisplayManager::DisplayManager() {
+    debug->println(DEBUG_LEVEL_DEBUG, "[DisplayManager]");
     activeDisplay = 0;
     count = 0;
+    debug->println(DEBUG_LEVEL_DEBUG, "[OK]");
 }
 
 bool DisplayManager::addDisplay(Adafruit_GC9A01A* monitor, int displayID, int screenWidth, int screenHeight) {
@@ -57,40 +59,36 @@ void DisplayManager::goToNextDisplay() {
     #endif
 }
 
+// Skip secondary views for fast navigation
 void DisplayManager::goToPreviousView() {
     
     bool changeGauge = true;
     #ifdef USE_MULTI_THREAD
         xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
     #endif
-
-    Display *display = myDisplays[activeDisplay];
-    Gauge *gauge = display->getActiveGauge();
-
-    if (gauge->secondaryViews.count > 0) {
-    gauge->secondaryViews.activeViewIndex--;
-
-    if (gauge->secondaryViews.activeViewIndex > 0) {
-        debug->print(DEBUG_LEVEL_INFO, "Changing to prev secondary view");
-        changeGauge = false;
-    } else {
-        gauge->secondaryViews.activeViewIndex = gauge->secondaryViews.count;
-    }
-    }
-
-    if (changeGauge) {
-        display->setActiveView(display->getActiveViewIndex() - 1);
-        if (display->getNextView() == 0) {
-            display->setNextView(display->getTotalGauges());
-        }
-        /*if (display->nextView == VIEW_DATE_TIME) {
-            memset(oldDateString, 0, DATE_LENGTH);
-            memset(oldTimeString, 0, TIME_LENGTH);
-        }*/
-    }
-    display->getActiveGauge()->setRepaint(true);
     
-    mySettings->setActiveView(display->getId(), display->getActiveViewId());
+    Display *display = myDisplays[activeDisplay];
+    int activeIndex = display->getActiveView();
+    if (activeIndex - 1 == 0) {
+        display->setActiveView(display->getTotalGauges());
+    } else {
+        activeIndex--;
+        display->setActiveView(activeIndex);
+    }
+    
+    Gauge *gauge = display->getActiveGauge();
+    if (gauge->getType() == TYPE_DUAL_TEXT) {
+        debug->println(DEBUG_LEVEL_DEBUG, "view is dual text");
+        gauge->secondaryViews.activeViewIndex = 1;
+    } else {
+        debug->println(DEBUG_LEVEL_DEBUG, "view is NOT dual text");
+        gauge->secondaryViews.activeViewIndex = 0;
+    }
+    display->setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
+    display->getActiveGauge()->setRepaint(true);
+    display->setGaugeHasChanged(true);
+    
+    mySettings->setActiveView(display->getId(), display->getActiveView());
     mySettings->setSecondaryActiveView(display->getId(), display->getSecondaryActiveView());
     mySettings->save();      
     
@@ -112,37 +110,38 @@ void DisplayManager::goToNextView() {
     Gauge *gauge = display->getActiveGauge();
 
     if (gauge->secondaryViews.count > 0) {
-    gauge->secondaryViews.activeViewIndex++;
+        gauge->secondaryViews.activeViewIndex++;
 
-    if (gauge->secondaryViews.activeViewIndex <= gauge->secondaryViews.count) {
-        debug->println(DEBUG_LEVEL_INFO, "Changing to next secondary view");
-        changeGauge = false;
-    } else {
-        debug->println(DEBUG_LEVEL_INFO, "Changing to next view");
-        if (gauge->getType() == TYPE_DUAL_TEXT) {
-        debug->println(DEBUG_LEVEL_DEBUG, "view is dual text");
-        gauge->secondaryViews.activeViewIndex = 1;
+        if (gauge->secondaryViews.activeViewIndex <= gauge->secondaryViews.count) {
+            debug->println(DEBUG_LEVEL_INFO, "Changing to next secondary view");
+            display->setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);            
+            changeGauge = false;
         } else {
-        debug->println(DEBUG_LEVEL_DEBUG, "view is NOT dual text");
-        gauge->secondaryViews.activeViewIndex = 0;
+            debug->println(DEBUG_LEVEL_INFO, "Changing to next view");
         }
-    }
     }
 
     if (changeGauge) {
-        display->setNextView(display->getActiveViewIndex() + 1);
-        if (display->getNextView() > display->getTotalGauges()) {
-            display->setNextView(1);
+        if (display->getActiveView() + 1 > display->getTotalGauges()) {
+            display->setActiveView(1);
+        } else {
+            display->setActiveView(display->getActiveView() + 1);
         }
-        /*if (display->nextView == VIEW_DATE_TIME) {
-            memset(oldDateString, 0, DATE_LENGTH);
-            memset(oldTimeString, 0, TIME_LENGTH);
-        }*/
+        gauge = display->getActiveGauge();
+        if (gauge->getType() == TYPE_DUAL_TEXT) {
+            debug->println(DEBUG_LEVEL_DEBUG, "view is dual text");
+            gauge->secondaryViews.activeViewIndex = 1;
+        } else {
+            debug->println(DEBUG_LEVEL_DEBUG, "view is NOT dual text");
+            gauge->secondaryViews.activeViewIndex = 0;
+        }
+        display->setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
     }
 
     display->getActiveGauge()->setRepaint(true);
+    display->setGaugeHasChanged(true);
 
-    mySettings->setActiveView(display->getId(), display->getActiveViewId());
+    mySettings->setActiveView(display->getId(), display->getActiveView());
     mySettings->setSecondaryActiveView(display->getId(), display->getSecondaryActiveView());
     mySettings->save();
     

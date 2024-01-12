@@ -221,6 +221,13 @@ void Gauge::draw() {
 
   debug->println(DEBUG_LEVEL_DEBUG2, "Gauge::Draw");
 
+  if (repaint) {
+    getDisplay()->fillScreen(BACK_COLOR);
+    if (getType() == TYPE_GAUGE_GRAPH && secondaryViews.activeViewIndex == 0) {      
+      drawBorders();
+    }
+  }  
+
   #ifdef USE_MULTI_THREAD
     xSemaphoreTake(semaphoreData, portMAX_DELAY);
   #endif
@@ -285,67 +292,65 @@ void Gauge::draw() {
     xSemaphoreGive(semaphoreActiveView);
   #endif
 
-  if (getType() == TYPE_GAUGE_GRAPH) {
-    if (secondaryViewsActiveView == 0) {
-      #ifdef USE_MULTI_THREAD
-      xSemaphoreTake(semaphoreData, portMAX_DELAY);
-      #endif
+  if (getType() == TYPE_GAUGE_GRAPH && secondaryViewsActiveView == 0) {
+    #ifdef USE_MULTI_THREAD
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    #endif
 
-      int oldValueToDraw = data.oldValue;
-      if (oldValueToDraw < data.min) {
-        oldValueToDraw = data.min;
-      } else if (oldValueToDraw > data.max) {
-        oldValueToDraw = data.max;
-      }      
+    int oldValueToDraw = data.oldValue;
+    if (oldValueToDraw < data.min) {
+      oldValueToDraw = data.min;
+    } else if (oldValueToDraw > data.max) {
+      oldValueToDraw = data.max;
+    }      
 
-      #ifdef USE_MULTI_THREAD
-      xSemaphoreGive(semaphoreData);
-      #endif
+    #ifdef USE_MULTI_THREAD
+    xSemaphoreGive(semaphoreData);
+    #endif
 
-      #ifndef DRAW_FAST
-        int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
-        int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
-      #endif
-      int oldAngle = map(oldValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
-      int newAngle = map(newValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
+    #ifndef DRAW_FAST
+      int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
+      int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
+    #endif
+    int oldAngle = map(oldValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
+    int newAngle = map(newValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
 
-      if (newValueToDraw < oldValueToDraw) {
-        #ifdef DRAW_FAST
-          drawGaugeLine(oldAngle, BACK_COLOR);
-          drawGaugeLine(newAngle, newStateColor);
-        #else
-          for (int i = oldAngle; i >= newAngle; i--) {
-            drawGaugeLine(i, bColor);
-          }
-          if (newState != data.state) {
-            for (int i = 0; i <= newAngle; i++) {
-              drawGaugeLine(i, newStateColor);
-            }
-          }
-        #endif
-      } else {        
-        #ifdef DRAW_FAST
-          drawGaugeLine(oldAngle, BACK_COLOR);
-          drawGaugeLine(newAngle, newStateColor);
-        #else            
-          if (newState != data.state) {
-            oldAngle = 0;
-          }
-          for (int i = oldAngle; i <= newAngle; i++) {
+    if (newValueToDraw < oldValueToDraw) {
+      #ifdef DRAW_FAST
+        drawGaugeLine(oldAngle, BACK_COLOR);
+        drawGaugeLine(newAngle, newStateColor);
+      #else
+        for (int i = oldAngle; i >= newAngle; i--) {
+          drawGaugeLine(i, bColor);
+        }
+        if (newState != data.state) {
+          for (int i = 0; i <= newAngle; i++) {
             drawGaugeLine(i, newStateColor);
           }
-        #endif
-      }
-
-      #ifndef DRAW_FAST
-        if (data.low != data.min && newValueToDraw < data.low) {
-          drawGaugeLine(lowAngle, data.lowColor);
-        }
-        if (data.high != data.max && newValueToDraw < data.high) {
-          drawGaugeLine(highAngle, data.highColor);
         }
       #endif
-    } 
+    } else {        
+      #ifdef DRAW_FAST
+        drawGaugeLine(oldAngle, BACK_COLOR);
+        drawGaugeLine(newAngle, newStateColor);
+      #else            
+        if (newState != data.state) {
+          oldAngle = 0;
+        }
+        for (int i = oldAngle; i <= newAngle; i++) {
+          drawGaugeLine(i, newStateColor);
+        }
+      #endif
+    }
+
+    #ifndef DRAW_FAST
+      if (data.low != data.min && newValueToDraw < data.low) {
+        drawGaugeLine(lowAngle, data.lowColor);
+      }
+      if (data.high != data.max && newValueToDraw < data.high) {
+        drawGaugeLine(highAngle, data.highColor);
+      }
+    #endif
   }
 
   data.state = newState;
@@ -361,6 +366,11 @@ void Gauge::draw() {
   #endif
 
   if ( (getType() == TYPE_GAUGE_GRAPH && secondaryViewsActiveView != 0) || getType() == TYPE_DUAL_TEXT) {
+
+    if (repaint) {
+      display->fillRoundRect(48, -24, 144, 72, 20, BACK_COLOR);
+      display->drawRoundRect(47, -23, 146, 72, 20, FRONT_COLOR);    
+    }
     
     int secondaryViewId = secondaryViews.ids[secondaryViewsActiveView];
     newValue = secondaryViews.value[secondaryViewsActiveView];
@@ -394,7 +404,6 @@ void Gauge::draw() {
           sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViewsActiveView], newValue);
         }
       }
-
       drawUpperString(secondaryBuffer, FRONT_COLOR, BACK_COLOR);
     }   
   }
@@ -456,11 +465,6 @@ void Gauge::drawUpperString(const char *buf, int fColor, int bgColor) {
   setFontSize(18);
   display->setTextColor(fColor);
   display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
-  
-  if (repaint) {
-    display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
-    display->drawRoundRect(47, -23, 146, 72, 20, fColor);    
-  }
   display->setCursor(x - w / 2, y + 5);
   display->print(buf);
 }

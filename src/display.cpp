@@ -9,7 +9,7 @@
 
 Display::Display(Adafruit_GC9A01A* monitor, int id, int screenWidth, int screenHeight) {
     
-    debug->println(DEBUG_LEVEL_DEBUG, "::Display activated");
+    debug->println(DEBUG_LEVEL_DEBUG, "[Display]");
 
     this->tft = monitor;
     this->tft->begin();
@@ -17,84 +17,54 @@ Display::Display(Adafruit_GC9A01A* monitor, int id, int screenWidth, int screenH
     this->tft->fillScreen(BLACK);
 
     this->id = id;
+    this->gaugeHasChanged = true;
     this->screenHeight = screenHeight;
     this->screenHeightCenter = screenHeight / 2;
     this->screenWidth = screenWidth;    
     this->screenWidthCenter = screenWidth / 2;
     
     this->activeViewIndex = 0;
-    this->nextViewIndex = 1;
     this->secondaryActiveView = 0;
     this->count = 0;
     this->totalGauges = 0;
+
+    debug->println(DEBUG_LEVEL_DEBUG, "[OK]");
+}
+
+void Display::setGaugeHasChanged(bool gaugeHasChanged) {
+  this->gaugeHasChanged = gaugeHasChanged;
 }
 
 void Display::updateDisplay() {
-
-    //Display *display = displayManager->getDisplay(displayManager->getActiveDisplayId());
-    Gauge *gauge = getActiveGauge();
 
     debug->println(DEBUG_LEVEL_DEBUG, "Update display");
 
     if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
 
-        bool changeView = false;
+      Gauge *gauge = getActiveGauge();
 
-        #ifdef USE_MULTI_THREAD
-        xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-        #endif
-        if (getActiveViewIndex() != getNextView() || 
-            getSecondaryActiveView() != gauge->secondaryViews.activeViewIndex) {
+      if (gaugeHasChanged) {
+        gauge->setRepaint(true);
+        gaugeHasChanged = false;
+        debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
+        gauge->secondaryViews.activeViewIndex = getSecondaryActiveView();        
+        gauge->draw();          
 
-            if (getNextView() == -1) { // First run
-              setNextView(getActiveViewIndex());
-            }
-            debug->print(DEBUG_LEVEL_INFO, "Changing Gauge at display ");
-            debug->println(DEBUG_LEVEL_INFO, getActiveViewId());
+      } else {
 
-            setActiveView(getNextView());
-            setSecondaryActiveView(gauge->secondaryViews.activeViewIndex);
-
-            gauge = getActiveGauge();
-
-            debug->print(DEBUG_LEVEL_INFO, "Active gauge: ");
-            debug->println(DEBUG_LEVEL_INFO, gauge->data.title);
-
-            fillScreen(BACK_COLOR);
-
-            gauge->data.state = STATE_UNKNOWN;
-            gauge->data.value = gauge->data.min;
-
-            if (gauge->getType() == TYPE_GAUGE_GRAPH && gauge->secondaryViews.activeViewIndex == 0) {
-              gauge->drawBorders();
-            }
-            changeView = true;
-            gauge->setRepaint(true);
-        } 
-        #ifdef USE_MULTI_THREAD
-        xSemaphoreGive(semaphoreActiveView);
-        #endif
-
-        if (changeView) {
-
-            debug->println(DEBUG_LEVEL_DEBUG, "Change view request");        
-            gauge->draw();
-
+        if (gauge->valueHasChanged()) {
+          debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
+          gauge->draw();
         } else {
-
-            if (gauge->valueHasChanged()) {
-            debug->println(DEBUG_LEVEL_DEBUG, "Value has changed");
-            gauge->draw();
-            } else {
-            debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
-            }
+          debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
         }
+      }
 
-        #ifdef USE_MULTI_THREAD
-            vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
-        #else
-            delay(DELAY_REFRESH_VIEW);
-        #endif
+      #ifdef USE_MULTI_THREAD
+          vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
+      #else
+          delay(DELAY_REFRESH_VIEW);
+      #endif
 
     } /*else {
         fillScreen(BACK_COLOR);
@@ -128,8 +98,14 @@ bool Display::addGauge(int id, int type, int interval, char *title, char *strFor
 
 bool Display::addSecondaryView(int primaryView, int secondaryViewId, char *strFormat) {
   bool ret;
-  for (int i=1; i<totalGauges; i++) {
+  
+  debug->print(DEBUG_LEVEL_DEBUG2, "Adding 2nd view to primary ID: ");
+  debug->println(DEBUG_LEVEL_DEBUG2, primaryView);
+  
+  for (int i=1; i<=totalGauges; i++) {
+    
     if (myGauges[i]->getId() == primaryView) {
+      debug->println(DEBUG_LEVEL_DEBUG2, "Found primary gauge");
       myGauges[i]->addSecondaryView(secondaryViewId, strFormat);
       ret = true;
       break;
@@ -158,7 +134,7 @@ void Display::printMsg(const char *buf) {
   tft->print(buf);
 }
 
-int Display::getActiveViewIndex() {
+int Display::getActiveView() {
   
   int ret;
   #ifdef USE_MULTI_THREAD
@@ -209,29 +185,6 @@ void Display::setActiveView(int newActiveView) {
   #ifdef USE_MULTI_THREAD
     xSemaphoreGive(semaphoreActiveView);
   #endif
-}
-
-void Display::setNextView(int newNextView) {
- 
-  #ifdef USE_MULTI_THREAD
-    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-  #endif
-  this->nextViewIndex = newNextView;
-  #ifdef USE_MULTI_THREAD
-    xSemaphoreGive(semaphoreActiveView);
-  #endif
-}
-
-int Display::getNextView() {
-  int ret;
-  #ifdef USE_MULTI_THREAD
-    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-  #endif
-  ret = this->nextViewIndex;
-  #ifdef USE_MULTI_THREAD
-    xSemaphoreGive(semaphoreActiveView);
-  #endif
-  return ret;
 }
 
 int Display::getSecondaryActiveView() {

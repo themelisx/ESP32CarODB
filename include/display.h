@@ -12,6 +12,8 @@ class Gauge;
 class Display {
   private:
     int id;
+    bool gaugeHasChanged;
+
     Adafruit_GC9A01A* tft;
 
     int screenWidth;
@@ -22,7 +24,6 @@ class Display {
     int totalGauges;
 
     int activeViewIndex;
-    int nextViewIndex;
     int secondaryActiveView;
     int count;
 
@@ -32,6 +33,7 @@ class Display {
 
     Display(Adafruit_GC9A01A* monitor, int id, int screenWidth, int screenHeight);
 
+    void setGaugeHasChanged(bool gaugeHasChanged);
     void updateDisplay();
     int getId();
     int getTotalGauges();
@@ -45,16 +47,12 @@ class Display {
     void printMsg(const char *buf);
 
     int getActiveDisplayId();
-    int getActiveViewIndex();
+    int getActiveView();
     int getActiveViewId();
     Gauge* getActiveGauge();
     int getSecondaryActiveView();
 
     void setActiveView(int newActiveView);
-
-    int getNextView();
-    void setNextView(int newNextView);
-
     void setSecondaryActiveView(int newSecondaryActiveView);
 
     Adafruit_GC9A01A* getTFT();

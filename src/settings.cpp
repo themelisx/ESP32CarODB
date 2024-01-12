@@ -12,11 +12,12 @@
 
 Settings::Settings() {
 
-  debug->println(DEBUG_LEVEL_DEBUG, "::Settings activated");
+  debug->println(DEBUG_LEVEL_DEBUG, "[Settings]");
 
   #ifdef ENABLE_EEPROM
     myEEPROM = new MyEEPROM(512);
-    myEEPROM->start();      
+    myEEPROM->start();
+    debug->println(DEBUG_LEVEL_DEBUG, "[OK]");
   #endif
 }
 
@@ -41,7 +42,7 @@ void Settings::load() {
   #else
     setDefaults();
   #endif
-  debug->println(DEBUG_LEVEL_DEBUG, "[OK] Load");
+  debug->println(DEBUG_LEVEL_DEBUG, "Done");
 }
 
 void Settings::save() {
@@ -67,8 +68,8 @@ void Settings::setDefaults() {
     
     debug->println(DEBUG_LEVEL_INFO, "Setting default values");
 
-    this->activeView = VIEW_COOLANT_TEMP;
-    this->secondaryActiveView = VIEW_NONE;
+    this->activeView = 1;
+    this->secondaryActiveView = 0;
 
     debug->println(DEBUG_LEVEL_DEBUG, "[OK] Setting default values");
 }

@@ -15,7 +15,7 @@
 
 OdbAdapter::OdbAdapter(String deviceName, String deviceAddr) {
 
-    debug->println(DEBUG_LEVEL_DEBUG, "::OdbAdapter activated");
+    debug->println(DEBUG_LEVEL_DEBUG, "[OdbAdapter]");
 
     this->deviceName = deviceName;
     this->deviceAddr = deviceAddr;
@@ -35,6 +35,7 @@ OdbAdapter::OdbAdapter(String deviceName, String deviceAddr) {
     deviceConnected = false;
     obdConnected = false;
 
+    debug->println(DEBUG_LEVEL_DEBUG, "[OK]");
 }
 
 void OdbAdapter::setDeviceConnected(bool connected) {

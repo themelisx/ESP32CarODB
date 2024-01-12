@@ -110,7 +110,12 @@ void setup() {
   #endif
   
   mySettings = new Settings();
-  mySettings->load();
+  #ifdef CLEAR_SETTINGS
+    mySettings->setDefaults();
+    mySettings->save();
+  #else
+    mySettings->load();
+  #endif
 
   #ifdef USE_OBD_BLUETOOTH
     //odbAdapter = new OdbAdapter("OBDII", "11:22:33:dd:ee:ff");
@@ -139,35 +144,34 @@ void setup() {
   debug->println(DEBUG_LEVEL_INFO, "Creating gauges...");
   display = displayManager->getDisplay(1);
   displayManager->setActiveDisplay(1);
-  
   // Battery  
   display->addGauge(VIEW_BATTERY_VOLTAGE, TYPE_GAUGE_GRAPH, DELAY_VIEW_BATTERY_VOLTAGE, (char*)"Volt", (char*)"%0.1f", RED, RED, true, true, 110, 120, 140, 150);
   // KM/h
-  display->addGauge(VIEW_KPH, TYPE_GAUGE_GRAPH, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
-  //display->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
+  display->addGauge(VIEW_KPH, TYPE_DUAL_TEXT, DELAY_VIEW_KPH, (char*)"Km/h", (char*)"%d", WHITE, RED, false, false, 0, 0, 130, 200);
+  display->addSecondaryView(VIEW_KPH, VIEW_RPM, (char*)"%d");
   // RPM  
-  display->addGauge(VIEW_RPM, TYPE_GAUGE_GRAPH, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
-  //display->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
+  display->addGauge(VIEW_RPM, TYPE_DUAL_TEXT, DELAY_VIEW_RPM, (char*)"RPM", (char*)"%d", WHITE, RED, false, true, 0, 0, 6000, 7500);
+  display->addSecondaryView(VIEW_RPM, VIEW_KPH, (char*)"%d");
   // Engine coolant  
   display->addGauge(VIEW_COOLANT_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_COOLANT_TEMP, (char*)"Engine", (char*)"%d C", BLUE, RED, true, true, 0, 40, 105, 130);
-  //display->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"%d C");
+  display->addSecondaryView(VIEW_COOLANT_TEMP, VIEW_INTAKE_TEMP, (char*)"%d C");
   // Intake
   display->addGauge(VIEW_INTAKE_TEMP, TYPE_GAUGE_GRAPH, DELAY_VIEW_INTAKE_AIR_TEMP, (char*)"Intake", (char*)"%d C", WHITE, RED, false, true, -20, -20, 65, 100);
-  //display->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"%d C");
+  display->addSecondaryView(VIEW_INTAKE_TEMP, VIEW_COOLANT_TEMP, (char*)"%d C");
   // Advance
-  //display->addGauge(VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
+  display->addGauge(VIEW_TIMING_ADV, TYPE_SIMPLE_TEXT, DELAY_VIEW_TIMING_ADV, (char*)"Advance", (char*)"%d º", WHITE, WHITE, false, false, 0, 0, 50, 50);
   // Throttle
-  //display->addGauge(VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  display->addGauge(VIEW_THROTTLE, TYPE_GAUGE_GRAPH, DELAY_VIEW_THROTTLE, (char*)"THROTL", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
   //display->addSecondaryView(VIEW_THROTTLE, VIEW_ENGINE_LOAD, (char*)"%d");
   //  Engine load
-  //display->addGauge(VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
+  display->addGauge(VIEW_ENGINE_LOAD, TYPE_GAUGE_GRAPH, DELAY_VIEW_ENGINE_LOAD, (char*)"Load", (char*)"%d", WHITE, WHITE, false, false, 0, 0, 100, 100);
   //display->addSecondaryView(VIEW_ENGINE_LOAD, VIEW_THROTTLE, (char*)"%d");
   // Short fuel trims
-  //display->addGauge(VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  //display->addSecondaryView(VIEW_SHORT_FUEL_TRIM, VIEW_LONG_FUEL_TRIM, (char*)"%d");
+  display->addGauge(VIEW_SHORT_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_SHORT_FUEL_TRIM, (char*)"S.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  display->addSecondaryView(VIEW_SHORT_FUEL_TRIM, VIEW_LONG_FUEL_TRIM, (char*)"%d");
   // Long fuel trims
-  //display->addGauge(VIEW_LONG_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
-  //display->addSecondaryView(VIEW_LONG_FUEL_TRIM, VIEW_SHORT_FUEL_TRIM, (char*)"%d");
+  display->addGauge(VIEW_LONG_FUEL_TRIM, TYPE_DUAL_TEXT, DELAY_VIEW_LONG_FUEL_TRIM, (char*)"L.F.T.", (char*)"%d", RED, RED, false, false, -30, -20, 20, 30);
+  display->addSecondaryView(VIEW_LONG_FUEL_TRIM, VIEW_SHORT_FUEL_TRIM, (char*)"%d");
   // MAF rate
   //display->addGauge(VIEW_MAF_RATE, TYPE_GAUGE_GRAPH, DELAY_VIEW_MAF_RATE, (char*)"MAF", (char*)"%d", RED, RED, false, false, -10, 0, 10, 10);
   // Fuel level
@@ -181,8 +185,12 @@ void setup() {
  
   //display->addGauge(VIEW_DATE_TIME, TYPE_DATE, DELAY_VIEW_DATE_TIME, (char*)"  ", (char*)"  ", 0, 0, false, false, 0, 0, 0, 0);
 
+  debug->print(DEBUG_LEVEL_DEBUG2, "Saved view index: ");
+  debug->println(DEBUG_LEVEL_DEBUG2, mySettings->getActiveView(1));
   display->setActiveView(mySettings->getActiveView(1));
-  display->setNextView(-1);
+
+  debug->print(DEBUG_LEVEL_DEBUG2, "Saved secondary view index: ");
+  debug->println(DEBUG_LEVEL_DEBUG2, mySettings->getSecondaryActiveView(1));
   display->setSecondaryActiveView(mySettings->getSecondaryActiveView(1));
 
   #ifdef ENABLE_SECOND_DISPLAY

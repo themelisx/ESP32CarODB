@@ -20,15 +20,17 @@
 // Settings //
 //////////////
 
-#ifdef ESP32
-    // Enable EEPROM to save settings in EEPROM
-    #define ENABLE_EEPROM
+// Enable EEPROM to save settings in EEPROM
+#define ENABLE_EEPROM
+//#define CLEAR_SETTINGS
 
+#ifdef ESP32
     // Dual Core
     #define USE_MULTI_THREAD
 #endif
 
 #ifdef ESP8266
+    //
     #define DRAW_FAST
 #endif
 
@@ -68,7 +70,7 @@
 ////////////
 // Keypad //
 ////////////
-#define USE_MOCK_KEYPAD
+//#define USE_MOCK_KEYPAD
 
 
 
