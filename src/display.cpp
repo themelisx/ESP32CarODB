@@ -59,22 +59,23 @@ void Display::updateDisplay() {
           debug->println(DEBUG_LEVEL_DEBUG, "Value is equal");
         }
       }
-
-      #ifdef USE_MULTI_THREAD
-          vTaskDelay(DELAY_REFRESH_VIEW / portTICK_PERIOD_MS);
-      #else
-          delay(DELAY_REFRESH_VIEW);
-      #endif
-
-    } /*else {
+    } else {
         fillScreen(BACK_COLOR);
-        delay(500);
-        printMsg("NO OBD");
-        delay(DELAY_MAIN_TASK);
-        #ifndef MOCK_OBD
-            odbAdapter->connect(nullptr);
+
+        #ifdef USE_MULTI_THREAD
+          vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
+        #else
+          delay(DELAY_MAIN_TASK);
         #endif
-    }*/    
+
+        printMsg("NO OBD");
+
+        #ifdef USE_MULTI_THREAD
+          vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
+        #else
+          delay(DELAY_MAIN_TASK);
+        #endif
+    }    
 }
 
 int Display::getId() {

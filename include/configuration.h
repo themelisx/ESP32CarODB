@@ -15,10 +15,38 @@
 //#define MOCK_OBD_NORMAL_VALUES
 //#define MOCK_OBD_HIGH_VALUES
 
+////////////
+// Gauges //
+////////////
+#define GAUGE_BATTERY_VOLTAGE
+#define GAUGE_KMH
+#define GAUGE_RPM
+#define GAUGE_COOLANT_TEMP
+#define GAUGE_INTAKE_TEMP
+#define GAUGE_TIMING_ADV
+#define GAUGE_ENGINE_LOAD
+#define GAUGE_SHORT_FUEL_TRIM
+#define GAUGE_LONG_FUEL_TRIM
+#define GAUGE_THROTTLE
+//#define GAUGE_MAF_RATE
+//#define GAUGE_FUEL_LEVEL
+//#define GAUGE_AMBIENT_TEMP
+//#define GAUGE_OIL_TEMP
+//#define GAUGE_ABS_LOAD
+#define SECONDARY_GAUGE_KMH
+#define SECONDARY_GAUGE_RPM
+#define SECONDARY_GAUGE_COOLANT_TEMP
+#define SECONDARY_GAUGE_INTAKE_TEMP
+#define SECONDARY_GAUGE_SHORT_FUEL_TRIM
+#define SECONDARY_GAUGE_LONG_FUEL_TRIM
+//#define SECONDARY_GAUGE_ENGINE_LOAD
+//#define SECONDARY_GAUGE_THROTTLE
 
 //////////////
 // Settings //
 //////////////
+
+#define ENABLE_SECONDARY_VIEWS
 
 // Enable EEPROM to save settings in EEPROM
 #define ENABLE_EEPROM
@@ -49,7 +77,7 @@
 //#define ENABLE_STARTUP_LOGO
 
 // Enable the 2nd TFT screen
-//#define ENABLE_SECOND_DISPLAY
+#define ENABLE_SECOND_DISPLAY
 
 
 ////////////////
@@ -71,6 +99,7 @@
 // Keypad //
 ////////////
 //#define USE_MOCK_KEYPAD
+#define BUTTON_PRESSED HIGH
 
 
 

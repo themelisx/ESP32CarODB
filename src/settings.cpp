@@ -30,8 +30,8 @@ void Settings::load() {
         this->activeView = myEEPROM->readInt(EEPROM_DISPLAY1_NEXT_VIEW);
         this->secondaryActiveView = myEEPROM->readInt(EEPROM_DISPLAY1_SECONDARY_VIEW);
         #ifdef ENABLE_SECOND_DISPLAY
-            nextView2 = myEEPROM->readInt(EEPROM_DISPLAY2_NEXT_VIEW);
-            secondaryActiveView2 = myEEPROM->readInt(EEPROM_DISPLAY2_SECONDARY_VIEW);
+          this->activeView2 = myEEPROM->readInt(EEPROM_DISPLAY2_NEXT_VIEW);
+          this->secondaryActiveView2 = myEEPROM->readInt(EEPROM_DISPLAY2_SECONDARY_VIEW);
         #endif
     } else {
       debug->println(DEBUG_LEVEL_INFO, "No signature");

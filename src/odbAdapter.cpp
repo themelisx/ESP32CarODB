@@ -357,11 +357,6 @@ void OdbAdapter::updateOBDValue(Gauge* gauge) {
           debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
       }
     }
-    #ifdef USE_MULTI_THREAD
-        vTaskDelay(gauge->getInterval() / portTICK_PERIOD_MS);
-    #else
-        delay(gauge->getInterval());
-    #endif
 }
 
 int OdbAdapter::getValueForViewType(int viewId) {

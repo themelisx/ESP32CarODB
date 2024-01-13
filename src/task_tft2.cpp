@@ -8,11 +8,11 @@
 #include "vars.h"
 #include "display.h"
 
-void tft1_task(void *pvParameters) {
-  debug->print(DEBUG_LEVEL_INFO, "View manager TFT 1: Task running on core ");
+void tft2_task(void *pvParameters) {
+  debug->print(DEBUG_LEVEL_INFO, "View manager TFT 2: Task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
-  Display *display = displayManager->getDisplay(1);
+  Display *display = displayManager->getDisplay(2);
   
   for (;;) {
 

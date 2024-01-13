@@ -7,6 +7,7 @@
 void main_menu_task(void *pvParameters);
 void keypad_task(void *pvParameters);
 void tft1_task(void *pvParameters);
+void tft2_task(void *pvParameters);
 void obd_task(void *pvParameters);
 #endif
 

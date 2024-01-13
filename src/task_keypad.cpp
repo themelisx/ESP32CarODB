@@ -23,32 +23,32 @@ void keypad_task(void *pvParameters) {
   for (;;) {
 
     #ifdef ENABLE_SECOND_DISPLAY
-    if (digitalRead(PIN_LEFT_KEY) == HIGH) { // LEFT KEY PRESSED
+    if (digitalRead(PIN_LEFT_KEY) == BUTTON_PRESSED) { // LEFT KEY PRESSED
 
       debug->println(DEBUG_LEVEL_DEBUG, "Left key pressed");
       displayManager->goToPreviousDisplay();
       vTaskDelay(DELAY_VIEW_CHANGE / portTICK_PERIOD_MS);
 
-    } else if (digitalRead(PIN_RIGHT_KEY) == HIGH) {
+    } else if (digitalRead(PIN_RIGHT_KEY) == BUTTON_PRESSED) {
 
       debug->println(DEBUG_LEVEL_DEBUG, "Right key pressed");
       displayManager->goToNextDisplay();
       vTaskDelay(DELAY_VIEW_CHANGE / portTICK_PERIOD_MS);
 
-    } else if (digitalRead(PIN_ENTER_KEY) == HIGH) { // ENTER KEY PRESSED
+    } else if (digitalRead(PIN_ENTER_KEY) == BUTTON_PRESSED) { // ENTER KEY PRESSED
 
       debug->println(DEBUG_LEVEL_DEBUG, "Enter key pressed");
       vTaskDelay(DELAY_VIEW_CHANGE / portTICK_PERIOD_MS);
       
     } else 
     #endif
-    if (digitalRead(PIN_UP_KEY) == HIGH) { // UP KEY PRESSED
+    if (digitalRead(PIN_UP_KEY) == BUTTON_PRESSED) { // UP KEY PRESSED
 
       debug->println(DEBUG_LEVEL_DEBUG, "Up key pressed");
       displayManager->goToPreviousView();
       vTaskDelay(DELAY_VIEW_CHANGE / portTICK_PERIOD_MS);
 
-    } else if (digitalRead(PIN_DOWN_KEY) == HIGH || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
+    } else if (digitalRead(PIN_DOWN_KEY) == BUTTON_PRESSED || (testDownKey && (millis() - lastTime) > TEST_KEY_DELAY)) { // DOWN KEY PRESSED
 
       lastTime = millis();
       debug->println(DEBUG_LEVEL_DEBUG, "Down key pressed");

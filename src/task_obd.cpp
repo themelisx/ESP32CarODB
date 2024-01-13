@@ -12,18 +12,12 @@ void obd_task(void *pvParameters) {
   debug->print(DEBUG_LEVEL_INFO, "OBD manager task running on core ");
   debug->println(DEBUG_LEVEL_INFO, xPortGetCoreID());
 
-  int viewId;
-  int viewIndex;
   Gauge *gauge;
   #ifdef ENABLE_SECOND_DISPLAY
   Gauge *gauge2;
   #endif
 
-  #ifndef MOCK_OBD
-    // if device does not have pin use the follow
-    //odbAdapter->connect(nullptr);
-    //bool connected = odbAdapter->connect(OBD_DEVICE_PIN);
-  #else
+  #ifdef MOCK_OBD
     srand(time(NULL));
     odbAdapter->setDeviceConnected(true);
     odbAdapter->setObdConnected(true);
@@ -31,13 +25,20 @@ void obd_task(void *pvParameters) {
 
   for (;;) {
 
-    gauge = displayManager->getDisplay(1)->getActiveGauge();
-    odbAdapter->updateOBDValue(gauge);
-    #ifdef ENABLE_SECOND_DISPLAY
-      gauge2 = displayManager->getDisplay(2)->getActiveGauge();
-      odbAdapter->updateOBDValue(gauge2);
-    #endif
-
+    if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
+      gauge = displayManager->getDisplay(1)->getActiveGauge();
+      odbAdapter->updateOBDValue(gauge);
+      #ifdef ENABLE_SECOND_DISPLAY
+        gauge2 = displayManager->getDisplay(2)->getActiveGauge();
+        odbAdapter->updateOBDValue(gauge2);
+      #endif
+      vTaskDelay(gauge->getInterval() / portTICK_PERIOD_MS);
+    } else {
+      #ifndef MOCK_OBD
+        odbAdapter->connect(nullptr);
+        vTaskDelay(DELAY_ODB / portTICK_PERIOD_MS);
+      #endif
+    }
   }
 }
 
