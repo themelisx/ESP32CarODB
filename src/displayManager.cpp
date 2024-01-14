@@ -63,9 +63,6 @@ void DisplayManager::goToNextDisplay() {
 void DisplayManager::goToPreviousView() {
     
     bool changeGauge = true;
-    #ifdef USE_MULTI_THREAD
-        xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-    #endif
     
     Display *display = myDisplays[activeDisplay];
     int activeIndex = display->getActiveView();
@@ -92,19 +89,12 @@ void DisplayManager::goToPreviousView() {
     mySettings->setSecondaryActiveView(display->getId(), display->getSecondaryActiveView());
     mySettings->save();      
     
-    #ifdef USE_MULTI_THREAD        
-        xSemaphoreGive(semaphoreActiveView);
-        yield();
-    #endif
+     yield();
 
     
 }
 void DisplayManager::goToNextView() {
     bool changeGauge = true;
-    
-    #ifdef USE_MULTI_THREAD
-    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
-    #endif
 
     Display *display = myDisplays[activeDisplay];
     Gauge *gauge = display->getActiveGauge();
@@ -144,11 +134,7 @@ void DisplayManager::goToNextView() {
     mySettings->setActiveView(display->getId(), display->getActiveView());
     mySettings->setSecondaryActiveView(display->getId(), display->getSecondaryActiveView());
     mySettings->save();
-    
-    #ifdef USE_MULTI_THREAD    
-        xSemaphoreGive(semaphoreActiveView);
-        yield();
-    #endif
+
 }
 
 int DisplayManager::getActiveDisplayId() {

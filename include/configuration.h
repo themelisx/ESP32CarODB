@@ -1,12 +1,29 @@
+//////////////
+// Settings //
+//////////////
+//#define MODE_DEBUG_FULL
+//#define MODE_DEBUG
+#define MODE_RELEASE
+
+// Enable EEPROM to save settings in EEPROM
+#define ENABLE_EEPROM
+//#define CLEAR_SETTINGS
+
+#ifdef ESP32
+    // Dual Core
+    #define USE_MULTI_THREAD
+#endif
+
+#ifdef ESP8266
+    //
+    #define DRAW_FAST
+#endif
+
 //////////////////
 // OBD - ELM327 //
 //////////////////
 // Enable ELM327 (internal) debug logs
-#define ENABLE_ELM327_DEBUG_LOGS
-
-#define MODE_DEBUG_FULL
-//#define MODE_DEBUG
-//#define MODE_RELEASE
+//#define ENABLE_ELM327_DEBUG_LOGS
 
 // Mock OBD for testing without real OBD device 
 //#define MOCK_OBD
@@ -46,27 +63,6 @@
 //#define SECONDARY_GAUGE_ENGINE_LOAD
 //#define SECONDARY_GAUGE_THROTTLE
 
-//////////////
-// Settings //
-//////////////
-
-#define DEBUG_MODE
-#define ENABLE_SECONDARY_VIEWS
-
-// Enable EEPROM to save settings in EEPROM
-#define ENABLE_EEPROM
-//#define CLEAR_SETTINGS
-
-#ifdef ESP32
-    // Dual Core
-    #define USE_MULTI_THREAD
-#endif
-
-#ifdef ESP8266
-    //
-    #define DRAW_FAST
-#endif
-
 
 /////////////////
 // Date - Time //
@@ -82,7 +78,7 @@
 //#define ENABLE_STARTUP_LOGO
 
 // Enable the 2nd TFT screen
-#define ENABLE_SECOND_DISPLAY
+//#define ENABLE_SECOND_DISPLAY
 
 
 ////////////////
