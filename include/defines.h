@@ -41,11 +41,11 @@
     #endif
 
     #ifdef MOCK_OBD_HIGH_VALUES
-        #define MOCK_OBD_batteryVoltage 148
+        #define MOCK_OBD_batteryVoltage 140
         #define MOCK_OBD_kph 180
-        #define MOCK_OBD_rpm 7500
-        #define MOCK_OBD_engineCoolantTemp 120
-        #define MOCK_OBD_intakeAirTemp 95
+        #define MOCK_OBD_rpm 6000
+        #define MOCK_OBD_engineCoolantTemp 100
+        #define MOCK_OBD_intakeAirTemp 80
         #define MOCK_OBD_timingAdvance 40
         #define MOCK_OBD_engineLoad 85
         #define MOCK_OBD_mafRate 7
@@ -93,19 +93,26 @@
 #ifdef ESP32
     #define TFT1_CS 5
     #define TFT1_DC 17
+    #define TFT2_CS 15
+    #define TFT2_DC 17    
 #endif
+
 #ifdef ESP8266
     #define TFT1_CS D0
     #define TFT1_DC D3
+    #define TFT2_CS D4
+    #define TFT2_DC D1
 #endif
 
-#define TFT2_DC 17
-#define TFT2_CS 15
+#define TFT1_HEIGHT 240
+#define TFT1_WIDTH 240
+#define TFT2_HEIGHT 240
+#define TFT2_WIDTH 240
 
 #define TEST_KEY_DELAY 10000
 #define DELAY_MAIN_MENU_TASK 100
 #define DELAY_MAIN_TASK 1000
-#define DELAY_REFRESH_VIEW 100
+#define DELAY_REFRESH_VIEW 50
 
 #define DELAY_ODB 50
 #define DELAY_READING 10
@@ -149,9 +156,7 @@
 #define VIEW_LONG_FUEL_TRIM 9
 #define VIEW_THROTTLE 10
 #define VIEW_MAF_RATE 11
-//supportedPIDs_21_40
 #define VIEW_FUEL_LEVEL 12
-//supportedPIDs_41_60
 #define VIEW_AMBIENT_TEMP 13
 #define VIEW_OIL_TEMP 14
 #define VIEW_ABS_LOAD 15
@@ -164,12 +169,13 @@
 #define TYPE_DATE 4
 
 #define NO_IMAGE -1
-
+/*
 #define STATE_UNKNOWN -1
 #define STATE_LOW 0
 #define STATE_NORMAL 1
 #define STATE_HIGH 2
 #define STATE_OUT_OF_RANGE 3
+*/
 
 #define DATE_LENGTH 9
 #define TIME_LENGTH 6

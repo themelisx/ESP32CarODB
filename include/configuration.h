@@ -1,3 +1,24 @@
+//////////////
+// Settings //
+//////////////
+//#define MODE_DEBUG_FULL
+//#define MODE_DEBUG
+#define MODE_RELEASE
+
+// Enable EEPROM to save settings in EEPROM
+#define ENABLE_EEPROM
+//#define CLEAR_SETTINGS
+
+#ifdef ESP32
+    // Dual Core
+    #define USE_MULTI_THREAD
+#endif
+
+#ifdef ESP8266
+    //
+    #define DRAW_FAST
+#endif
+
 //////////////////
 // OBD - ELM327 //
 //////////////////
@@ -11,26 +32,36 @@
 // Enable only one of the follow
 // Values are in defines.h
 
-//#define MOCK_OBD_LOW_VALUES
+#define MOCK_OBD_LOW_VALUES
 //#define MOCK_OBD_NORMAL_VALUES
-#define MOCK_OBD_HIGH_VALUES
+//#define MOCK_OBD_HIGH_VALUES
 
-
-//////////////
-// Settings //
-//////////////
-
-#ifdef ESP32
-    // Enable EEPROM to save settings in EEPROM
-    #define ENABLE_EEPROM
-
-    // Dual Core
-    #define USE_MULTI_THREAD
-#endif
-
-#ifdef ESP8266
-    #define DRAW_FAST
-#endif
+////////////
+// Gauges //
+////////////
+#define GAUGE_BATTERY_VOLTAGE
+#define GAUGE_KMH
+#define GAUGE_RPM
+#define GAUGE_COOLANT_TEMP
+#define GAUGE_INTAKE_TEMP
+#define GAUGE_TIMING_ADV
+#define GAUGE_ENGINE_LOAD
+#define GAUGE_SHORT_FUEL_TRIM
+#define GAUGE_LONG_FUEL_TRIM
+#define GAUGE_THROTTLE
+//#define GAUGE_MAF_RATE
+//#define GAUGE_FUEL_LEVEL
+//#define GAUGE_AMBIENT_TEMP
+//#define GAUGE_OIL_TEMP
+//#define GAUGE_ABS_LOAD
+#define SECONDARY_GAUGE_KMH
+#define SECONDARY_GAUGE_RPM
+#define SECONDARY_GAUGE_COOLANT_TEMP
+#define SECONDARY_GAUGE_INTAKE_TEMP
+#define SECONDARY_GAUGE_SHORT_FUEL_TRIM
+#define SECONDARY_GAUGE_LONG_FUEL_TRIM
+//#define SECONDARY_GAUGE_ENGINE_LOAD
+//#define SECONDARY_GAUGE_THROTTLE
 
 
 /////////////////
@@ -69,6 +100,7 @@
 // Keypad //
 ////////////
 //#define USE_MOCK_KEYPAD
+#define BUTTON_PRESSED HIGH
 
 
 

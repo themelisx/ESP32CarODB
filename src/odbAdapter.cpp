@@ -8,13 +8,14 @@
 #include <ELMduino.h>
 
 #include "odbAdapter.h"
+#include "gauge.h"
 
 #include "debug.h"
 #include "vars.h"
 
 OdbAdapter::OdbAdapter(String deviceName, String deviceAddr) {
 
-    debug->println(DEBUG_LEVEL_DEBUG, "::OdbAdapter activated");
+    debug->println(DEBUG_LEVEL_DEBUG, "[OdbAdapter]");
 
     this->deviceName = deviceName;
     this->deviceAddr = deviceAddr;
@@ -34,6 +35,7 @@ OdbAdapter::OdbAdapter(String deviceName, String deviceAddr) {
     deviceConnected = false;
     obdConnected = false;
 
+    debug->println(DEBUG_LEVEL_DEBUG, "[OK]");
 }
 
 void OdbAdapter::setDeviceConnected(bool connected) {
@@ -90,11 +92,6 @@ bool OdbAdapter::isOBDConnected() {
 }*/
 
 void OdbAdapter::disconnect() {
-    /*if (SerialDevice.connected()) {
-        #ifdef ESP32
-            SerialDevice.disconnect();        
-        #endif
-    }*/
     setDeviceConnected(false);
     setObdConnected(false);
 }
@@ -319,6 +316,49 @@ bool OdbAdapter::readValueForViewType(int viewId) {
   return valueReaded;
 }
 
+void OdbAdapter::updateOBDValue(Gauge* gauge) {
+    //Gauge* gauge = displayManager->getDisplay(displayManager->getActiveDisplayId())->getActiveGauge();
+
+    if (isDeviceConnected() && isOBDConnected()) {
+      debug->println(DEBUG_LEVEL_DEBUG, "Reading OBD...");
+
+      bool valueReaded = readValueForViewType(gauge->getId());
+
+      int newValue = INT_MIN;
+      if (valueReaded) {
+        
+        newValue = getValueForViewType(gauge->getId());
+
+        if (gauge->data.value != newValue) {
+          debug->println(DEBUG_LEVEL_DEBUG2, "Value has changed");
+          /*
+          debug->print(DEBUG_LEVEL_DEBUG2, "---> new value : ");
+          debug->println(DEBUG_LEVEL_DEBUG2, newValue);
+          debug->print(DEBUG_LEVEL_DEBUG2, "---> old value : ");
+          debug->println(DEBUG_LEVEL_DEBUG2, gauge->data.value);
+          */
+        }
+        gauge->data.value = newValue;
+
+        int secondaryViewIdx = gauge->secondaryViews.activeViewIndex;
+        if (secondaryViewIdx != 0) {
+          int secondaryViewId = gauge->secondaryViews.ids[secondaryViewIdx];
+
+          valueReaded = readValueForViewType(secondaryViewId);
+          if (valueReaded) {
+            newValue = getValueForViewType(secondaryViewId);
+            if (gauge->secondaryViews.oldValue[secondaryViewIdx] != newValue) {
+              debug->println(DEBUG_LEVEL_DEBUG2, "Secondary value has changed");
+            }
+            gauge->secondaryViews.value[secondaryViewIdx] = newValue;
+          }
+        }
+      } else {
+          debug->println(DEBUG_LEVEL_DEBUG2, "value NOT readed");
+      }
+    }
+}
+
 int OdbAdapter::getValueForViewType(int viewId) {
   int newValue;
   switch (viewId) {
@@ -373,22 +413,21 @@ int OdbAdapter::getRandomNumber(int min, int max) {
 bool OdbAdapter::readObdValue(int viewTypeId) {
 
   int newValue = 0;
-  bool doAction = true;
 
   #ifdef MOCK_OBD
     bool saveValue = true;
 
     switch (viewTypeId) {
       case VIEW_BATTERY_VOLTAGE: 
-              newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 10, MOCK_OBD_batteryVoltage + 10); break;
+              newValue = getRandomNumber(MOCK_OBD_batteryVoltage - 20, MOCK_OBD_batteryVoltage + 20); break;
       case VIEW_KPH: 
-              newValue = getRandomNumber(MOCK_OBD_kph - 10, MOCK_OBD_kph + 10); break;
+              newValue = getRandomNumber(MOCK_OBD_kph - 20, MOCK_OBD_kph + 20); break;
       case VIEW_RPM: 
-              newValue = getRandomNumber(MOCK_OBD_rpm - 100, MOCK_OBD_rpm + 100); break;
+              newValue = getRandomNumber(MOCK_OBD_rpm - 1000, MOCK_OBD_rpm + 1000); break;
       case VIEW_COOLANT_TEMP: 
-              newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 15, MOCK_OBD_engineCoolantTemp + 15); break;    
+              newValue = getRandomNumber(MOCK_OBD_engineCoolantTemp - 30, MOCK_OBD_engineCoolantTemp + 30); break;    
       case VIEW_INTAKE_TEMP:
-              newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 5, MOCK_OBD_intakeAirTemp + 5); break;
+              newValue = getRandomNumber(MOCK_OBD_intakeAirTemp - 20, MOCK_OBD_intakeAirTemp + 20); break;
       case VIEW_TIMING_ADV: 
               newValue = getRandomNumber(MOCK_OBD_timingAdvance - 5, MOCK_OBD_timingAdvance + 5); break;
       case VIEW_ENGINE_LOAD: 
@@ -410,11 +449,9 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
       case VIEW_ABS_LOAD: 
               newValue = getRandomNumber(MOCK_OBD_absLoad - 5, MOCK_OBD_absLoad + 5); break;
       case VIEW_NONE:
-            doAction = false;
             debug->println(DEBUG_LEVEL_INFO, "Inactive view");
             break;
       default:
-            doAction = false;
             debug->print(DEBUG_LEVEL_ERROR, viewTypeId);
             debug->println(DEBUG_LEVEL_ERROR, " is an unknown view type");
     }
@@ -425,6 +462,7 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
 
   #else
     bool saveValue = false;
+    bool doAction = true;
 
     switch (viewTypeId) {
       case VIEW_BATTERY_VOLTAGE: 

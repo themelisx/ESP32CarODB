@@ -1,14 +1,13 @@
 #include <Arduino.h>
 
-#include "gauge.h"
-
 #include "defines.h"
 #include "vars.h"
 #include "debug.h"
 #include "fonts.h"
-#include "displays.h"
+#include "display.h"
+#include "gauge.h"
 
-Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
+Gauge::Gauge(Display* display, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max) {
 
     debug->print(DEBUG_LEVEL_INFO, "Creating Gauge (title:'");
     debug->print(DEBUG_LEVEL_INFO, title);
@@ -25,12 +24,13 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
       xSemaphoreGive(this->semaphore);
     #endif
 
-    this->monitor = monitor;
     this->id = id;
+    this->display = display;
     this->type = type;    
+    this->repaint = true;
     this->interval = interval;
     this->visible = true;
-    this->secondaryViews.activeView = 0;
+    this->secondaryViews.activeViewIndex = 0;
     this->secondaryViews.count = 0;
 
     this->data.min = min;
@@ -39,7 +39,7 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     this->data.max = max;
     this->data.value = INT_MIN;
     this->data.oldValue = INT_MIN;
-    this->data.state = STATE_OUT_OF_RANGE;
+    this->data.state = STATE_UNKNOWN;
     this->data.lowColor = lowColor;
     this->data.highColor = highColor;
     this->data.useLowWarning = useLowWarning;
@@ -47,13 +47,11 @@ Gauge::Gauge(Displays *monitor, int id, int type, int interval, char *title, cha
     this->data.strFormat = strFormat;
     this->data.title = title;
 
-    this->screenHeight = monitor->getScreenHeight();
+    this->screenHeight = display->getScreenHeight();
     this->halfScreenHeight = this->screenHeight / 2;
 
-    this->screenWidth = monitor->getScreenWidth();
+    this->screenWidth = display->getScreenWidth();
     this->halfScreenWidth = this->screenWidth / 2;
-
-    this->display = monitor->getTFT();
 
     outerRadius = halfScreenHeight - 1;
     innerRadius = outerRadius - 50;
@@ -170,20 +168,33 @@ void Gauge::drawDateTime() {
 
 #endif
 
+void Gauge::setRepaint(bool repaint) {
+  if (repaint) {
+    debug->println(DEBUG_LEVEL_DEBUG2, "Set repaint TRUE");
+  } else {
+    debug->println(DEBUG_LEVEL_DEBUG2, "Set repaint FALSE");
+  }
+  this->repaint = repaint;
+}
+
+bool Gauge::needsRepaint() {
+  return this->repaint;
+}
+
 bool Gauge::valueHasChanged() {
 
   bool ret = false;
 
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreData, portMAX_DELAY);
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
 
   if (data.value != data.oldValue) {
     ret = true;
   } else {    
-    if (secondaryViews.activeView != VIEW_NONE) {
-      int secondaryViewIdx = secondaryViews.activeView;
+    if (secondaryViews.activeViewIndex != VIEW_NONE) {
+      int secondaryViewIdx = secondaryViews.activeViewIndex;
       //int secondaryViewId = secondaryViews.ids[secondaryViewIdx];      
       if (secondaryViews.value[secondaryViewIdx] != secondaryViews.oldValue[secondaryViewIdx]) {
         ret = true;
@@ -191,36 +202,52 @@ bool Gauge::valueHasChanged() {
     }
   }
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreData);
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreData);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
   return ret;
 }
 
-void Gauge::draw(bool repaint) {
+void Gauge::draw() {
 
   char valueBuf[16];
   char secondaryBuffer[16];
   int newState;
   int newStateColor;
+  int newValueToDraw;
   //int fColorSecondary;
   //int bColorSecondary;
   //int secondaryValue;
-  bool drawUpper = false;
+
+  debug->println(DEBUG_LEVEL_DEBUG2, "Gauge::Draw");
+
+  if (repaint) {
+    getDisplay()->fillScreen(BACK_COLOR);
+    if (getType() == TYPE_GAUGE_GRAPH && secondaryViews.activeViewIndex == 0) {      
+      drawBorders();
+    }
+  }  
 
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
   #endif
   int newValue = this->data.value;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreData);
+    xSemaphoreGive(semaphoreData);
   #endif
 
   newStateColor = WHITE;
 
-  if (newValue < data.min || newValue > data.max) {
-    newState = STATE_OUT_OF_RANGE;
+  if (newValue < data.min) {
+    newState = STATE_LOW;
+    newStateColor = data.lowColor;
+    newValueToDraw = data.min;
+  } else if (newValue > data.max) {
+    newState = STATE_HIGH;
+    newStateColor = data.highColor;
+    newValueToDraw = data.max;
   } else {
+    newValueToDraw = newValue;
     if (data.low != data.min && newValue >= data.min && newValue < data.low) {
       newState = STATE_LOW;
       newStateColor = data.lowColor;
@@ -258,79 +285,72 @@ void Gauge::draw(bool repaint) {
   }
 
   #ifdef USE_MULTI_THREAD
-  xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
+    xSemaphoreTake(semaphoreActiveView, portMAX_DELAY);
   #endif
-  int secondaryViewsActiveView = secondaryViews.activeView;
+  int secondaryViewsActiveView = secondaryViews.activeViewIndex;
   #ifdef USE_MULTI_THREAD
-  xSemaphoreGive(semaphoreActiveView);
+    xSemaphoreGive(semaphoreActiveView);
   #endif
 
-  if (getType() == TYPE_GAUGE_GRAPH) {
-    if (secondaryViewsActiveView == 0) {
-      if (newState != STATE_OUT_OF_RANGE) {
-        int i;
+  if (getType() == TYPE_GAUGE_GRAPH && secondaryViewsActiveView == 0) {
+    #ifdef USE_MULTI_THREAD
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    #endif
 
-        #ifdef USE_MULTI_THREAD
-        xSemaphoreTake(semaphoreData, portMAX_DELAY);
-        #endif
+    int oldValueToDraw = data.oldValue;
+    if (oldValueToDraw < data.min) {
+      oldValueToDraw = data.min;
+    } else if (oldValueToDraw > data.max) {
+      oldValueToDraw = data.max;
+    }      
 
-        int oldValue = data.oldValue;
+    #ifdef USE_MULTI_THREAD
+    xSemaphoreGive(semaphoreData);
+    #endif
 
-        #ifdef USE_MULTI_THREAD
-        xSemaphoreGive(semaphoreData);
-        #endif
+    #ifndef DRAW_FAST
+      int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
+      int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
+    #endif
+    int oldAngle = map(oldValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
+    int newAngle = map(newValueToDraw, data.min, data.max, gaugeMin, gaugeMax);
 
-        #ifndef DRAW_FAST
-          int lowAngle = map(data.low, data.min, data.max, gaugeMin, gaugeMax);
-          int highAngle = map(data.high, data.min, data.max, gaugeMin, gaugeMax);
-        #endif
-        int oldAngle = map(oldValue, data.min, data.max, gaugeMin, gaugeMax);
-        int newAngle = map(newValue, data.min, data.max, gaugeMin, gaugeMax);
-
-        if (newValue < oldValue) {
-          #ifdef DRAW_FAST
-            drawGaugeLine(oldAngle, BACK_COLOR);
-            drawGaugeLine(newAngle, newStateColor);
-          #else
-            for (i = oldAngle; i >= newAngle; i--) {
-              drawGaugeLine(i, bColor);
-            }
-            if (newState != data.state) {
-              for (i = 0; i <= newAngle; i++) {
-                drawGaugeLine(i, newStateColor);
-              }
-            }
-          #endif
-        } else {          
-          if (newState != data.state) {
-            oldAngle = 0;
-          }
-          #ifdef DRAW_FAST
-            drawGaugeLine(oldAngle, BACK_COLOR);
-            drawGaugeLine(newAngle, newStateColor);
-          #else            
-            for (i = oldAngle; i <= newAngle; i++) {
-              drawGaugeLine(i, newStateColor);
-            }
-          #endif
+    if (newValueToDraw < oldValueToDraw) {
+      #ifdef DRAW_FAST
+        drawGaugeLine(oldAngle, BACK_COLOR);
+        drawGaugeLine(newAngle, newStateColor);
+      #else
+        for (int i = oldAngle; i >= newAngle; i--) {
+          drawGaugeLine(i, bColor);
         }
-
-        #ifndef DRAW_FAST
-          if (data.low != data.min && newValue < data.low) {
-            drawGaugeLine(lowAngle, data.lowColor);
+        if (newState != data.state) {
+          for (int i = 0; i <= newAngle; i++) {
+            drawGaugeLine(i, newStateColor);
           }
-          if (data.high != data.max && newValue < data.high) {
-            drawGaugeLine(highAngle, data.highColor);
-          }
-        #endif
-      } else {
-        debug->println(DEBUG_LEVEL_ERROR, "Out of range");        
-      }
-    } else {
-      drawUpper = true;
+        }
+      #endif
+    } else {        
+      #ifdef DRAW_FAST
+        drawGaugeLine(oldAngle, BACK_COLOR);
+        drawGaugeLine(newAngle, newStateColor);
+      #else            
+        if (newState != data.state) {
+          oldAngle = 0;
+        }
+        for (int i = oldAngle; i <= newAngle; i++) {
+          drawGaugeLine(i, newStateColor);
+        }
+      #endif
     }
-  } else if (getType() == TYPE_DUAL_TEXT) {
-    drawUpper = true;
+
+    #ifndef DRAW_FAST
+      if (data.low != data.min && newValueToDraw < data.low) {
+        drawGaugeLine(lowAngle, data.lowColor);
+      }
+      if (data.high != data.max && newValueToDraw < data.high) {
+        drawGaugeLine(highAngle, data.highColor);
+      }
+    #endif
   }
 
   data.state = newState;
@@ -345,7 +365,12 @@ void Gauge::draw(bool repaint) {
   xSemaphoreGive(semaphoreData);
   #endif
 
-  if (drawUpper && secondaryViewsActiveView != 0) {
+  if ( (getType() == TYPE_GAUGE_GRAPH && secondaryViewsActiveView != 0) || getType() == TYPE_DUAL_TEXT) {
+
+    if (repaint) {
+      display->fillRoundRect(48, -24, 144, 72, 20, BACK_COLOR);
+      display->drawRoundRect(47, -23, 146, 72, 20, FRONT_COLOR);    
+    }
     
     int secondaryViewId = secondaryViews.ids[secondaryViewsActiveView];
     newValue = secondaryViews.value[secondaryViewsActiveView];
@@ -366,7 +391,7 @@ void Gauge::draw(bool repaint) {
           sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViewsActiveView], oldValue);
         }
       }
-      drawUpperString(repaint, secondaryBuffer, BACK_COLOR, BACK_COLOR);
+      drawUpperString(secondaryBuffer, BACK_COLOR, BACK_COLOR);
       
       // draw new text
       if (newValue == INT_MIN) {
@@ -379,11 +404,10 @@ void Gauge::draw(bool repaint) {
           sprintf(secondaryBuffer, secondaryViews.strFormat[secondaryViewsActiveView], newValue);
         }
       }
-
-      drawUpperString(repaint, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
-      //drawUpperString(true, secondaryBuffer, FRONT_COLOR, BACK_COLOR);
+      drawUpperString(secondaryBuffer, FRONT_COLOR, BACK_COLOR);
     }   
-  }    
+  }
+  setRepaint(false);
 }
 
 void Gauge::drawGaugeLine(int angle, int color) {
@@ -432,7 +456,7 @@ void Gauge::drawCenterString(const char *buf, bool clearCircleArea) {
  
 }
 
-void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgColor) {
+void Gauge::drawUpperString(const char *buf, int fColor, int bgColor) {
   int16_t x1, y1;
   uint16_t w, h;
   int x = 120;
@@ -441,11 +465,6 @@ void Gauge::drawUpperString(bool repaint, const char *buf, int fColor, int bgCol
   setFontSize(18);
   display->setTextColor(fColor);
   display->getTextBounds(buf, x, y, &x1, &y1, &w, &h);  
-  
-  if (repaint) {
-    display->fillRoundRect(48, -24, 144, 72, 20, bgColor);
-    display->drawRoundRect(47, -23, 146, 72, 20, fColor);    
-  }
   display->setCursor(x - w / 2, y + 5);
   display->print(buf);
 }
@@ -481,16 +500,20 @@ void Gauge::addSecondaryView(int secondaryViewId, char *strFormat) {
         debug->println(DEBUG_LEVEL_ERROR, "Cannot add more views");
     }
     if (type == TYPE_DUAL_TEXT) {
-        secondaryViews.activeView = 1;
+        secondaryViews.activeViewIndex = 1;
     }
 }
 
+Display* Gauge::getDisplay() {
+  return this->display;
+}
+
 int Gauge::getViewHeight() {
-    return monitor->getScreenHeight();
+    return display->getScreenHeight();
 }
 
 int Gauge::getViewWidth() {
-    return monitor->getScreenWidth();
+    return display->getScreenWidth();
 }
 
 int Gauge::getId() {

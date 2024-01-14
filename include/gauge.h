@@ -5,19 +5,18 @@
 #include "Adafruit_GFX.h"
 #include "Adafruit_GC9A01A.h"
 #include "defines.h"
-#include "displays.h"
+#include "display.h"
 
 #define STATE_UNKNOWN -1
-#define STATE_LOW 0
-#define STATE_NORMAL 1
-#define STATE_HIGH 2
-#define STATE_OUT_OF_RANGE 3
+#define STATE_LOW 1
+#define STATE_NORMAL 2
+#define STATE_HIGH 3
 
 #define rad 0.01745
 
 typedef struct
 {
-  int activeView;
+  int activeViewIndex;
   int count;
   int ids[MAX_SECONDARY_VIEWS + 1];
   int value[MAX_SECONDARY_VIEWS + 1];
@@ -41,6 +40,8 @@ typedef struct
   char *strFormat;
   char *title;
 } S_Gauge;
+
+class Display;
 
 class Gauge {
   private:
@@ -66,7 +67,6 @@ class Gauge {
     float y[360];
     float x2[360];
     float y2[360];
-
     
     #ifdef ENABLE_RTC_CLOCK
       char dateString[DATE_LENGTH];
@@ -75,27 +75,24 @@ class Gauge {
       char oldTimeString[TIME_LENGTH];
     #endif
 
-    int activeDisplay;
-
-    Adafruit_GC9A01A *display;
-    
-    Displays *monitor;
     int id;
     int type;
     int interval;
     bool visible;
+    bool repaint;
     
     Gauge *gauge;
+    Display *display;
 
     void drawGaugeLine(int angle, int color);
     void drawCenterString(const char *buf, bool clearCircleArea);
-    void drawUpperString(bool repaint, const char *buf, int fColor, int bgColor);
+    void drawUpperString(const char *buf, int fColor, int bgColor);
     void drawBottomString(const char *buf, int fColor, int bgColor);
     void getFormattedValue(int newValue, char *buf);
     void drawDateTime();
 
   public:
-    Gauge(Displays *monitor, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
+    Gauge(Display* display, int id, int type, int interval, char *title, char *strFormat, int lowColor, int highColor, bool useLowWarning, bool useHighWarning, int min, int low, int high, int max);
 
     S_Gauge data;
     S_SecondaryViews secondaryViews;
@@ -106,6 +103,7 @@ class Gauge {
     
     void addSecondaryView(int secondaryViewId, char *strFormat);
 
+    Display* getDisplay();
     int getViewHeight();
     int getViewWidth();
 
@@ -118,9 +116,11 @@ class Gauge {
     void setBackColor(int bColor);    
     void setFontSize(int sz);
     
-    void draw(bool repaint);    
+    void draw();    
     void drawBorders();
     bool valueHasChanged();
+    void setRepaint(bool repaint);
+    bool needsRepaint();
 
 };
 
