@@ -83,7 +83,13 @@ void setup() {
 
   // Initialize Serial and set debug level
   debug = new Debug();
-  debug->start(115200, DEBUG_LEVEL_INFO);
+  #if defined(MODE_DEBUG_FULL)
+    debug->start(115200, DEBUG_LEVEL_DEBUG2);
+  #elif defined(MODE_DEBUG)
+    debug->start(115200, DEBUG_LEVEL_DEBUG2);
+  #elif defined(MODE_RELEASE)
+    debug->start(115200, DEBUG_LEVEL_INFO);
+  #endif
 
   debug->println(DEBUG_LEVEL_INFO, "Staring up...");
 

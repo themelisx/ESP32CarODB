@@ -2,7 +2,11 @@
 // OBD - ELM327 //
 //////////////////
 // Enable ELM327 (internal) debug logs
-//#define ENABLE_ELM327_DEBUG_LOGS
+#define ENABLE_ELM327_DEBUG_LOGS
+
+#define MODE_DEBUG_FULL
+//#define MODE_DEBUG
+//#define MODE_RELEASE
 
 // Mock OBD for testing without real OBD device 
 //#define MOCK_OBD
@@ -46,6 +50,7 @@
 // Settings //
 //////////////
 
+#define DEBUG_MODE
 #define ENABLE_SECONDARY_VIEWS
 
 // Enable EEPROM to save settings in EEPROM
