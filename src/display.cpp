@@ -44,10 +44,12 @@ void Display::updateDisplay() {
       Gauge *gauge = getActiveGauge();
 
       if (gaugeHasChanged) {
-        gauge->setRepaint(true);
         gaugeHasChanged = false;
+        gauge->setRepaint(true);        
         debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
-        gauge->secondaryViews.activeViewIndex = getSecondaryActiveView();        
+        gauge->secondaryViews.activeViewIndex = getSecondaryActiveView();
+        gauge->data.oldValue = INT_MIN;
+        gauge->secondaryViews.oldValue[gauge->secondaryViews.activeViewIndex] = INT_MIN;
         gauge->draw();          
 
       } else {
