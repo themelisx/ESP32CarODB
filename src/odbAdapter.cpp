@@ -466,7 +466,7 @@ bool OdbAdapter::readObdValue(int viewTypeId) {
 
     switch (viewTypeId) {
       case VIEW_BATTERY_VOLTAGE: 
-            newValue = int(obd->batteryVoltage() * 10); break;
+            newValue = (int)(obd->batteryVoltage() * 10.0); break;
       case VIEW_KPH:
             newValue = (int)obd->kph(); break;
       case VIEW_RPM: 
