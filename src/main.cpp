@@ -129,8 +129,8 @@ void setup() {
   #endif
 
   #ifdef USE_OBD_BLUETOOTH
-    //odbAdapter = new OdbAdapter("OBDII", "11:22:33:dd:ee:ff");
-    odbAdapter = new OdbAdapter("OBDII", "00:12:6f:10:24:aa");
+    odbAdapter = new OdbAdapter("OBDII", "66:1e:11:e3:8f:18");
+    //odbAdapter = new OdbAdapter("OBDII", "00:12:6f:10:24:aa");
 
     debug->println(DEBUG_LEVEL_INFO, "Disabling WiFi...");  
     WiFi.disconnect(true);

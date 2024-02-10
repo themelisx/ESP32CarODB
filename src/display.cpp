@@ -28,6 +28,9 @@ Display::Display(Adafruit_GC9A01A* monitor, int id, int screenWidth, int screenH
     this->count = 0;
     this->totalGauges = 0;
 
+    this->standBy = false;
+    this->countToStandBy = 0;
+
     debug->println(DEBUG_LEVEL_DEBUG, "[OK]");
 }
 
@@ -42,6 +45,9 @@ void Display::updateDisplay() {
     if (odbAdapter->isDeviceConnected() && odbAdapter->isOBDConnected()) {
 
       Gauge *gauge = getActiveGauge();
+
+      standBy = false;
+      countToStandBy = 0;
 
       if (gaugeHasChanged) {
         gaugeHasChanged = false;
@@ -62,21 +68,29 @@ void Display::updateDisplay() {
         }
       }
     } else {
-        fillScreen(BACK_COLOR);
+        if (!standBy) {
+          fillScreen(BACK_COLOR);
 
-        #ifdef USE_MULTI_THREAD
-          vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
-        #else
-          delay(DELAY_MAIN_TASK);
-        #endif
+          #ifdef USE_MULTI_THREAD
+            vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
+          #else
+            delay(DELAY_MAIN_TASK);
+          #endif
 
-        printMsg("NO OBD");
+          printMsg("NO OBD");
 
-        #ifdef USE_MULTI_THREAD
-          vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
-        #else
-          delay(DELAY_MAIN_TASK);
-        #endif
+          #ifdef USE_MULTI_THREAD
+            vTaskDelay(DELAY_MAIN_TASK / portTICK_PERIOD_MS);
+          #else
+            delay(DELAY_MAIN_TASK);
+          #endif
+
+          countToStandBy++;
+          if (countToStandBy > 10) {
+            standBy = true;
+            countToStandBy = 0;
+          }
+        }
     }    
 }
 

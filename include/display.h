@@ -26,6 +26,9 @@ class Display {
     int activeViewIndex;
     int secondaryActiveView;
     int count;
+    
+    bool standBy;
+    int countToStandBy;
 
     Gauge *myGauges[MAX_VIEWS + 1];
 
