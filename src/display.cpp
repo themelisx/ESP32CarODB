@@ -54,8 +54,8 @@ void Display::updateDisplay() {
         gauge->setRepaint(true);        
         debug->println(DEBUG_LEVEL_DEBUG, "Change view request");
         gauge->secondaryViews.activeViewIndex = getSecondaryActiveView();
-        gauge->data.oldValue = INT_MIN;
-        gauge->secondaryViews.oldValue[gauge->secondaryViews.activeViewIndex] = INT_MIN;
+        //gauge->data.oldValue = INT_MIN;
+        //gauge->secondaryViews.oldValue[gauge->secondaryViews.activeViewIndex] = INT_MIN;
         gauge->draw();          
 
       } else {
